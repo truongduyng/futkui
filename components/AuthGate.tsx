@@ -10,7 +10,6 @@ interface AuthGateProps {
 
 export function AuthGate({ children }: AuthGateProps) {
   const [sentEmail, setSentEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
