@@ -1,75 +1,102 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { AuthGate } from '@/components/AuthGate';
+import { CreateGroupModal } from '@/components/chat/CreateGroupModal';
+import { GroupList } from '@/components/chat/GroupList';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { useInstantDB } from '@/hooks/useInstantDB';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
 export default function HomeScreen() {
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [currentUserName, setCurrentUserName] = useState('');
+  const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+
+  const { useGroups, createGroup } = useInstantDB();
+  const { data: groupsData, isLoading, error } = useGroups();
+
+  useEffect(() => {
+    // For testing, set a random user name
+    if (!currentUserName) {
+      const randomNames = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank'];
+      setCurrentUserName(randomNames[Math.floor(Math.random() * randomNames.length)]);
+    }
+  }, [currentUserName]);
+
+  const handleGroupPress = (group: any) => {
+    router.push({
+      pathname: '/chat/[groupId]' as any,
+      params: { groupId: group.id }
+    });
+  };
+
+  const handleCreateGroup = async (groupData: { name: string; description: string; avatar: string }) => {
+    try {
+      await createGroup({
+        ...groupData,
+        adminId: currentUserName, // Using username as admin ID for simplicity
+      });
+      Alert.alert('Success', 'Group created successfully!');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to create group. Please try again.');
+      console.error('Error creating group:', error);
+    }
+  };
+
+  const groups = groupsData?.groups || [];
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <AuthGate>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        {isLoading && (
+          <View style={styles.loadingContainer}>
+            <Text style={[styles.loadingText, { color: colors.text }]}>Loading groups...</Text>
+          </View>
+        )}
+
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text style={[styles.errorText, { color: 'red' }]}>Error loading groups: {error.message}</Text>
+          </View>
+        )}
+
+        <GroupList
+          groups={groups}
+          onGroupPress={handleGroupPress}
+          onCreateGroup={() => setShowCreateModal(true)}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+
+        <CreateGroupModal
+          visible={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onCreateGroup={handleCreateGroup}
+        />
+      </View>
+    </AuthGate>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  loadingText: {
+    fontSize: 16,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  errorContainer: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 14,
+    textAlign: 'center',
   },
 });

@@ -1,110 +1,180 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { useInstantDB } from '@/hooks/useInstantDB';
+import React, { useState } from 'react';
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+export default function ExploreScreen() {
+  const [shareLink, setShareLink] = useState('');
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
 
-export default function TabTwoScreen() {
+  const { useGroups } = useInstantDB();
+  const { data: groupsData } = useGroups();
+  const groups = groupsData?.groups || [];
+
+  const handleJoinGroup = async () => {
+    if (!shareLink.trim()) {
+      Alert.alert('Error', 'Please enter a group link');
+      return;
+    }
+
+    // Find group by share link
+    const group = groups.find((g: any) => g.shareLink === shareLink.trim());
+    if (group) {
+      Alert.alert('Success', `Joined group: ${group.name}`);
+      setShareLink('');
+    } else {
+      Alert.alert('Error', 'Group not found. Please check the link.');
+    }
+  };
+
+  const handleShareGroup = (group: any) => {
+    Alert.alert(
+      'Share Group',
+      `Share this link to invite others to join "${group.name}":\n\n${group.shareLink}`,
+      [
+        { text: 'Copy Link', onPress: () => console.log('Copy link:', group.shareLink) },
+        { text: 'Cancel', style: 'cancel' }
+      ]
+    );
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Join a Group</Text>
+        <View style={styles.joinContainer}>
+          <TextInput
+            style={[styles.input, {
+              color: colors.text,
+              backgroundColor: colors.background,
+              borderColor: colors.tabIconDefault
+            }]}
+            value={shareLink}
+            onChangeText={setShareLink}
+            placeholder="Enter group link..."
+            placeholderTextColor={colors.tabIconDefault}
+          />
+          <TouchableOpacity
+            style={[styles.joinButton, { backgroundColor: colors.tint }]}
+            onPress={handleJoinGroup}
+          >
+            <Text style={styles.joinButtonText}>Join</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Groups</Text>
+        {groups.length === 0 ? (
+          <Text style={[styles.emptyText, { color: colors.tabIconDefault }]}>
+            No groups yet. Create your first group in the Chats tab!
+          </Text>
+        ) : (
+          groups.map((group: any) => (
+            <TouchableOpacity
+              key={group.id}
+              style={[styles.groupItem, { backgroundColor: colors.background }]}
+              onPress={() => handleShareGroup(group)}
+            >
+              <Text style={styles.groupEmoji}>{group.avatar}</Text>
+              <View style={styles.groupInfo}>
+                <Text style={[styles.groupName, { color: colors.text }]}>
+                  {group.name}
+                </Text>
+                <Text style={[styles.groupDescription, { color: colors.tabIconDefault }]}>
+                  {group.description}
+                </Text>
+                <Text style={[styles.memberCount, { color: colors.tabIconDefault }]}>
+                  {group.members?.length || 0} members
+                </Text>
+              </View>
+              <Text style={[styles.shareText, { color: colors.tint }]}>Share</Text>
+            </TouchableOpacity>
+          ))
+        )}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    padding: 16,
   },
-  titleContainer: {
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  joinContainer: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+  },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    marginRight: 8,
+  },
+  joinButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  joinButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  emptyText: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontStyle: 'italic',
+    marginTop: 20,
+  },
+  groupItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginVertical: 4,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  groupEmoji: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  groupInfo: {
+    flex: 1,
+  },
+  groupName: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  groupDescription: {
+    fontSize: 14,
+    marginBottom: 2,
+  },
+  memberCount: {
+    fontSize: 12,
+  },
+  shareText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

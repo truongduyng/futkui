@@ -1,50 +1,163 @@
-# Welcome to your Expo app 👋
+# FutKui - Group Chat App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A real-time group chat application built with React Native, Expo, and InstantDB.
 
-## Get started
+## Features
 
-1. Install dependencies
+### 🗨️ Group Chat
+- Create and join chat groups
+- Real-time messaging with InstantDB
+- Anonymous chat (no authentication required for testing)
+- Message reactions with emojis
+- Group sharing via links
 
-   ```bash
-   npm install
-   ```
+### 👥 Group Management
+- Create groups with custom names, descriptions, and avatars
+- View group members and activity
+- Share groups with unique links
+- Join groups using share links
 
-2. Start the app
+### 🎨 Modern UI
+- Beautiful, responsive design
+- Dark and light mode support
+- Smooth animations and haptic feedback
+- Intuitive navigation
 
-   ```bash
-   npx expo start
-   ```
+## Tech Stack
 
-In the output, you'll find options to open the app in a
+- **Frontend**: React Native with Expo
+- **Database**: InstantDB (real-time database)
+- **Navigation**: Expo Router
+- **Styling**: React Native StyleSheet with theming
+- **Icons**: Expo Symbols
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Getting Started
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Prerequisites
+- Node.js (v18 or higher)
+- Expo CLI
+- iOS Simulator or Android Emulator (optional)
 
-## Get a fresh project
+### Installation
 
-When you're ready, run:
-
+1. Clone the repository:
 ```bash
-npm run reset-project
+git clone <repository-url>
+cd futkui
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Install dependencies:
+```bash
+npm install
+```
 
-## Learn more
+3. Start the development server:
+```bash
+npm start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+4. Run on your preferred platform:
+```bash
+# iOS
+npm run ios
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+# Android
+npm run android
 
-## Join the community
+# Web
+npm run web
+```
 
-Join our community of developers creating universal apps.
+## App Structure
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```
+app/
+├── (tabs)/
+│   ├── index.tsx          # Main chat groups screen
+│   ├── explore.tsx        # Group discovery and sharing
+│   └── _layout.tsx        # Tab navigation
+├── chat/
+│   └── [groupId].tsx      # Individual chat screen
+└── _layout.tsx            # Root layout with InstantDB provider
+
+components/
+├── chat/
+│   ├── GroupList.tsx      # List of chat groups
+│   ├── MessageBubble.tsx  # Individual message component
+│   ├── MessageInput.tsx   # Message input with reactions
+│   └── CreateGroupModal.tsx # Group creation modal
+└── ui/                    # Reusable UI components
+
+hooks/
+└── useInstantDB.ts        # InstantDB operations and queries
+
+lib/
+└── instantdb.ts           # InstantDB configuration
+```
+
+## Database Schema
+
+The app uses InstantDB with the following entities:
+
+- **groups**: Chat groups with name, description, avatar, and share links
+- **messages**: Individual messages with content, author, and timestamps
+- **reactions**: Message reactions with emoji and user information
+- **$users**: System users (managed by InstantDB)
+
+## Features in Detail
+
+### Creating Groups
+1. Tap the "+ New Group" button on the Chats tab
+2. Choose an avatar emoji
+3. Enter group name and description
+4. Tap "Create" to create the group
+
+### Sending Messages
+1. Tap on a group to open the chat
+2. Type your message in the input field
+3. Tap "Send" or press Enter
+
+### Adding Reactions
+1. Tap the emoji button in the message input
+2. Select an emoji to add as a reaction
+3. Reactions appear below messages with counts
+
+### Sharing Groups
+1. Go to the Explore tab
+2. Tap on any group to see sharing options
+3. Copy the share link to invite others
+
+### Joining Groups
+1. Go to the Explore tab
+2. Enter a group share link in the input field
+3. Tap "Join" to join the group
+
+## Development Notes
+
+- The app uses anonymous users for testing (random names assigned)
+- All data is stored in InstantDB with real-time synchronization
+- The UI adapts to light/dark mode automatically
+- Error handling includes user-friendly alerts
+
+## Future Enhancements
+
+- User authentication and profiles
+- Image and file sharing
+- Push notifications
+- Message editing and deletion
+- Group admin features
+- Message search functionality
+- Voice messages
+- Video calls integration
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
