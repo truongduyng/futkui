@@ -8,7 +8,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
-export default function ChatScreen() {
+function ChatScreenContent() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -47,32 +47,38 @@ export default function ChatScreen() {
   const groups = groupsData?.groups || [];
 
   return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <Text style={[styles.loadingText, { color: colors.text }]}>Loading groups...</Text>
+        </View>
+      )}
+
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={[styles.errorText, { color: 'red' }]}>Error loading groups: {error.message}</Text>
+        </View>
+      )}
+
+      <GroupList
+        groups={groups}
+        onGroupPress={handleGroupPress}
+        onCreateGroup={() => setShowCreateModal(true)}
+      />
+
+      <CreateGroupModal
+        visible={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreateGroup={handleCreateGroup}
+      />
+    </SafeAreaView>
+  );
+}
+
+export default function ChatScreen() {
+  return (
     <AuthGate>
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        {isLoading && (
-          <View style={styles.loadingContainer}>
-            <Text style={[styles.loadingText, { color: colors.text }]}>Loading groups...</Text>
-          </View>
-        )}
-
-        {error && (
-          <View style={styles.errorContainer}>
-            <Text style={[styles.errorText, { color: 'red' }]}>Error loading groups: {error.message}</Text>
-          </View>
-        )}
-
-        <GroupList
-          groups={groups}
-          onGroupPress={handleGroupPress}
-          onCreateGroup={() => setShowCreateModal(true)}
-        />
-
-        <CreateGroupModal
-          visible={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onCreateGroup={handleCreateGroup}
-        />
-      </SafeAreaView>
+      <ChatScreenContent />
     </AuthGate>
   );
 }

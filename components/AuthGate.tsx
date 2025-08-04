@@ -8,15 +8,13 @@ interface AuthGateProps {
   children: React.ReactNode;
 }
 
-export function AuthGate({ children }: AuthGateProps) {
-  const [sentEmail, setSentEmail] = useState('');
+function AuthenticatedContent({ children }: { children: React.ReactNode }) {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-
   const { instantClient, useProfile, createProfile } = useInstantDB();
-  const { user, isLoading: authLoading } = instantClient.useAuth();
+  const { user } = instantClient.useAuth();
 
-  // Get user profile if authenticated - always call the hook
+  // Now we can safely call useProfile since we know user exists
   const { data: profileData, isLoading: profileLoading } = useProfile();
   const profile = profileData?.profiles?.[0];
 
@@ -27,7 +25,7 @@ export function AuthGate({ children }: AuthGateProps) {
     }
   }, [user, profileLoading, profile, createProfile]);
 
-  if (authLoading || (user && profileLoading)) {
+  if (profileLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Text style={[styles.text, { color: colors.text }]}>Loading...</Text>
@@ -35,7 +33,7 @@ export function AuthGate({ children }: AuthGateProps) {
     );
   }
 
-  if (user && profile) {
+  if (profile) {
     return (
       <View style={{ flex: 1 }}>
         {/* Sign out button */}
@@ -45,7 +43,7 @@ export function AuthGate({ children }: AuthGateProps) {
               {profile.handle}
             </Text>
             <Text style={[styles.userEmail, { color: colors.tabIconDefault }]}>
-              {user.email}
+              {user!.email}
             </Text>
           </View>
           <TouchableOpacity
@@ -58,6 +56,34 @@ export function AuthGate({ children }: AuthGateProps) {
         {children}
       </View>
     );
+  }
+
+  // Still creating profile
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.text, { color: colors.text }]}>Setting up your profile...</Text>
+    </View>
+  );
+}
+
+export function AuthGate({ children }: AuthGateProps) {
+  const [sentEmail, setSentEmail] = useState('');
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+
+  const { instantClient } = useInstantDB();
+  const { user, isLoading: authLoading } = instantClient.useAuth();
+
+  if (authLoading) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={[styles.text, { color: colors.text }]}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (user) {
+    return <AuthenticatedContent>{children}</AuthenticatedContent>;
   }
 
   return (
