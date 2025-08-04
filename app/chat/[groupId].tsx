@@ -7,12 +7,14 @@ import { useInstantDB } from '@/hooks/useInstantDB';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import { Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ChatScreen() {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const insets = useSafeAreaInsets();
 
   const { useGroup, useProfile, sendMessage, addReaction } = useInstantDB();
   const { data: groupData, isLoading } = useGroup(groupId || '');
@@ -106,7 +108,7 @@ export default function ChatScreen() {
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? insets.bottom + 49 : 0}
           enabled
         >
           <FlatList
@@ -118,7 +120,7 @@ export default function ChatScreen() {
             inverted={false}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
-            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+            automaticallyAdjustKeyboardInsets={false}
             onContentSizeChange={() => {}}
             onLayout={() => {}}
           />

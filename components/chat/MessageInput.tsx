@@ -59,8 +59,8 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    paddingBottom: 30,
+    paddingVertical: 12,
+    paddingBottom: 34,
   },
   inputContainer: {
     flexDirection: 'row',
