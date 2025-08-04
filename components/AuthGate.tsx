@@ -14,11 +14,9 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
   const { instantClient, useProfile, createProfile } = useInstantDB();
   const { user } = instantClient.useAuth();
 
-  // Now we can safely call useProfile since we know user exists
   const { data: profileData, isLoading: profileLoading } = useProfile();
   const profile = profileData?.profiles?.[0];
 
-  // Create profile if user exists but no profile
   useEffect(() => {
     if (user && !profileLoading && !profile) {
       createProfile(user.id);
@@ -33,37 +31,15 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (profile) {
+  if (!profile) {
     return (
-      <View style={{ flex: 1 }}>
-        {/* Sign out button */}
-        <View style={[styles.header, { backgroundColor: colors.background }]}>
-          <View style={styles.profileInfo}>
-            <Text style={[styles.profileName, { color: colors.text }]}>
-              {profile.handle}
-            </Text>
-            <Text style={[styles.userEmail, { color: colors.tabIconDefault }]}>
-              {user!.email}
-            </Text>
-          </View>
-          <TouchableOpacity
-            style={[styles.signOutButton, { backgroundColor: colors.tint }]}
-            onPress={() => instantClient.auth.signOut()}
-          >
-            <Text style={styles.signOutText}>Sign Out</Text>
-          </TouchableOpacity>
-        </View>
-        {children}
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={[styles.text, { color: colors.text }]}>Setting up your profile...</Text>
       </View>
     );
   }
 
-  // Still creating profile
-  return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.text, { color: colors.text }]}>Setting up your profile...</Text>
-    </View>
-  );
+  return <>{children}</>;
 }
 
 export function AuthGate({ children }: AuthGateProps) {
@@ -222,36 +198,6 @@ const styles = StyleSheet.create({
     width: '80%',
     maxWidth: 300,
     alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  profileName: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  userEmail: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  signOutButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  signOutText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '500',
   },
   title: {
     fontSize: 24,
