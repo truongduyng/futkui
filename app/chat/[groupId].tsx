@@ -5,26 +5,21 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ChatScreen() {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
-  const [currentUserName, setCurrentUserName] = useState('');
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
-  const { useGroup, sendMessage, addReaction } = useInstantDB();
+  const { instantClient, useGroup, sendMessage, addReaction } = useInstantDB();
+  const { user } = instantClient.useAuth();
   const { data: groupData, isLoading } = useGroup(groupId || '');
 
-  useEffect(() => {
-    // For testing, set a random user name
-    if (!currentUserName) {
-      const randomNames = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank'];
-      setCurrentUserName(randomNames[Math.floor(Math.random() * randomNames.length)]);
-    }
-  }, [currentUserName]);
+  // Use the authenticated user's email as the current user name
+  const currentUserName = user?.email || 'Anonymous';
 
   const group = groupData?.groups?.[0];
   const messages = group?.messages || [];
