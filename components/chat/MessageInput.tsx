@@ -1,7 +1,7 @@
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import React, { useRef, useState } from 'react';
-import { Keyboard, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface MessageInputProps {
   onSendMessage: (message: string) => void;
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 30,
+    paddingBottom: 30,
   },
   inputContainer: {
     flexDirection: 'row',

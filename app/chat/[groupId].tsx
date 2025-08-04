@@ -6,7 +6,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
-import { Alert, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ChatScreen() {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
@@ -106,11 +106,14 @@ export default function ChatScreen() {
 
   return (
     <AuthGate>
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+
+
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior={'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 65 : 0}
+          enabled
         >
           <FlatList
             data={messages}
@@ -121,13 +124,16 @@ export default function ChatScreen() {
             inverted={false}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
+            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+            onContentSizeChange={() => {}}
+            onLayout={() => {}}
           />
 
           <MessageInput
             onSendMessage={handleSendMessage}
           />
         </KeyboardAvoidingView>
-      </SafeAreaView>
+      </View>
     </AuthGate>
   );
 }
