@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface Reaction {
@@ -16,6 +16,7 @@ interface MessageBubbleProps {
   isOwnMessage: boolean;
   reactions: Reaction[];
   onReactionPress: (emoji: string) => void;
+  onAddReaction?: (emoji: string) => void;
 }
 
 export function MessageBubble({
@@ -25,9 +26,13 @@ export function MessageBubble({
   isOwnMessage,
   reactions,
   onReactionPress,
+  onAddReaction,
 }: MessageBubbleProps) {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const [showReactionOptions, setShowReactionOptions] = useState(false);
+
+  const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '😡'];
 
   const formatTime = (date: Date) => {
     return new Date(date).toLocaleTimeString([], {
@@ -44,23 +49,48 @@ export function MessageBubble({
     return acc;
   }, {} as Record<string, Reaction[]>);
 
+  const handleLongPress = () => {
+    if (onAddReaction) {
+      setShowReactionOptions(true);
+    }
+  };
+
+  const handleAddReaction = (emoji: string) => {
+    if (onAddReaction) {
+      onAddReaction(emoji);
+      setShowReactionOptions(false);
+    }
+  };
+
+  const handleTapOutside = () => {
+    setShowReactionOptions(false);
+  };
+
   return (
-    <View style={[
-      styles.container,
-      isOwnMessage ? styles.ownMessage : styles.otherMessage
-    ]}>
+    <TouchableOpacity
+      style={[
+        styles.container,
+        isOwnMessage ? styles.ownMessage : styles.otherMessage
+      ]}
+      onPress={handleTapOutside}
+      activeOpacity={1}
+    >
       {!isOwnMessage && (
         <Text style={[styles.authorName, { color: colors.text }]}>
           {authorName}
         </Text>
       )}
 
-      <View style={[
-        styles.bubble,
-        isOwnMessage
-          ? [styles.ownBubble, { backgroundColor: colors.tint }]
-          : [styles.otherBubble, { backgroundColor: colors.background }]
-      ]}>
+      <TouchableOpacity
+        onLongPress={handleLongPress}
+        activeOpacity={0.8}
+        style={[
+          styles.bubble,
+          isOwnMessage
+            ? [styles.ownBubble, { backgroundColor: colors.tint }]
+            : [styles.otherBubble, { backgroundColor: colorScheme === 'dark' ? '#2A2A2A' : '#F0F0F0' }]
+        ]}
+      >
         <Text style={[
           styles.messageText,
           isOwnMessage
@@ -69,29 +99,45 @@ export function MessageBubble({
         ]}>
           {content}
         </Text>
+      </TouchableOpacity>
+
+      <View style={styles.messageFooter}>
+        <Text style={[styles.timeText, { color: colors.tabIconDefault }]}>
+          {formatTime(createdAt)}
+        </Text>
+
+        {Object.keys(groupedReactions).length > 0 && (
+          <View style={styles.reactionsContainer}>
+            {Object.entries(groupedReactions).map(([emoji, reactions]) => (
+              <TouchableOpacity
+                key={emoji}
+                style={styles.reactionButton}
+                onPress={() => onReactionPress(emoji)}
+              >
+                <Text style={styles.reactionEmoji}>{emoji}</Text>
+                <Text style={[styles.reactionCount, { color: colors.text }]}>
+                  {reactions.length}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
-      <Text style={[styles.timeText, { color: colors.tabIconDefault }]}>
-        {formatTime(createdAt)}
-      </Text>
-
-      {Object.keys(groupedReactions).length > 0 && (
-        <View style={styles.reactionsContainer}>
-          {Object.entries(groupedReactions).map(([emoji, reactions]) => (
+      {showReactionOptions && onAddReaction && (
+        <View style={[styles.reactionOptionsContainer, { backgroundColor: colors.background }]}>
+          {QUICK_REACTIONS.map((emoji) => (
             <TouchableOpacity
               key={emoji}
-              style={styles.reactionButton}
-              onPress={() => onReactionPress(emoji)}
+              style={styles.reactionOptionButton}
+              onPress={() => handleAddReaction(emoji)}
             >
-              <Text style={styles.reactionEmoji}>{emoji}</Text>
-              <Text style={[styles.reactionCount, { color: colors.text }]}>
-                {reactions.length}
-              </Text>
+              <Text style={styles.reactionOptionEmoji}>{emoji}</Text>
             </TouchableOpacity>
           ))}
         </View>
       )}
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -130,25 +176,29 @@ const styles = StyleSheet.create({
   ownMessageText: {
     color: 'white',
   },
+  messageFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+    marginHorizontal: 8,
+  },
   timeText: {
     fontSize: 10,
-    marginTop: 2,
-    marginHorizontal: 8,
   },
   reactionsContainer: {
     flexDirection: 'row',
-    marginTop: 4,
-    marginLeft: 8,
     flexWrap: 'wrap',
+    justifyContent: 'flex-end',
   },
   reactionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.1)',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginRight: 4,
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginLeft: 4,
     marginBottom: 2,
   },
   reactionEmoji: {
@@ -158,5 +208,26 @@ const styles = StyleSheet.create({
   reactionCount: {
     fontSize: 12,
     fontWeight: '500',
+  },
+  reactionOptionsContainer: {
+    flexDirection: 'row',
+    marginTop: 8,
+    marginLeft: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  reactionOptionButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginHorizontal: 2,
+  },
+  reactionOptionEmoji: {
+    fontSize: 18,
   },
 });

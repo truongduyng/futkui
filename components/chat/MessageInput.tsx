@@ -1,19 +1,16 @@
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Keyboard, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface MessageInputProps {
   onSendMessage: (message: string) => void;
-  onAddReaction: (emoji: string) => void;
   disabled?: boolean;
 }
 
-const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '😡'];
-
-export function MessageInput({ onSendMessage, onAddReaction, disabled }: MessageInputProps) {
+export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
   const [message, setMessage] = useState('');
-  const [showReactions, setShowReactions] = useState(false);
+  const inputRef = useRef<TextInput>(null);
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
@@ -21,39 +18,15 @@ export function MessageInput({ onSendMessage, onAddReaction, disabled }: Message
     if (message.trim() && !disabled) {
       onSendMessage(message.trim());
       setMessage('');
+      Keyboard.dismiss();
     }
-  };
-
-  const handleReaction = (emoji: string) => {
-    onAddReaction(emoji);
-    setShowReactions(false);
   };
 
   return (
     <View style={styles.container}>
-      {showReactions && (
-        <View style={[styles.reactionsContainer, { backgroundColor: colors.background }]}>
-          {QUICK_REACTIONS.map((emoji) => (
-            <TouchableOpacity
-              key={emoji}
-              style={styles.reactionButton}
-              onPress={() => handleReaction(emoji)}
-            >
-              <Text style={styles.reactionEmoji}>{emoji}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-
       <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
-        <TouchableOpacity
-          style={styles.reactionToggle}
-          onPress={() => setShowReactions(!showReactions)}
-        >
-          <Text style={[styles.reactionToggleText, { color: colors.text }]}>😊</Text>
-        </TouchableOpacity>
-
         <TextInput
+          ref={inputRef}
           style={[styles.textInput, { color: colors.text }]}
           value={message}
           onChangeText={setMessage}
@@ -62,6 +35,10 @@ export function MessageInput({ onSendMessage, onAddReaction, disabled }: Message
           multiline
           maxLength={1000}
           editable={!disabled}
+          textAlignVertical="top"
+          scrollEnabled={true}
+          returnKeyType="default"
+          blurOnSubmit={false}
         />
 
         <TouchableOpacity
@@ -83,26 +60,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-  },
-  reactionsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginBottom: 8,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  reactionButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginHorizontal: 4,
-  },
-  reactionEmoji: {
-    fontSize: 20,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 30,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -110,31 +68,29 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingHorizontal: 12,
     paddingVertical: 8,
+    minHeight: 44,
+    maxHeight: 120,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
-  reactionToggle: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  reactionToggleText: {
-    fontSize: 20,
-  },
   textInput: {
     flex: 1,
     fontSize: 16,
+    minHeight: 28,
     maxHeight: 100,
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 8,
+    lineHeight: 20,
   },
   sendButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 16,
     marginLeft: 8,
+    alignSelf: 'flex-end',
   },
   sendButtonText: {
     color: 'white',

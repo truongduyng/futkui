@@ -6,7 +6,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
-import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ChatScreen() {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
@@ -39,28 +39,23 @@ export default function ChatScreen() {
     }
   };
 
-  const handleAddReaction = async (emoji: string) => {
+  const handleAddReaction = async (messageId: string, emoji: string) => {
     if (!groupId) return;
 
     try {
-      // For now, we'll add a reaction to the last message
-      // In a real app, you'd want to let users select which message to react to
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage && lastMessage.id) {
-        await addReaction({
-          messageId: lastMessage.id,
-          emoji,
-          userName: currentUserName,
-        });
-      }
+      await addReaction({
+        messageId,
+        emoji,
+        userName: currentUserName,
+      });
     } catch (error) {
       Alert.alert('Error', 'Failed to add reaction. Please try again.');
       console.error('Error adding reaction:', error);
     }
   };
 
-  const handleReactionPress = (emoji: string) => {
-    handleAddReaction(emoji);
+  const handleReactionPress = (messageId: string, emoji: string) => {
+    handleAddReaction(messageId, emoji);
   };
 
   const renderMessage = ({ item: message }: { item: any }) => {
@@ -73,7 +68,8 @@ export default function ChatScreen() {
         createdAt={new Date(message.createdAt)}
         isOwnMessage={isOwnMessage}
         reactions={message.reactions || []}
-        onReactionPress={handleReactionPress}
+        onReactionPress={(emoji: string) => handleReactionPress(message.id, emoji)}
+        onAddReaction={(emoji: string) => handleAddReaction(message.id, emoji)}
       />
     );
   };
@@ -110,33 +106,40 @@ export default function ChatScreen() {
 
   return (
     <AuthGate>
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={[styles.backButton, { color: colors.tint }]}>← Back</Text>
-          </TouchableOpacity>
-          <View style={styles.groupInfo}>
-            <Text style={styles.groupEmoji}>{group.avatar}</Text>
-            <View>
-              <Text style={[styles.groupName, { color: colors.text }]}>{group.name}</Text>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        >
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()}>
+              <Text style={[styles.backButton, { color: colors.tint }]}>← Back</Text>
+            </TouchableOpacity>
+            <View style={styles.groupInfo}>
+              <Text style={styles.groupEmoji}>{group.avatar}</Text>
+              <View>
+                <Text style={[styles.groupName, { color: colors.text }]}>{group.name}</Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        <FlatList
-          data={messages}
-          renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
-          style={styles.messageList}
-          contentContainerStyle={styles.messageListContent}
-          inverted={false}
-        />
+          <FlatList
+            data={messages}
+            renderItem={renderMessage}
+            keyExtractor={(item) => item.id}
+            style={styles.messageList}
+            contentContainerStyle={styles.messageListContent}
+            inverted={false}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          />
 
-        <MessageInput
-          onSendMessage={handleSendMessage}
-          onAddReaction={handleAddReaction}
-        />
-      </View>
+          <MessageInput
+            onSendMessage={handleSendMessage}
+          />
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </AuthGate>
   );
 }
