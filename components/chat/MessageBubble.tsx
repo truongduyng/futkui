@@ -6,12 +6,20 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 interface Reaction {
   id: string;
   emoji: string;
-  userName: string;
+  user?: {
+    id: string;
+    handle: string;
+    displayName?: string;
+  };
 }
 
 interface MessageBubbleProps {
   content: string;
-  authorName: string;
+  author?: {
+    id: string;
+    handle: string;
+    displayName?: string;
+  };
   createdAt: Date;
   isOwnMessage: boolean;
   reactions: Reaction[];
@@ -21,7 +29,7 @@ interface MessageBubbleProps {
 
 export function MessageBubble({
   content,
-  authorName,
+  author,
   createdAt,
   isOwnMessage,
   reactions,
@@ -77,7 +85,7 @@ export function MessageBubble({
     >
       {!isOwnMessage && (
         <Text style={[styles.authorName, { color: colors.text }]}>
-          {authorName}
+          {author?.handle || 'Unknown'}
         </Text>
       )}
 

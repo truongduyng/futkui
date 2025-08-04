@@ -12,11 +12,20 @@ interface Group {
   createdAt: number;
   shareLink: string;
   adminId: string;
+  admin?: {
+    id: string;
+    handle: string;
+    displayName?: string;
+  };
   messages: {
     id: string;
     content: string;
-    authorName: string;
     createdAt: number;
+    author?: {
+      id: string;
+      handle: string;
+      displayName?: string;
+    };
   }[];
 }
 
@@ -88,7 +97,7 @@ export function GroupList({ groups, onGroupPress, onCreateGroup }: GroupListProp
 
           {lastMessage && (
             <Text style={[styles.lastMessage, { color: colors.tabIconDefault }]}>
-              {lastMessage.authorName}: {lastMessage.content}
+              {lastMessage.author?.handle || 'Unknown'}: {lastMessage.content}
             </Text>
           )}
         </View>

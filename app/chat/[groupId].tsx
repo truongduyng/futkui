@@ -14,24 +14,26 @@ export default function ChatScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
-  const { instantClient, useGroup, sendMessage, addReaction } = useInstantDB();
+  const { instantClient, useGroup, useProfile, sendMessage, addReaction } = useInstantDB();
   const { user } = instantClient.useAuth();
   const { data: groupData, isLoading } = useGroup(groupId || '');
-
-  // Use the authenticated user's email as the current user name
-  const currentUserName = user?.email || 'Anonymous';
+  const { data: profileData } = useProfile();
+  const currentProfile = profileData?.profiles?.[0];
 
   const group = groupData?.groups?.[0];
   const messages = group?.messages || [];
 
   const handleSendMessage = async (content: string) => {
-    if (!groupId) return;
+    if (!groupId || !currentProfile) {
+      Alert.alert('Error', 'Please wait for your profile to load.');
+      return;
+    }
 
     try {
       await sendMessage({
         groupId,
         content,
-        authorName: currentUserName,
+        authorId: currentProfile.id,
       });
     } catch (error) {
       Alert.alert('Error', 'Failed to send message. Please try again.');
@@ -40,13 +42,16 @@ export default function ChatScreen() {
   };
 
   const handleAddReaction = async (messageId: string, emoji: string) => {
-    if (!groupId) return;
+    if (!currentProfile) {
+      Alert.alert('Error', 'Please wait for your profile to load.');
+      return;
+    }
 
     try {
       await addReaction({
         messageId,
         emoji,
-        userName: currentUserName,
+        userId: currentProfile.id,
       });
     } catch (error) {
       Alert.alert('Error', 'Failed to add reaction. Please try again.');
@@ -59,12 +64,12 @@ export default function ChatScreen() {
   };
 
   const renderMessage = ({ item: message }: { item: any }) => {
-    const isOwnMessage = message.authorName === currentUserName;
+    const isOwnMessage = message.author?.id === currentProfile?.id;
 
     return (
       <MessageBubble
         content={message.content}
-        authorName={message.authorName}
+        author={message.author}
         createdAt={new Date(message.createdAt)}
         isOwnMessage={isOwnMessage}
         reactions={message.reactions || []}
@@ -107,7 +112,24 @@ export default function ChatScreen() {
   return (
     <AuthGate>
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={[styles.backButton, { color: colors.tint }]}>← Back</Text>
+          </TouchableOpacity>
+          <View style={styles.groupInfo}>
+            <Text style={[styles.groupEmoji, { color: colors.text }]}>
+              {group.name.charAt(0).toUpperCase()}
+            </Text>
+            <View>
+              <Text style={[styles.groupName, { color: colors.text }]}>
+                {group.name}
+              </Text>
+              <Text style={[styles.memberCount, { color: colors.tabIconDefault }]}>
+                Created by {group.admin?.handle || 'Unknown'}
+              </Text>
+            </View>
+          </View>
+        </View>
 
         <KeyboardAvoidingView
           style={{ flex: 1 }}

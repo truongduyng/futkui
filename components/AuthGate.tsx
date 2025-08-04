@@ -1,7 +1,7 @@
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useInstantDB } from '@/hooks/useInstantDB';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface AuthGateProps {
@@ -13,10 +13,21 @@ export function AuthGate({ children }: AuthGateProps) {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
-  const { instantClient } = useInstantDB();
+  const { instantClient, useProfile, createProfile } = useInstantDB();
   const { user, isLoading: authLoading } = instantClient.useAuth();
 
-  if (authLoading) {
+  // Get user profile if authenticated - always call the hook
+  const { data: profileData, isLoading: profileLoading } = useProfile();
+  const profile = profileData?.profiles?.[0];
+
+  // Create profile if user exists but no profile
+  useEffect(() => {
+    if (user && !profileLoading && !profile) {
+      createProfile(user.id);
+    }
+  }, [user, profileLoading, profile, createProfile]);
+
+  if (authLoading || (user && profileLoading)) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Text style={[styles.text, { color: colors.text }]}>Loading...</Text>
@@ -24,8 +35,29 @@ export function AuthGate({ children }: AuthGateProps) {
     );
   }
 
-  if (user) {
-    return <>{children}</>;
+  if (user && profile) {
+    return (
+      <View style={{ flex: 1 }}>
+        {/* Sign out button */}
+        <View style={[styles.header, { backgroundColor: colors.background }]}>
+          <View style={styles.profileInfo}>
+            <Text style={[styles.profileName, { color: colors.text }]}>
+              {profile.handle}
+            </Text>
+            <Text style={[styles.userEmail, { color: colors.tabIconDefault }]}>
+              {user.email}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.signOutButton, { backgroundColor: colors.tint }]}
+            onPress={() => instantClient.auth.signOut()}
+          >
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
+        {children}
+      </View>
+    );
   }
 
   return (
@@ -68,9 +100,9 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
       </Text>
       <TextInput
         style={[styles.input, {
-          borderColor: colors.border,
+          borderColor: colors.icon,
           color: colors.text,
-          backgroundColor: colors.card
+          backgroundColor: colors.background
         }]}
         placeholder="Enter your email"
         placeholderTextColor={colors.tabIconDefault}
@@ -125,9 +157,9 @@ function CodeStep({ sentEmail, onBack, colors, instantClient }: {
       </Text>
       <TextInput
         style={[styles.input, {
-          borderColor: colors.border,
+          borderColor: colors.icon,
           color: colors.text,
-          backgroundColor: colors.card
+          backgroundColor: colors.background
         }]}
         placeholder="Enter 6-digit code"
         placeholderTextColor={colors.tabIconDefault}
@@ -164,6 +196,36 @@ const styles = StyleSheet.create({
     width: '80%',
     maxWidth: 300,
     alignItems: 'center',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  userEmail: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  signOutButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  signOutText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
   },
   title: {
     fontSize: 24,

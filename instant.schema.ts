@@ -11,6 +11,11 @@ const _schema = i.schema({
     $users: i.entity({
       email: i.string().unique().indexed().optional(),
     }),
+    profiles: i.entity({
+      handle: i.string().unique().indexed(),
+      displayName: i.string().optional(),
+      createdAt: i.number(),
+    }),
     colors: i.entity({
       value: i.string().optional(),
     }),
@@ -23,7 +28,6 @@ const _schema = i.schema({
       shareLink: i.string().unique(),
     }),
     messages: i.entity({
-      authorName: i.string(),
       content: i.string(),
       createdAt: i.number(),
       updatedAt: i.number(),
@@ -31,10 +35,21 @@ const _schema = i.schema({
     reactions: i.entity({
       createdAt: i.number(),
       emoji: i.string(),
-      userName: i.string(),
     }),
   },
   links: {
+    userProfiles: {
+      forward: { on: "profiles", has: "one", label: "user" },
+      reverse: { on: "$users", has: "one", label: "profile" },
+    },
+    groupAdmins: {
+      forward: { on: "groups", has: "one", label: "admin" },
+      reverse: { on: "profiles", has: "many", label: "adminGroups" },
+    },
+    messageAuthors: {
+      forward: { on: "messages", has: "one", label: "author", required: true },
+      reverse: { on: "profiles", has: "many", label: "messages" },
+    },
     groupsMessages: {
       forward: {
         on: "groups",
@@ -59,6 +74,14 @@ const _schema = i.schema({
         label: "message",
       },
     },
+    reactionUsers: {
+      forward: { on: "reactions", has: "one", label: "user" },
+      reverse: { on: "profiles", has: "many", label: "reactions" },
+    },
+    profileAvatars: {
+      forward: { on: "profiles", has: "one", label: "avatar" },
+      reverse: { on: "$files", has: "one", label: "profile" },
+    }
   },
   rooms: {},
 });

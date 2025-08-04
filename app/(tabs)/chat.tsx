@@ -5,26 +5,19 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Alert, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
-export default function HomeScreen() {
+export default function ChatScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [currentUserName, setCurrentUserName] = useState('');
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
-  const { useGroups, createGroup } = useInstantDB();
+  const { useGroups, useProfile, createGroup } = useInstantDB();
   const { data: groupsData, isLoading, error } = useGroups();
-
-  useEffect(() => {
-    // For testing, set a random user name
-    if (!currentUserName) {
-      const randomNames = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank'];
-      setCurrentUserName(randomNames[Math.floor(Math.random() * randomNames.length)]);
-    }
-  }, [currentUserName]);
+  const { data: profileData } = useProfile();
+  const currentProfile = profileData?.profiles?.[0];
 
   const handleGroupPress = (group: any) => {
     router.push({
@@ -34,10 +27,15 @@ export default function HomeScreen() {
   };
 
   const handleCreateGroup = async (groupData: { name: string; description: string; avatar: string }) => {
+    if (!currentProfile) {
+      Alert.alert('Error', 'Please wait for your profile to load.');
+      return;
+    }
+
     try {
       await createGroup({
         ...groupData,
-        adminId: currentUserName, // Using username as admin ID for simplicity
+        adminId: currentProfile.id, // Use profile ID as admin ID
       });
       Alert.alert('Success', 'Group created successfully!');
     } catch (error) {

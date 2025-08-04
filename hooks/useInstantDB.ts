@@ -16,6 +16,9 @@ export function useInstantDB() {
   const useGroups = () => {
     return db.useQuery({
       groups: {
+        admin: {
+          avatar: {},
+        },
         messages: {}, // No $: { order/limit } here!
       },
     });
@@ -25,13 +28,55 @@ export function useInstantDB() {
     return db.useQuery({
       groups: {
         $: { where: { id: groupId } },
+        admin: {
+          avatar: {},
+        },
         messages: {
           $: { order: { createdAt: 'asc' } } as any, // Get all messages in chronological order
-          reactions: {},
+          author: {
+            avatar: {},
+          },
+          reactions: {
+            user: {},
+          },
         },
       },
     });
   };
+
+  const useProfile = () => {
+    const { user } = db.useAuth();
+    if (!user) {
+      throw new Error("useProfile must be used after auth");
+    }
+
+    return db.useQuery({
+      profiles: {
+        $: { where: { "user.id": user.id } },
+        avatar: {},
+      }
+    });
+  };
+
+  // Utility function to generate random handle
+  const generateHandle = () => {
+    const adjectives = ['Quick', 'Lazy', 'Happy', 'Sad', 'Bright', 'Dark', 'Swift', 'Calm'];
+    const nouns = ['Fox', 'Dog', 'Cat', 'Bird', 'Fish', 'Mouse', 'Wolf', 'Bear'];
+    const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+    const randomSuffix = Math.floor(Math.random() * 9000) + 1000;
+    return `${randomAdjective}${randomNoun}${randomSuffix}`;
+  };
+
+  // Profile management
+  const createProfile = useCallback(async (userId: string) => {
+    await db.transact(
+      db.tx.profiles[id()].update({
+        handle: generateHandle(),
+        createdAt: Date.now(),
+      }).link({ user: userId })
+    );
+  }, [db]);
 
   // Mutation functions
   const createGroup = useCallback(
@@ -50,8 +95,7 @@ export function useInstantDB() {
           avatar: groupData.avatar,
           createdAt: Date.now(),
           shareLink,
-          adminId: groupData.adminId,
-        }),
+        }).link({ admin: groupData.adminId }),
       ]);
 
       return result;
@@ -63,15 +107,17 @@ export function useInstantDB() {
     async (messageData: {
       groupId: string;
       content: string;
-      authorName: string;
+      authorId: string;
     }) => {
       const result = await db.transact([
         db.tx.messages[id()].update({
           content: messageData.content,
-          authorName: messageData.authorName,
           createdAt: Date.now(),
           updatedAt: Date.now(),
-        }).link({ group: messageData.groupId }),
+        }).link({
+          group: messageData.groupId,
+          author: messageData.authorId
+        }),
       ]);
 
       return result;
@@ -83,14 +129,16 @@ export function useInstantDB() {
     async (reactionData: {
       messageId: string;
       emoji: string;
-      userName: string;
+      userId: string;
     }) => {
       const result = await db.transact([
         db.tx.reactions[id()].update({
           emoji: reactionData.emoji,
-          userName: reactionData.userName,
           createdAt: Date.now(),
-        }).link({ message: reactionData.messageId }),
+        }).link({
+          message: reactionData.messageId,
+          user: reactionData.userId
+        }),
       ]);
 
       return result;
@@ -113,6 +161,8 @@ export function useInstantDB() {
     instantClient,
     useGroups,
     useGroup,
+    useProfile,
+    createProfile,
     createGroup,
     sendMessage,
     addReaction,
