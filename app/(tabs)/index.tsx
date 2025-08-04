@@ -6,7 +6,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 export default function HomeScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -50,7 +50,7 @@ export default function HomeScreen() {
 
   return (
     <AuthGate>
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         {isLoading && (
           <View style={styles.loadingContainer}>
             <Text style={[styles.loadingText, { color: colors.text }]}>Loading groups...</Text>
@@ -74,7 +74,7 @@ export default function HomeScreen() {
           onClose={() => setShowCreateModal(false)}
           onCreateGroup={handleCreateGroup}
         />
-      </View>
+      </SafeAreaView>
     </AuthGate>
   );
 }

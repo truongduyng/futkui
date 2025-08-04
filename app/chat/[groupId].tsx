@@ -109,21 +109,9 @@ export default function ChatScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         >
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={[styles.backButton, { color: colors.tint }]}>← Back</Text>
-            </TouchableOpacity>
-            <View style={styles.groupInfo}>
-              <Text style={styles.groupEmoji}>{group.avatar}</Text>
-              <View>
-                <Text style={[styles.groupName, { color: colors.text }]}>{group.name}</Text>
-              </View>
-            </View>
-          </View>
-
           <FlatList
             data={messages}
             renderItem={renderMessage}
