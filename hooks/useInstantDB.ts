@@ -108,10 +108,12 @@ export function useInstantDB() {
       groupId: string;
       content: string;
       authorId: string;
+      authorName: string;
     }) => {
       const result = await db.transact([
         db.tx.messages[id()].update({
           content: messageData.content,
+          authorName: messageData.authorName,
           createdAt: Date.now(),
           updatedAt: Date.now(),
         }).link({

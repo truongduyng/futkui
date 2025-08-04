@@ -29,6 +29,7 @@ const _schema = i.schema({
     }),
     messages: i.entity({
       content: i.string(),
+      authorName: i.string(),
       createdAt: i.number(),
       updatedAt: i.number(),
     }),

@@ -6,7 +6,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
-import { Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 
 export default function ChatScreen() {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
@@ -14,8 +14,7 @@ export default function ChatScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
-  const { instantClient, useGroup, useProfile, sendMessage, addReaction } = useInstantDB();
-  const { user } = instantClient.useAuth();
+  const { useGroup, useProfile, sendMessage, addReaction } = useInstantDB();
   const { data: groupData, isLoading } = useGroup(groupId || '');
   const { data: profileData } = useProfile();
   const currentProfile = profileData?.profiles?.[0];
@@ -34,6 +33,7 @@ export default function ChatScreen() {
         groupId,
         content,
         authorId: currentProfile.id,
+        authorName: currentProfile.handle,
       });
     } catch (error) {
       Alert.alert('Error', 'Failed to send message. Please try again.');
@@ -82,13 +82,8 @@ export default function ChatScreen() {
   if (isLoading) {
     return (
       <AuthGate>
-        <View style={[styles.container, { backgroundColor: colors.background }]}>
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={[styles.backButton, { color: colors.tint }]}>← Back</Text>
-            </TouchableOpacity>
-            <Text style={[styles.loadingText, { color: colors.text }]}>Loading...</Text>
-          </View>
+        <View style={[styles.container, styles.centered, { backgroundColor: colors.background }]}>
+          <Text style={[styles.loadingText, { color: colors.text }]}>Loading...</Text>
         </View>
       </AuthGate>
     );
@@ -97,13 +92,8 @@ export default function ChatScreen() {
   if (!group) {
     return (
       <AuthGate>
-        <View style={[styles.container, { backgroundColor: colors.background }]}>
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={[styles.backButton, { color: colors.tint }]}>← Back</Text>
-            </TouchableOpacity>
-            <Text style={[styles.errorText, { color: colors.text }]}>Group not found</Text>
-          </View>
+        <View style={[styles.container, styles.centered, { backgroundColor: colors.background }]}>
+          <Text style={[styles.errorText, { color: colors.text }]}>Group not found</Text>
         </View>
       </AuthGate>
     );
@@ -112,29 +102,11 @@ export default function ChatScreen() {
   return (
     <AuthGate>
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={[styles.backButton, { color: colors.tint }]}>← Back</Text>
-          </TouchableOpacity>
-          <View style={styles.groupInfo}>
-            <Text style={[styles.groupEmoji, { color: colors.text }]}>
-              {group.name.charAt(0).toUpperCase()}
-            </Text>
-            <View>
-              <Text style={[styles.groupName, { color: colors.text }]}>
-                {group.name}
-              </Text>
-              <Text style={[styles.memberCount, { color: colors.tabIconDefault }]}>
-                Created by {group.admin?.handle || 'Unknown'}
-              </Text>
-            </View>
-          </View>
-        </View>
 
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 65 : 0}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
           enabled
         >
           <FlatList
@@ -164,33 +136,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
+  centered: {
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  backButton: {
-    fontSize: 16,
-    marginRight: 16,
-  },
-  groupInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  groupEmoji: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  groupName: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  memberCount: {
-    fontSize: 12,
   },
   loadingText: {
     fontSize: 16,

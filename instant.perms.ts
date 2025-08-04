@@ -15,8 +15,8 @@ const rules = {
   groups: {
     allow: {
       view: "true",
-      create: "isAuthenticated",
-      update: "isAdmin",
+      create: "isAuthenticated", 
+      update: "isAuthenticated",
       delete: "isAdmin",
     },
     bind: ["isAuthenticated", "auth.id != null", "isAdmin", "auth.id in data.ref('admin.id')"]
