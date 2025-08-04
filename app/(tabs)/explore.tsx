@@ -1,6 +1,5 @@
 import { AuthGate } from "@/components/AuthGate";
 import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
 import { useInstantDB } from "@/hooks/useInstantDB";
 import React, { useState } from "react";
 import {
@@ -15,8 +14,7 @@ import {
 
 export default function ExploreScreen() {
   const [shareLink, setShareLink] = useState("");
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
+  const colors = Colors['light'];
 
   const { useGroups } = useInstantDB();
   const { data: groupsData } = useGroups();

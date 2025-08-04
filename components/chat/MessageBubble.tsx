@@ -1,5 +1,4 @@
 import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -36,8 +35,7 @@ export function MessageBubble({
   onReactionPress,
   onAddReaction,
 }: MessageBubbleProps) {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors['light'];
   const [showReactionOptions, setShowReactionOptions] = useState(false);
 
   const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '😡'];
@@ -96,7 +94,7 @@ export function MessageBubble({
           styles.bubble,
           isOwnMessage
             ? [styles.ownBubble, { backgroundColor: colors.tint }]
-            : [styles.otherBubble, { backgroundColor: colorScheme === 'dark' ? '#2A2A2A' : '#F0F0F0' }]
+            : [styles.otherBubble, { backgroundColor: '#F0F0F0' }]
         ]}
       >
         <Text style={[

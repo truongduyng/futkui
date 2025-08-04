@@ -1,5 +1,4 @@
 import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import React, { useState } from 'react';
 import {
     Alert,
@@ -24,8 +23,7 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState('👥');
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors['light'];
 
   const handleCreate = () => {
     if (!name.trim()) {

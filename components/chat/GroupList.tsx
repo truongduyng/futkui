@@ -1,5 +1,4 @@
 import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { instantClient } from '@/hooks/useInstantDB';
 import React from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -36,8 +35,7 @@ interface GroupListProps {
 }
 
 export function GroupList({ groups, onGroupPress, onCreateGroup }: GroupListProps) {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors['light'];
 
   // Ensure groups is always an array
   const safeGroups = groups || [];

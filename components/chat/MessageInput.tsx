@@ -1,5 +1,4 @@
 import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import React, { useRef, useState } from 'react';
 import { Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -11,8 +10,7 @@ interface MessageInputProps {
 export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const inputRef = useRef<TextInput>(null);
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors['light'];
 
   const handleSend = () => {
     if (message.trim() && !disabled) {

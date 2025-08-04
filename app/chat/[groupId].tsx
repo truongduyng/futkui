@@ -2,18 +2,15 @@ import { AuthGate } from '@/components/AuthGate';
 import { MessageBubble } from '@/components/chat/MessageBubble';
 import { MessageInput } from '@/components/chat/MessageInput';
 import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { useInstantDB } from '@/hooks/useInstantDB';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ChatScreen() {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
-  const router = useRouter();
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors['light'];
   const insets = useSafeAreaInsets();
 
   const { useGroup, useProfile, sendMessage, addReaction } = useInstantDB();

@@ -1,5 +1,4 @@
 import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import React, { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -9,8 +8,7 @@ interface AuthGateProps {
 }
 
 function AuthenticatedContent({ children }: { children: React.ReactNode }) {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors['light'];
   const { instantClient, useProfile, createProfile } = useInstantDB();
   const { user } = instantClient.useAuth();
 
@@ -44,8 +42,7 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
 
 export function AuthGate({ children }: AuthGateProps) {
   const [sentEmail, setSentEmail] = useState('');
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors['light'];
 
   const { instantClient } = useInstantDB();
   const { user, isLoading: authLoading } = instantClient.useAuth();

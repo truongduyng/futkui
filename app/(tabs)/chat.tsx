@@ -2,7 +2,6 @@ import { AuthGate } from '@/components/AuthGate';
 import { CreateGroupModal } from '@/components/chat/CreateGroupModal';
 import { GroupList } from '@/components/chat/GroupList';
 import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -11,8 +10,7 @@ import { Alert, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 function ChatScreenContent() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors['light'];
 
   const { useGroups, useProfile, createGroup } = useInstantDB();
   const { data: groupsData, isLoading, error } = useGroups();
