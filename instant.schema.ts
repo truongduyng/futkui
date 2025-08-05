@@ -36,6 +36,7 @@ const _schema = i.schema({
     reactions: i.entity({
       createdAt: i.number(),
       emoji: i.string(),
+      userName: i.string(),
     }),
   },
   links: {

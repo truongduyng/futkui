@@ -51,6 +51,7 @@ export default function ChatScreen() {
         messageId,
         emoji,
         userId: currentProfile.id,
+        userName: currentProfile.handle,
       });
     } catch (error) {
       Alert.alert('Error', 'Failed to add reaction. Please try again.');

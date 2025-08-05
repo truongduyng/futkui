@@ -132,10 +132,12 @@ export function useInstantDB() {
       messageId: string;
       emoji: string;
       userId: string;
+      userName: string;
     }) => {
       const result = await db.transact([
         db.tx.reactions[id()].update({
           emoji: reactionData.emoji,
+          userName: reactionData.userName,
           createdAt: Date.now(),
         }).link({
           message: reactionData.messageId,

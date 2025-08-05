@@ -56,7 +56,7 @@ export function MessageBubble({
   }, {} as Record<string, Reaction[]>);
 
   const handleLongPress = () => {
-    if (onAddReaction) {
+    if (onAddReaction && !isOwnMessage) {
       setShowReactionOptions(true);
     }
   };
@@ -87,25 +87,44 @@ export function MessageBubble({
         </Text>
       )}
 
-      <TouchableOpacity
-        onLongPress={handleLongPress}
-        activeOpacity={0.8}
-        style={[
-          styles.bubble,
-          isOwnMessage
-            ? [styles.ownBubble, { backgroundColor: colors.tint }]
-            : [styles.otherBubble, { backgroundColor: '#F0F0F0' }]
-        ]}
-      >
-        <Text style={[
-          styles.messageText,
-          isOwnMessage
-            ? styles.ownMessageText
-            : { color: colors.text }
-        ]}>
-          {content}
-        </Text>
-      </TouchableOpacity>
+      <View style={styles.messageContainer}>
+        <TouchableOpacity
+          onLongPress={handleLongPress}
+          activeOpacity={0.8}
+          style={[
+            styles.bubble,
+            isOwnMessage
+              ? [styles.ownBubble, { backgroundColor: colors.tint }]
+              : [styles.otherBubble, { backgroundColor: '#F0F0F0' }]
+          ]}
+        >
+          <Text style={[
+            styles.messageText,
+            isOwnMessage
+              ? styles.ownMessageText
+              : { color: colors.text }
+          ]}>
+            {content}
+          </Text>
+        </TouchableOpacity>
+
+        {showReactionOptions && onAddReaction && !isOwnMessage && (
+          <View style={[
+            styles.reactionOptionsContainer,
+            isOwnMessage ? styles.reactionOptionsOwn : styles.reactionOptionsOther
+          ]}>
+            {QUICK_REACTIONS.map((emoji) => (
+              <TouchableOpacity
+                key={emoji}
+                style={styles.reactionOptionButton}
+                onPress={() => handleAddReaction(emoji)}
+              >
+                <Text style={styles.reactionOptionEmoji}>{emoji}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
 
       <View style={styles.messageFooter}>
         <Text style={[styles.timeText, { color: colors.tabIconDefault }]}>
@@ -130,19 +149,6 @@ export function MessageBubble({
         )}
       </View>
 
-      {showReactionOptions && onAddReaction && (
-        <View style={[styles.reactionOptionsContainer, { backgroundColor: colors.background }]}>
-          {QUICK_REACTIONS.map((emoji) => (
-            <TouchableOpacity
-              key={emoji}
-              style={styles.reactionOptionButton}
-              onPress={() => handleAddReaction(emoji)}
-            >
-              <Text style={styles.reactionOptionEmoji}>{emoji}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
     </TouchableOpacity>
   );
 }
@@ -151,6 +157,9 @@ const styles = StyleSheet.create({
   container: {
     marginVertical: 4,
     maxWidth: '80%',
+  },
+  messageContainer: {
+    position: 'relative',
   },
   ownMessage: {
     alignSelf: 'flex-end',
@@ -200,12 +209,14 @@ const styles = StyleSheet.create({
   reactionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     marginLeft: 4,
     marginBottom: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
   },
   reactionEmoji: {
     fontSize: 14,
@@ -216,24 +227,35 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   reactionOptionsContainer: {
+    position: 'absolute',
+    top: '75%',
     flexDirection: 'row',
-    marginTop: 8,
-    marginLeft: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 25,
+    backgroundColor: 'white',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+    zIndex: 1000,
+  },
+  reactionOptionsOwn: {
+    right: 8,
+  },
+  reactionOptionsOther: {
+    left: 8,
   },
   reactionOptionButton: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 4,
     marginHorizontal: 2,
+    borderRadius: 8,
   },
   reactionOptionEmoji: {
-    fontSize: 18,
+    fontSize: 20,
   },
 });
