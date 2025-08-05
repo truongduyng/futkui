@@ -3,8 +3,8 @@ import { MessageBubble } from '@/components/chat/MessageBubble';
 import { MessageInput } from '@/components/chat/MessageInput';
 import { Colors } from '@/constants/Colors';
 import { useInstantDB } from '@/hooks/useInstantDB';
-import { useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
+import React, { useEffect } from 'react';
 import { Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -12,6 +12,7 @@ export default function ChatScreen() {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const colors = Colors['light'];
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
 
   const { useGroup, useProfile, sendMessage, addReaction, instantClient } = useInstantDB();
   const { data: groupData, isLoading } = useGroup(groupId || '');
@@ -21,6 +22,24 @@ export default function ChatScreen() {
 
   const group = groupData?.groups?.[0];
   const messages = group?.messages || [];
+
+  // Update navigation header when group data loads
+  useEffect(() => {
+    if (group) {
+      navigation.setOptions({
+        title: group.name,
+        headerBackTitle: 'Back',
+        headerShown: true,
+        headerStyle: {
+          backgroundColor: colors.background,
+        },
+        headerTintColor: colors.tint,
+        headerTitleStyle: {
+          color: colors.text,
+        },
+      });
+    }
+  }, [group, navigation, colors]);
 
   const handleSendMessage = async (content: string) => {
     if (!groupId || !currentProfile) {

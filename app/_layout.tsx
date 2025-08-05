@@ -19,6 +19,14 @@ export default function RootLayout() {
     <ThemeProvider value={DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen 
+          name="chat/[groupId]" 
+          options={{ 
+            headerShown: true,
+            title: 'Chat',
+            presentation: 'card'
+          }} 
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="dark" />
