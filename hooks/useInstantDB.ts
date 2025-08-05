@@ -127,25 +127,43 @@ export function useInstantDB() {
     [db]
   );
 
-  const addReaction = useCallback(
+  const addOrUpdateReaction = useCallback(
     async (reactionData: {
       messageId: string;
       emoji: string;
       userId: string;
       userName: string;
+      existingReactions: any[];
     }) => {
-      const result = await db.transact([
-        db.tx.reactions[id()].update({
-          emoji: reactionData.emoji,
-          userName: reactionData.userName,
-          createdAt: Date.now(),
-        }).link({
-          message: reactionData.messageId,
-          user: reactionData.userId
-        }),
-      ]);
+      // Find existing reaction by this user on this message
+      const existingReaction = reactionData.existingReactions.find(
+        (reaction: any) => reaction.user?.id === reactionData.userId
+      );
 
-      return result;
+      if (existingReaction) {
+        // Update existing reaction
+        const result = await db.transact([
+          db.tx.reactions[existingReaction.id].update({
+            emoji: reactionData.emoji,
+            userName: reactionData.userName,
+            createdAt: Date.now(),
+          })
+        ]);
+        return result;
+      } else {
+        // Create new reaction
+        const result = await db.transact([
+          db.tx.reactions[id()].update({
+            emoji: reactionData.emoji,
+            userName: reactionData.userName,
+            createdAt: Date.now(),
+          }).link({
+            message: reactionData.messageId,
+            user: reactionData.userId
+          }),
+        ]);
+        return result;
+      }
     },
     [db]
   );
@@ -169,7 +187,7 @@ export function useInstantDB() {
     createProfile,
     createGroup,
     sendMessage,
-    addReaction,
+    addReaction: addOrUpdateReaction,
     removeReaction,
   };
 }

@@ -13,9 +13,10 @@ export default function ChatScreen() {
   const colors = Colors['light'];
   const insets = useSafeAreaInsets();
 
-  const { useGroup, useProfile, sendMessage, addReaction } = useInstantDB();
+  const { useGroup, useProfile, sendMessage, addReaction, instantClient } = useInstantDB();
   const { data: groupData, isLoading } = useGroup(groupId || '');
   const { data: profileData } = useProfile();
+  const { user } = instantClient.useAuth();
   const currentProfile = profileData?.profiles?.[0];
 
   const group = groupData?.groups?.[0];
@@ -40,8 +41,8 @@ export default function ChatScreen() {
     }
   };
 
-  const handleAddReaction = async (messageId: string, emoji: string) => {
-    if (!currentProfile) {
+  const handleAddReaction = async (messageId: string, emoji: string, existingReactions: any[]) => {
+    if (!currentProfile || !user) {
       Alert.alert('Error', 'Please wait for your profile to load.');
       return;
     }
@@ -50,8 +51,9 @@ export default function ChatScreen() {
       await addReaction({
         messageId,
         emoji,
-        userId: currentProfile.id,
+        userId: currentProfile.id, // Use profile ID to match schema
         userName: currentProfile.handle,
+        existingReactions,
       });
     } catch (error) {
       Alert.alert('Error', 'Failed to add reaction. Please try again.');
@@ -59,8 +61,8 @@ export default function ChatScreen() {
     }
   };
 
-  const handleReactionPress = (messageId: string, emoji: string) => {
-    handleAddReaction(messageId, emoji);
+  const handleReactionPress = (messageId: string, emoji: string, existingReactions: any[]) => {
+    handleAddReaction(messageId, emoji, existingReactions);
   };
 
   const renderMessage = ({ item: message }: { item: any }) => {
@@ -73,8 +75,8 @@ export default function ChatScreen() {
         createdAt={new Date(message.createdAt)}
         isOwnMessage={isOwnMessage}
         reactions={message.reactions || []}
-        onReactionPress={(emoji: string) => handleReactionPress(message.id, emoji)}
-        onAddReaction={(emoji: string) => handleAddReaction(message.id, emoji)}
+        onReactionPress={(emoji: string) => handleReactionPress(message.id, emoji, message.reactions || [])}
+        onAddReaction={(emoji: string) => handleAddReaction(message.id, emoji, message.reactions || [])}
       />
     );
   };

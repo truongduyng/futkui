@@ -33,14 +33,13 @@ const rules = {
   reactions: {
     allow: {
       view: "true",
-      create: "isAuthenticated && isNotMessageAuthor",
-      update: "isOwner",
+      create: "isAuthenticated",
+      update: "isAuthenticated",
       delete: "isOwner",
     },
     bind: [
       "isAuthenticated", "auth.id != null", 
-      "isOwner", "auth.id in data.ref('user.id')",
-      "isNotMessageAuthor", "auth.id != data.ref('message.author.id')"
+      "isOwner", "auth.id in data.ref('user.user.id')"
     ]
   },
   $files: {
