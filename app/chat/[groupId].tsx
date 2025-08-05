@@ -65,19 +65,49 @@ export default function ChatScreen() {
     handleAddReaction(messageId, emoji, existingReactions);
   };
 
-  const renderMessage = ({ item: message }: { item: any }) => {
+  const shouldShowTimestamp = (currentMessage: any, previousMessage: any): boolean => {
+    if (!previousMessage) return true;
+    
+    const currentTime = new Date(currentMessage.createdAt);
+    const previousTime = new Date(previousMessage.createdAt);
+    
+    // Show timestamp if messages are more than 15 minutes apart
+    const timeDifference = currentTime.getTime() - previousTime.getTime();
+    const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
+    
+    return timeDifference >= fifteenMinutes;
+  };
+
+  const renderMessage = ({ item: message, index }: { item: any; index: number }) => {
     const isOwnMessage = message.author?.id === currentProfile?.id;
+    const previousMessage = index > 0 ? messages[index - 1] : null;
+    const showTimestamp = shouldShowTimestamp(message, previousMessage);
 
     return (
-      <MessageBubble
-        content={message.content}
-        author={message.author}
-        createdAt={new Date(message.createdAt)}
-        isOwnMessage={isOwnMessage}
-        reactions={message.reactions || []}
-        onReactionPress={(emoji: string) => handleReactionPress(message.id, emoji, message.reactions || [])}
-        onAddReaction={(emoji: string) => handleAddReaction(message.id, emoji, message.reactions || [])}
-      />
+      <>
+        {showTimestamp && (
+          <View style={styles.timestampHeader}>
+            <Text style={[styles.timestampText, { color: colors.tabIconDefault }]}>
+              {new Date(message.createdAt).toLocaleString([], {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </Text>
+          </View>
+        )}
+        <MessageBubble
+          content={message.content}
+          author={message.author}
+          createdAt={new Date(message.createdAt)}
+          isOwnMessage={isOwnMessage}
+          reactions={message.reactions || []}
+          onReactionPress={(emoji: string) => handleReactionPress(message.id, emoji, message.reactions || [])}
+          onAddReaction={(emoji: string) => handleAddReaction(message.id, emoji, message.reactions || [])}
+          showTimestamp={false}
+        />
+      </>
     );
   };
 
@@ -154,5 +184,17 @@ const styles = StyleSheet.create({
   messageListContent: {
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  timestampHeader: {
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+  timestampText: {
+    fontSize: 12,
+    fontWeight: '500',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
 });

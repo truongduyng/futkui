@@ -5,6 +5,7 @@ import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'rea
 interface Reaction {
   id: string;
   emoji: string;
+  userName?: string;
   user?: {
     id: string;
     handle: string;
@@ -24,6 +25,7 @@ interface MessageBubbleProps {
   reactions: Reaction[];
   onReactionPress: (emoji: string) => void;
   onAddReaction?: (emoji: string) => void;
+  showTimestamp?: boolean;
 }
 
 export function MessageBubble({
@@ -34,6 +36,7 @@ export function MessageBubble({
   reactions,
   onReactionPress,
   onAddReaction,
+  showTimestamp = true,
 }: MessageBubbleProps) {
   const colors = Colors['light'];
   const [showReactionOptions, setShowReactionOptions] = useState(false);
@@ -128,9 +131,11 @@ export function MessageBubble({
       </View>
 
       <View style={styles.messageFooter}>
-        <Text style={[styles.timeText, { color: colors.tabIconDefault }]}>
-          {formatTime(createdAt)}
-        </Text>
+        {showTimestamp && (
+          <Text style={[styles.timeText, { color: colors.tabIconDefault }]}>
+            {formatTime(createdAt)}
+          </Text>
+        )}
 
         {Object.keys(groupedReactions).length > 0 && (
           <View style={styles.reactionsContainer}>
