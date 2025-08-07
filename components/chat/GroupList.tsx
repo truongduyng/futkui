@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { instantClient } from '@/hooks/useInstantDB';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -36,6 +37,30 @@ interface GroupListProps {
 
 export function GroupList({ groups, onGroupPress, onCreateGroup }: GroupListProps) {
   const colors = Colors['light'];
+  const router = useRouter();
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyStateContainer}>
+      <Text style={[styles.emptyStateTitle, { color: colors.text }]}>No Groups Yet</Text>
+      <Text style={[styles.emptyStateMessage, { color: colors.tabIconDefault }]}>
+        Create a new group or join an existing one to start chatting!
+      </Text>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[styles.emptyStateButton, { backgroundColor: colors.tint }]}
+          onPress={onCreateGroup}
+        >
+          <Text style={styles.emptyStateButtonText}>Create Group</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.emptyStateButtonSecondary, { borderColor: colors.tint }]}
+          onPress={() => router.push('/(tabs)/explore')}
+        >
+          <Text style={[styles.emptyStateButtonSecondaryText, { color: colors.tint }]}>Join Group</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   // Ensure groups is always an array
   const safeGroups = groups || [];
@@ -124,7 +149,8 @@ export function GroupList({ groups, onGroupPress, onCreateGroup }: GroupListProp
         renderItem={renderGroup}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={safeGroups.length === 0 ? styles.emptyListContainer : styles.listContainer}
+        ListEmptyComponent={renderEmptyState}
       />
     </View>
   );
@@ -172,6 +198,9 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingHorizontal: 16,
+  },
+  emptyListContainer: {
+    flex: 1,
   },
   groupItem: {
     flexDirection: 'row',
@@ -225,5 +254,54 @@ const styles = StyleSheet.create({
   },
   memberCount: {
     fontSize: 12,
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingBottom: 64,
+  },
+  emptyStateTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  emptyStateMessage: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 22,
+  },
+  buttonContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 12,
+    width: '100%',
+  },
+  emptyStateButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    minWidth: 150,
+  },
+  emptyStateButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  emptyStateButtonSecondary: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    borderWidth: 1,
+    minWidth: 150,
+  },
+  emptyStateButtonSecondaryText: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

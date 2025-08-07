@@ -42,7 +42,9 @@ function ChatScreenContent() {
     }
   };
 
-  const groups = groupsData?.groups || [];
+  // Extract groups from memberships
+  const profile = groupsData?.profiles?.[0];
+  const groups = profile?.memberships?.map((membership: any) => membership.group) || [];
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>

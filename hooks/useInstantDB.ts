@@ -14,14 +14,24 @@ export function useInstantDB() {
 
   // Query hooks
   const useGroups = () => {
+    const { user } = db.useAuth();
+    if (!user) {
+      return { data: null, isLoading: false, error: null };
+    }
+
     return db.useQuery({
-      groups: {
-        admin: {
-          avatar: {},
-        },
-        messages: {
-          author: {
-            avatar: {},
+      profiles: {
+        $: { where: { "user.id": user.id } },
+        memberships: {
+          group: {
+            admin: {
+              avatar: {},
+            },
+            messages: {
+              author: {
+                avatar: {},
+              },
+            },
           },
         },
       },
@@ -91,15 +101,24 @@ export function useInstantDB() {
       adminId: string;
     }) => {
       const shareLink = `futkui-chat://group/${Math.random().toString(36).substring(2, 15)}`;
+      const groupId = id();
+      const membershipId = id();
 
       const result = await db.transact([
-        db.tx.groups[id()].update({
+        db.tx.groups[groupId].update({
           name: groupData.name,
           description: groupData.description,
           avatar: groupData.avatar,
           createdAt: Date.now(),
           shareLink,
         }).link({ admin: groupData.adminId }),
+        db.tx.memberships[membershipId].update({
+          createdAt: Date.now(),
+          role: 'admin',
+        }).link({ 
+          group: groupId, 
+          profile: groupData.adminId 
+        }),
       ]);
 
       return result;
@@ -183,6 +202,25 @@ export function useInstantDB() {
     [db]
   );
 
+  const joinGroup = useCallback(
+    async (groupId: string, profileId: string) => {
+      const membershipId = id();
+      
+      const result = await db.transact([
+        db.tx.memberships[membershipId].update({
+          createdAt: Date.now(),
+          role: 'member',
+        }).link({ 
+          group: groupId, 
+          profile: profileId 
+        }),
+      ]);
+
+      return result;
+    },
+    [db]
+  );
+
   return {
     instantClient,
     useGroups,
@@ -193,5 +231,6 @@ export function useInstantDB() {
     sendMessage,
     addReaction: addOrUpdateReaction,
     removeReaction,
+    joinGroup,
   };
 }

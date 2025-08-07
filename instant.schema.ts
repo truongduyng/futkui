@@ -38,6 +38,10 @@ const _schema = i.schema({
       emoji: i.string(),
       userName: i.string(),
     }),
+    memberships: i.entity({
+      createdAt: i.number(),
+      role: i.string().optional(), // 'member', 'admin', etc.
+    }),
   },
   links: {
     userProfiles: {
@@ -83,6 +87,14 @@ const _schema = i.schema({
     profileAvatars: {
       forward: { on: "profiles", has: "one", label: "avatar" },
       reverse: { on: "$files", has: "one", label: "profile" },
+    },
+    groupMemberships: {
+      forward: { on: "groups", has: "many", label: "memberships" },
+      reverse: { on: "memberships", has: "one", label: "group" },
+    },
+    membershipProfiles: {
+      forward: { on: "memberships", has: "one", label: "profile" },
+      reverse: { on: "profiles", has: "many", label: "memberships" },
     }
   },
   rooms: {},
