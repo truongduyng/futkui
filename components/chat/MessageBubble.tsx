@@ -41,6 +41,7 @@ export function MessageBubble({
   const colors = Colors["light"];
   const [showReactionOptions, setShowReactionOptions] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
+  const [messagePosition, setMessagePosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
   const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "😡"];
 
@@ -59,9 +60,13 @@ export function MessageBubble({
     return acc;
   }, {} as Record<string, Reaction[]>);
 
-  const handleLongPress = () => {
+  const handleLongPress = (event: any) => {
     if (onAddReaction && !isOwnMessage) {
-      setShowReactionOptions(true);
+      // Get the message bubble position
+      event.target.measure((x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
+        setMessagePosition({ x: pageX, y: pageY, width, height });
+        setShowReactionOptions(true);
+      });
     }
   };
 
@@ -129,7 +134,11 @@ export function MessageBubble({
             <View
               style={[
                 styles.reactionOptionsContainer,
-                styles.reactionOptionsOther,
+                {
+                  position: 'absolute',
+                  left: messagePosition.x,
+                  top: messagePosition.y + messagePosition.height + 10,
+                }
               ]}
             >
               {QUICK_REACTIONS.map((emoji) => (
@@ -344,8 +353,8 @@ const styles = StyleSheet.create({
   reactionModalOverlay: {
     flex: 1,
     backgroundColor: "transparent",
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
   },
   reactionOptionsContainer: {
     flexDirection: "row",
