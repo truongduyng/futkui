@@ -148,6 +148,7 @@ export function useInstantDB() {
         db.tx.memberships[membershipId].update({
           createdAt: Date.now(),
           role: 'admin',
+          profileGroupKey: `${groupData.adminId}_${groupId}`,
         }).link({ 
           group: groupId, 
           profile: groupData.adminId 
@@ -238,11 +239,13 @@ export function useInstantDB() {
   const joinGroup = useCallback(
     async (groupId: string, profileId: string) => {
       const membershipId = id();
+      const profileGroupKey = `${profileId}_${groupId}`;
       
       const result = await db.transact([
         db.tx.memberships[membershipId].update({
           createdAt: Date.now(),
           role: 'member',
+          profileGroupKey,
         }).link({ 
           group: groupId, 
           profile: profileId 

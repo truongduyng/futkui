@@ -41,6 +41,7 @@ const _schema = i.schema({
     memberships: i.entity({
       createdAt: i.number(),
       role: i.string().optional(), // 'member', 'admin', etc.
+      profileGroupKey: i.string().unique(), // composite key for profile + group uniqueness
     }),
   },
   links: {

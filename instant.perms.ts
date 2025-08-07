@@ -37,20 +37,21 @@ const rules = {
   reactions: {
     allow: {
       view: "true",
-      create: "isAuthenticated",
-      update: "isAuthenticated",
+      create: "isAuthenticated && isGroupMember",
+      update: "isOwner",
       delete: "isOwner",
     },
     bind: [
       "isAuthenticated", "auth.id != null", 
-      "isOwner", "auth.id in data.ref('user.user.id')"
+      "isOwner", "auth.id in data.ref('user.user.id')",
+      "isGroupMember", "auth.id in data.ref('message.group.memberships.profile.user.id')"
     ]
   },
   memberships: {
     allow: {
       view: "true",
-      create: "isAuthenticated",
-      update: "isOwner || isGroupAdmin",
+      create: "isAuthenticated && (data.profile + '_' + data.group) == data.profileGroupKey",
+      update: "(isOwner || isGroupAdmin) && (data.profile + '_' + data.group) == data.profileGroupKey",
       delete: "isOwner || isGroupAdmin",
     },
     bind: [
