@@ -1,14 +1,14 @@
 import { Colors } from '@/constants/Colors';
 import React, { useState } from 'react';
 import {
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 interface CreateGroupModalProps {
@@ -17,22 +17,22 @@ interface CreateGroupModalProps {
   onCreateGroup: (groupData: { name: string; description: string; avatar: string }) => void;
 }
 
-const AVATAR_OPTIONS = ['👥', '🎮', '📚', '🏠', '🚗', '🍕', '🎵', '⚽', '💻', '🎨'];
+const AVATAR_OPTIONS = ['⚽', '🏓', '🏸'];
 
 export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGroupModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedAvatar, setSelectedAvatar] = useState('👥');
+  const [selectedAvatar, setSelectedAvatar] = useState('⚽');
   const colors = Colors['light'];
 
   const handleCreate = () => {
     if (!name.trim()) {
-      Alert.alert('Error', 'Please enter a group name');
+      Alert.alert('Error', 'Please enter a club name');
       return;
     }
 
     if (!description.trim()) {
-      Alert.alert('Error', 'Please enter a group description');
+      Alert.alert('Error', 'Please enter a club description');
       return;
     }
 
@@ -45,14 +45,14 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
     // Reset form
     setName('');
     setDescription('');
-    setSelectedAvatar('👥');
+    setSelectedAvatar('⚽');
     onClose();
   };
 
   const handleCancel = () => {
     setName('');
     setDescription('');
-    setSelectedAvatar('👥');
+    setSelectedAvatar('⚽');
     onClose();
   };
 
@@ -67,7 +67,7 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
           <TouchableOpacity onPress={handleCancel}>
             <Text style={[styles.cancelButton, { color: colors.tint }]}>Cancel</Text>
           </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.text }]}>Create Group</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Create Sports Club</Text>
           <TouchableOpacity onPress={handleCreate}>
             <Text style={[styles.createButton, { color: colors.tint }]}>Create</Text>
           </TouchableOpacity>
@@ -75,7 +75,7 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
 
         <ScrollView style={styles.content}>
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Group Avatar</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Sport</Text>
             <View style={styles.avatarGrid}>
               {AVATAR_OPTIONS.map((avatar) => (
                 <TouchableOpacity
@@ -93,7 +93,7 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
           </View>
 
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Group Name</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Club Name</Text>
             <TextInput
               style={[styles.input, {
                 color: colors.text,
@@ -102,7 +102,7 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
               }]}
               value={name}
               onChangeText={setName}
-              placeholder="Enter group name..."
+              placeholder="Enter club name..."
               placeholderTextColor={colors.tabIconDefault}
               maxLength={50}
             />
@@ -118,7 +118,7 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
               }]}
               value={description}
               onChangeText={setDescription}
-              placeholder="Describe your group..."
+              placeholder="Describe your sports club..."
               placeholderTextColor={colors.tabIconDefault}
               multiline
               numberOfLines={4}
@@ -170,8 +170,8 @@ const styles = StyleSheet.create({
   avatarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
+    gap: 12,
+    justifyContent: 'flex-start',},
   avatarOption: {
     width: 60,
     height: 60,

@@ -142,6 +142,7 @@ export function useInstantDB() {
           name: groupData.name,
           description: groupData.description,
           avatar: groupData.avatar,
+          adminId: groupData.adminId,
           createdAt: Date.now(),
           shareLink,
         }).link({ admin: groupData.adminId }),

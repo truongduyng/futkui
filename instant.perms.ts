@@ -50,8 +50,8 @@ const rules = {
   memberships: {
     allow: {
       view: "true",
-      create: "isAuthenticated && (data.profile + '_' + data.group) == data.profileGroupKey",
-      update: "(isOwner || isGroupAdmin) && (data.profile + '_' + data.group) == data.profileGroupKey",
+      create: "isAuthenticated",
+      update: "isOwner || isGroupAdmin",
       delete: "isOwner || isGroupAdmin",
     },
     bind: [
