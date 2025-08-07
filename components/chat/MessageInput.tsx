@@ -16,7 +16,6 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
     if (message.trim() && !disabled) {
       onSendMessage(message.trim());
       setMessage('');
-      Keyboard.dismiss();
     }
   };
 

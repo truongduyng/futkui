@@ -221,6 +221,7 @@ const styles = StyleSheet.create({
   },
   messageContainer: {
     position: 'relative',
+    zIndex: 1,
   },
   ownMessage: {
     alignSelf: 'flex-end',
@@ -314,7 +315,7 @@ const styles = StyleSheet.create({
     elevation: 5,
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.1)',
-    zIndex: 1000,
+    zIndex: 9999,
   },
   reactionOptionsOwn: {
     right: 8,

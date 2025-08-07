@@ -4,7 +4,7 @@ import { MessageInput } from '@/components/chat/MessageInput';
 import { Colors } from '@/constants/Colors';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -13,6 +13,8 @@ export default function ChatScreen() {
   const colors = Colors['light'];
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const flatListRef = useRef<FlatList>(null);
+  const previousMessageCountRef = useRef<number>(0);
 
   const { useGroup, useProfile, sendMessage, addReaction, instantClient } = useInstantDB();
   const { data: groupData, isLoading } = useGroup(groupId || '');
@@ -22,6 +24,28 @@ export default function ChatScreen() {
 
   const group = groupData?.groups?.[0];
   const messages = group?.messages || [];
+  
+  // Track message count changes to detect new messages
+  useEffect(() => {
+    const currentMessageCount = messages.length;
+    const previousMessageCount = previousMessageCountRef.current;
+    
+    if (currentMessageCount > 0) {
+      if (previousMessageCount === 0) {
+        // Initial load, scroll to bottom without animation
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: false });
+        }, 100);
+      } else if (currentMessageCount > previousMessageCount) {
+        // New message added, scroll to bottom with animation
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      }
+    }
+    
+    previousMessageCountRef.current = currentMessageCount;
+  }, [messages.length]);
 
   // Update navigation header when group data loads
   useEffect(() => {
@@ -54,6 +78,11 @@ export default function ChatScreen() {
         authorId: currentProfile.id,
         authorName: currentProfile.handle,
       });
+      
+      // Auto-scroll to bottom after sending message
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
     } catch (error) {
       Alert.alert('Error', 'Failed to send message. Please try again.');
       console.error('Error sending message:', error);
@@ -161,6 +190,7 @@ export default function ChatScreen() {
           enabled
         >
           <FlatList
+            ref={flatListRef}
             data={messages}
             renderItem={renderMessage}
             keyExtractor={(item) => item.id}
@@ -170,8 +200,7 @@ export default function ChatScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             automaticallyAdjustKeyboardInsets={false}
-            onContentSizeChange={() => {}}
-            onLayout={() => {}}
+            onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
           />
 
           <MessageInput
