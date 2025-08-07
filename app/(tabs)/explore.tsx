@@ -21,13 +21,13 @@ export default function ExploreScreen() {
   const { data: allGroupsData } = useAllGroups();
   const { data: profileData } = useProfile();
 
-  const myGroups = myGroupsData?.profiles?.[0]?.memberships?.map((m: any) => m.group) || [];
-  const allGroups = allGroupsData?.groups || [];
+  const myGroups = myGroupsData?.profiles?.[0]?.memberships?.map((m: any) => m.group).filter((g: any) => g && g.id) || [];
+  const allGroups = allGroupsData?.groups?.filter((g: any) => g && g.id) || [];
   const currentProfile = profileData?.profiles?.[0];
 
   // Filter out groups the user is already a member of
   const availableGroups = allGroups.filter((group: any) =>
-    !myGroups.some((myGroup: any) => myGroup.id === group.id)
+    group && group.id && !myGroups.some((myGroup: any) => myGroup && myGroup.id === group.id)
   );
 
   const handleJoinViaLink = async () => {
@@ -37,10 +37,10 @@ export default function ExploreScreen() {
     }
 
     // Find group by share link
-    const group = allGroups.find((g: any) => g.shareLink === shareLink.trim());
-    if (group && currentProfile) {
+    const group = allGroups.find((g: any) => g && g.shareLink === shareLink.trim());
+    if (group && group.id && currentProfile) {
       // Check if user is already a member
-      const isAlreadyMember = myGroups.some((myGroup: any) => myGroup.id === group.id);
+      const isAlreadyMember = myGroups.some((myGroup: any) => myGroup && myGroup.id === group.id);
       
       if (isAlreadyMember) {
         Alert.alert("Already a Member", `You are already a member of "${group.name}".`);
@@ -67,7 +67,7 @@ export default function ExploreScreen() {
     }
 
     // Check if user is already a member (extra safety check)
-    const isAlreadyMember = myGroups.some((myGroup: any) => myGroup.id === groupId);
+    const isAlreadyMember = myGroups.some((myGroup: any) => myGroup && myGroup.id === groupId);
     
     if (isAlreadyMember) {
       Alert.alert("Already a Member", `You are already a member of "${groupName}".`);
