@@ -89,10 +89,6 @@ export function GroupList({ groups, onGroupPress, onCreateGroup }: GroupListProp
             )}
           </View>
 
-          <Text style={[styles.groupDescription, { color: colors.tabIconDefault }]}>
-            {group.description}
-          </Text>
-
           {lastMessage && (
             <Text style={[styles.lastMessage, { color: colors.tabIconDefault }]}>
               {lastMessage.author?.handle || 'Unknown'}: {lastMessage.content}

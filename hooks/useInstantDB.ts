@@ -19,7 +19,11 @@ export function useInstantDB() {
         admin: {
           avatar: {},
         },
-        messages: {}, // No $: { order/limit } here!
+        messages: {
+          author: {
+            avatar: {},
+          },
+        },
       },
     });
   };
