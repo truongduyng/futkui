@@ -38,16 +38,16 @@ export function MessageBubble({
   onAddReaction,
   showTimestamp = true,
 }: MessageBubbleProps) {
-  const colors = Colors['light'];
+  const colors = Colors["light"];
   const [showReactionOptions, setShowReactionOptions] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
 
-  const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '😡'];
+  const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "😡"];
 
   const formatTime = (date: Date) => {
     return new Date(date).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit'
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -77,93 +77,114 @@ export function MessageBubble({
   };
 
   return (
-    <TouchableOpacity
-      style={[
-        styles.container,
-        isOwnMessage ? styles.ownMessage : styles.otherMessage
-      ]}
-      onPress={handleTapOutside}
-      activeOpacity={1}
-    >
-      {!isOwnMessage && (
-        <Text style={[styles.authorName, { color: colors.text }]}>
-          {author?.handle || 'Unknown'}
-        </Text>
+    <>
+      <TouchableOpacity
+        style={[
+          styles.container,
+          isOwnMessage ? styles.ownMessage : styles.otherMessage,
+        ]}
+        onPress={handleTapOutside}
+        activeOpacity={1}
+      >
+        {!isOwnMessage && (
+          <Text style={[styles.authorName, { color: colors.text }]}>
+            {author?.handle || "Unknown"}
+          </Text>
+        )}
+
+        <View style={styles.messageContainer}>
+          <TouchableOpacity
+            onLongPress={handleLongPress}
+            activeOpacity={1}
+            style={[
+              styles.bubble,
+              isOwnMessage
+                ? [styles.ownBubble, { backgroundColor: colors.tint }]
+                : [styles.otherBubble, { backgroundColor: "#F0F0F0" }],
+            ]}
+          >
+            <Text
+              style={[
+                styles.messageText,
+                isOwnMessage ? styles.ownMessageText : { color: colors.text },
+              ]}
+            >
+              {content}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+      {showReactionOptions && onAddReaction && !isOwnMessage && (
+        <Modal
+          visible={showReactionOptions}
+          transparent={true}
+          animationType="none"
+          onRequestClose={handleTapOutside}
+        >
+          <TouchableOpacity
+            style={styles.reactionModalOverlay}
+            activeOpacity={1}
+            onPress={handleTapOutside}
+          >
+            <View
+              style={[
+                styles.reactionOptionsContainer,
+                styles.reactionOptionsOther,
+              ]}
+            >
+              {QUICK_REACTIONS.map((emoji) => (
+                <TouchableOpacity
+                  key={emoji}
+                  style={styles.reactionOptionButton}
+                  onPress={() => handleAddReaction(emoji)}
+                >
+                  <Text style={styles.reactionOptionEmoji}>{emoji}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </TouchableOpacity>
+        </Modal>
       )}
 
-      <View style={styles.messageContainer}>
-        <TouchableOpacity
-          onLongPress={handleLongPress}
-          activeOpacity={0.8}
-          style={[
-            styles.bubble,
-            isOwnMessage
-              ? [styles.ownBubble, { backgroundColor: colors.tint }]
-              : [styles.otherBubble, { backgroundColor: '#F0F0F0' }]
-          ]}
-        >
-          <Text style={[
-            styles.messageText,
-            isOwnMessage
-              ? styles.ownMessageText
-              : { color: colors.text }
-          ]}>
-            {content}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.messageFooter}>
+          {showTimestamp && (
+            <Text style={[styles.timeText, { color: colors.tabIconDefault }]}>
+              {formatTime(createdAt)}
+            </Text>
+          )}
 
-        {showReactionOptions && onAddReaction && !isOwnMessage && (
-          <View style={[
-            styles.reactionOptionsContainer,
-            isOwnMessage ? styles.reactionOptionsOwn : styles.reactionOptionsOther
-          ]}>
-            {QUICK_REACTIONS.map((emoji) => (
+          {Object.keys(groupedReactions).length > 0 && (
+            <View style={styles.reactionsContainer}>
               <TouchableOpacity
-                key={emoji}
-                style={styles.reactionOptionButton}
-                onPress={() => handleAddReaction(emoji)}
+                style={styles.reactionButton}
+                onPress={() => setShowReactionDetails(true)}
               >
-                <Text style={styles.reactionOptionEmoji}>{emoji}</Text>
+                <View style={styles.reactionEmojis}>
+                  {Object.keys(groupedReactions)
+                    .slice(0, 3)
+                    .map((emoji, index) => (
+                      <Text
+                        key={emoji}
+                        style={[
+                          styles.reactionEmoji,
+                          index > 0 && styles.overlappingEmoji,
+                        ]}
+                      >
+                        {emoji}
+                      </Text>
+                    ))}
+                </View>
+                <Text style={[styles.reactionCount, { color: colors.text }]}>
+                  {Object.values(groupedReactions).reduce(
+                    (total, reactionList) => total + reactionList.length,
+                    0,
+                  )}
+                </Text>
               </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </View>
-
-      <View style={styles.messageFooter}>
-        {showTimestamp && (
-          <Text style={[styles.timeText, { color: colors.tabIconDefault }]}>
-            {formatTime(createdAt)}
-          </Text>
-        )}
-
-        {Object.keys(groupedReactions).length > 0 && (
-          <View style={styles.reactionsContainer}>
-            <TouchableOpacity
-              style={styles.reactionButton}
-              onPress={() => setShowReactionDetails(true)}
-            >
-              <View style={styles.reactionEmojis}>
-                {Object.keys(groupedReactions).slice(0, 3).map((emoji, index) => (
-                  <Text
-                    key={emoji}
-                    style={[
-                      styles.reactionEmoji,
-                      index > 0 && styles.overlappingEmoji
-                    ]}
-                  >
-                    {emoji}
-                  </Text>
-                ))}
-              </View>
-              <Text style={[styles.reactionCount, { color: colors.text }]}>
-                {Object.values(groupedReactions).reduce((total, reactionList) => total + reactionList.length, 0)}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
       {/* Reaction Details Bottom Sheet */}
       <Modal
         visible={showReactionDetails}
@@ -183,51 +204,70 @@ export function MessageBubble({
                   Reactions
                 </Text>
                 <TouchableOpacity onPress={() => setShowReactionDetails(false)}>
-                  <Text style={[styles.closeButton, { color: colors.tint }]}>✕</Text>
+                  <Text style={[styles.closeButton, { color: colors.tint }]}>
+                    ✕
+                  </Text>
                 </TouchableOpacity>
               </View>
 
               <ScrollView style={styles.reactionDetailsList}>
-                {Object.entries(groupedReactions).map(([emoji, reactionList]) => (
-                  <View key={emoji} style={styles.reactionDetailSection}>
-                    <View style={styles.reactionDetailHeader}>
-                      <Text style={styles.reactionDetailEmoji}>{emoji}</Text>
-                      <Text style={[styles.reactionDetailCount, { color: colors.text }]}>
-                        {reactionList.length}
-                      </Text>
-                    </View>
-                    {reactionList.map((reaction: Reaction) => (
-                      <View key={reaction.id} style={styles.reactionDetailItem}>
-                        <Text style={[styles.reactionDetailUser, { color: colors.text }]}>
-                          {reaction.user?.handle || reaction.userName || 'Unknown'}
+                {Object.entries(groupedReactions).map(
+                  ([emoji, reactionList]) => (
+                    <View key={emoji} style={styles.reactionDetailSection}>
+                      <View style={styles.reactionDetailHeader}>
+                        <Text style={styles.reactionDetailEmoji}>{emoji}</Text>
+                        <Text
+                          style={[
+                            styles.reactionDetailCount,
+                            { color: colors.text },
+                          ]}
+                        >
+                          {reactionList.length}
                         </Text>
                       </View>
-                    ))}
-                  </View>
-                ))}
+                      {reactionList.map((reaction: Reaction) => (
+                        <View
+                          key={reaction.id}
+                          style={styles.reactionDetailItem}
+                        >
+                          <Text
+                            style={[
+                              styles.reactionDetailUser,
+                              { color: colors.text },
+                            ]}
+                          >
+                            {reaction.user?.handle ||
+                              reaction.userName ||
+                              "Unknown"}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  ),
+                )}
               </ScrollView>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
-    </TouchableOpacity>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     marginVertical: 4,
-    maxWidth: '80%',
+    maxWidth: "80%",
   },
   messageContainer: {
-    position: 'relative',
+    position: "relative",
     zIndex: 1,
   },
   ownMessage: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
   },
   otherMessage: {
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   authorName: {
     fontSize: 12,
@@ -238,7 +278,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 18,
-    maxWidth: '100%',
+    maxWidth: "100%",
+    zIndex: 1,
   },
   ownBubble: {
     borderBottomRightRadius: 4,
@@ -251,12 +292,12 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   ownMessageText: {
-    color: 'white',
+    color: "white",
   },
   messageFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 4,
     marginHorizontal: 8,
   },
@@ -264,33 +305,33 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   reactionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
     marginTop: 4,
   },
   reactionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.08)",
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 4,
     marginLeft: 4,
     marginBottom: 2,
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
+    borderColor: "rgba(0, 0, 0, 0.1)",
   },
   reactionEmojis: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginRight: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   reactionEmoji: {
     fontSize: 14,
     width: 20,
     height: 20,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 20,
   },
   overlappingEmoji: {
@@ -298,27 +339,27 @@ const styles = StyleSheet.create({
   },
   reactionCount: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: "500",
+  },
+  reactionModalOverlay: {
+    flex: 1,
+    backgroundColor: "transparent",
+    justifyContent: "center",
+    alignItems: "center",
   },
   reactionOptionsContainer: {
-    position: 'absolute',
-    top: '75%',
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 25,
-    backgroundColor: 'white',
-    shadowColor: '#000',
+    backgroundColor: "white",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 10,
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
-    zIndex: 9999,
-  },
-  reactionOptionsOwn: {
-    right: 8,
+    borderColor: "rgba(0, 0, 0, 0.1)",
   },
   reactionOptionsOther: {
     left: 8,
@@ -334,32 +375,32 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   bottomSheet: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '50%',
+    maxHeight: "50%",
     paddingBottom: 34,
   },
   bottomSheetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+    borderBottomColor: "rgba(0, 0, 0, 0.1)",
   },
   bottomSheetTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   closeButton: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   reactionDetailsList: {
     paddingHorizontal: 20,
@@ -368,8 +409,8 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
   reactionDetailHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
   },
   reactionDetailEmoji: {
@@ -378,7 +419,7 @@ const styles = StyleSheet.create({
   },
   reactionDetailCount: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   reactionDetailItem: {
     paddingVertical: 4,
