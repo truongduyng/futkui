@@ -90,6 +90,7 @@ export function MessageBubble({
           styles.container,
           isOwnMessage ? styles.ownMessage : styles.otherMessage,
           !showAuthor && !isOwnMessage && styles.groupedMessage,
+          Object.keys(groupedReactions).length > 0 && { marginBottom: 16 },
         ]}
         onPress={handleTapOutside}
         activeOpacity={1}
@@ -158,42 +159,45 @@ export function MessageBubble({
         </Modal>
       )}
 
+        {Object.keys(groupedReactions).length > 0 && (
+          <View style={[
+            styles.reactionsContainer,
+            isOwnMessage ? styles.reactionsOwnMessage : styles.reactionsOtherMessage
+          ]}>
+            <TouchableOpacity
+              style={styles.reactionButton}
+              onPress={() => setShowReactionDetails(true)}
+            >
+              <View style={styles.reactionEmojis}>
+                {Object.keys(groupedReactions)
+                  .slice(0, 3)
+                  .map((emoji, index) => (
+                    <Text
+                      key={emoji}
+                      style={[
+                        styles.reactionEmoji,
+                        index > 0 && styles.overlappingEmoji,
+                      ]}
+                    >
+                      {emoji}
+                    </Text>
+                  ))}
+              </View>
+              <Text style={[styles.reactionCount, { color: colors.text }]}>
+                {Object.values(groupedReactions).reduce(
+                  (total, reactionList) => total + reactionList.length,
+                  0,
+                )}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View style={styles.messageFooter}>
           {showTimestamp && (
             <Text style={[styles.timeText, { color: colors.tabIconDefault }]}>
               {formatTime(createdAt)}
             </Text>
-          )}
-
-          {Object.keys(groupedReactions).length > 0 && (
-            <View style={styles.reactionsContainer}>
-              <TouchableOpacity
-                style={styles.reactionButton}
-                onPress={() => setShowReactionDetails(true)}
-              >
-                <View style={styles.reactionEmojis}>
-                  {Object.keys(groupedReactions)
-                    .slice(0, 3)
-                    .map((emoji, index) => (
-                      <Text
-                        key={emoji}
-                        style={[
-                          styles.reactionEmoji,
-                          index > 0 && styles.overlappingEmoji,
-                        ]}
-                      >
-                        {emoji}
-                      </Text>
-                    ))}
-                </View>
-                <Text style={[styles.reactionCount, { color: colors.text }]}>
-                  {Object.values(groupedReactions).reduce(
-                    (total, reactionList) => total + reactionList.length,
-                    0,
-                  )}
-                </Text>
-              </TouchableOpacity>
-            </View>
           )}
         </View>
       </TouchableOpacity>
@@ -320,41 +324,53 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   reactionsContainer: {
+    position: "absolute",
+    bottom: -10,
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "flex-end",
-    marginTop: 4,
+  },
+  reactionsOwnMessage: {
+    right: 8,
+  },
+  reactionsOtherMessage: {
+    right: 8,
   },
   reactionButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.08)",
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginLeft: 4,
-    marginBottom: 2,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: 10,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    marginLeft: 2,
     borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.1)",
+    borderColor: "rgba(0, 0, 0, 0.15)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    zIndex: 1,
   },
   reactionEmojis: {
     flexDirection: "row",
-    marginRight: 1,
+    marginRight: 2,
     alignItems: "center",
   },
   reactionEmoji: {
-    fontSize: 14,
-    width: 20,
-    height: 20,
+    fontSize: 10,
+    height: 12,
     textAlign: "center",
-    lineHeight: 20,
+    lineHeight: 12,
   },
   overlappingEmoji: {
-    marginLeft: -7,
+    marginLeft: -4,
   },
   reactionCount: {
-    fontSize: 13,
-    fontWeight: "500",
+    fontSize: 9,
+    fontWeight: "600",
+    minWidth: 10,
+    textAlign: "center",
   },
   reactionModalOverlay: {
     flex: 1,
