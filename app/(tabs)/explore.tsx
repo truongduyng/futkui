@@ -39,6 +39,15 @@ export default function ExploreScreen() {
     // Find group by share link
     const group = allGroups.find((g: any) => g.shareLink === shareLink.trim());
     if (group && currentProfile) {
+      // Check if user is already a member
+      const isAlreadyMember = myGroups.some((myGroup: any) => myGroup.id === group.id);
+      
+      if (isAlreadyMember) {
+        Alert.alert("Already a Member", `You are already a member of "${group.name}".`);
+        setShareLink("");
+        return;
+      }
+
       try {
         await joinGroup(group.id, currentProfile.id);
         Alert.alert("Success", `Joined group: ${group.name}`);
@@ -54,6 +63,14 @@ export default function ExploreScreen() {
   const handleJoinGroup = async (groupId: string, groupName: string) => {
     if (!currentProfile) {
       Alert.alert("Error", "Please wait for your profile to load.");
+      return;
+    }
+
+    // Check if user is already a member (extra safety check)
+    const isAlreadyMember = myGroups.some((myGroup: any) => myGroup.id === groupId);
+    
+    if (isAlreadyMember) {
+      Alert.alert("Already a Member", `You are already a member of "${groupName}".`);
       return;
     }
 

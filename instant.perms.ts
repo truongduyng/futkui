@@ -24,11 +24,15 @@ const rules = {
   messages: {
     allow: {
       view: "true",
-      create: "isAuthenticated",
-      update: "isAuthenticated",
+      create: "isAuthenticated && isGroupMember",
+      update: "isAuthor",
       delete: "isAuthor",
     },
-    bind: ["isAuthenticated", "auth.id != null", "isAuthor", "auth.id in data.ref('author.id')"]
+    bind: [
+      "isAuthenticated", "auth.id != null", 
+      "isAuthor", "auth.id in data.ref('author.id')",
+      "isGroupMember", "auth.id in data.ref('group.memberships.profile.user.id')"
+    ]
   },
   reactions: {
     allow: {
@@ -40,6 +44,19 @@ const rules = {
     bind: [
       "isAuthenticated", "auth.id != null", 
       "isOwner", "auth.id in data.ref('user.user.id')"
+    ]
+  },
+  memberships: {
+    allow: {
+      view: "true",
+      create: "isAuthenticated",
+      update: "isOwner || isGroupAdmin",
+      delete: "isOwner || isGroupAdmin",
+    },
+    bind: [
+      "isAuthenticated", "auth.id != null",
+      "isOwner", "auth.id in data.ref('profile.user.id')",
+      "isGroupAdmin", "auth.id in data.ref('group.admin.user.id')"
     ]
   },
   $files: {
