@@ -16,38 +16,53 @@ export default function ExploreScreen() {
   const [shareLink, setShareLink] = useState("");
   const colors = Colors['light'];
 
-  const { useGroups } = useInstantDB();
-  const { data: groupsData } = useGroups();
-  const groups = groupsData?.groups || [];
+  const { useGroups, useAllGroups, useProfile, joinGroup } = useInstantDB();
+  const { data: myGroupsData } = useGroups();
+  const { data: allGroupsData } = useAllGroups();
+  const { data: profileData } = useProfile();
 
-  const handleJoinGroup = async () => {
+  const myGroups = myGroupsData?.profiles?.[0]?.memberships?.map((m: any) => m.group) || [];
+  const allGroups = allGroupsData?.groups || [];
+  const currentProfile = profileData?.profiles?.[0];
+
+  // Filter out groups the user is already a member of
+  const availableGroups = allGroups.filter((group: any) =>
+    !myGroups.some((myGroup: any) => myGroup.id === group.id)
+  );
+
+  const handleJoinViaLink = async () => {
     if (!shareLink.trim()) {
       Alert.alert("Error", "Please enter a group link");
       return;
     }
 
     // Find group by share link
-    const group = groups.find((g: any) => g.shareLink === shareLink.trim());
-    if (group) {
-      Alert.alert("Success", `Joined group: ${group.name}`);
-      setShareLink("");
+    const group = allGroups.find((g: any) => g.shareLink === shareLink.trim());
+    if (group && currentProfile) {
+      try {
+        await joinGroup(group.id, currentProfile.id);
+        Alert.alert("Success", `Joined group: ${group.name}`);
+        setShareLink("");
+      } catch (error) {
+        Alert.alert("Error", "Failed to join group. Please try again.");
+      }
     } else {
       Alert.alert("Error", "Group not found. Please check the link.");
     }
   };
 
-  const handleShareGroup = (group: any) => {
-    Alert.alert(
-      "Share Group",
-      `Share this link to invite others to join "${group.name}":\n\n${group.shareLink}`,
-      [
-        {
-          text: "Copy Link",
-          onPress: () => console.log("Copy link:", group.shareLink),
-        },
-        { text: "Cancel", style: "cancel" },
-      ],
-    );
+  const handleJoinGroup = async (groupId: string, groupName: string) => {
+    if (!currentProfile) {
+      Alert.alert("Error", "Please wait for your profile to load.");
+      return;
+    }
+
+    try {
+      await joinGroup(groupId, currentProfile.id);
+      Alert.alert("Success", `Joined group: ${groupName}`);
+    } catch (error) {
+      Alert.alert("Error", "Failed to join group. Please try again.");
+    }
   };
 
   return (
@@ -76,7 +91,7 @@ export default function ExploreScreen() {
             />
             <TouchableOpacity
               style={[styles.joinButton, { backgroundColor: colors.tint }]}
-              onPress={handleJoinGroup}
+              onPress={handleJoinViaLink}
             >
               <Text style={styles.joinButtonText}>Join</Text>
             </TouchableOpacity>
@@ -85,24 +100,24 @@ export default function ExploreScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Your Groups
+            Community
           </Text>
           <View style={styles.groupList}>
-            {groups.length === 0 ? (
+            {availableGroups.length === 0 ? (
               <Text
                 style={[styles.emptyText, { color: colors.tabIconDefault }]}
               >
-                No groups yet. Create your first group in the Chats tab!
+                No groups available to join at the moment.
               </Text>
             ) : (
-              groups.map((group: any) => (
+              availableGroups.map((group: any) => (
                 <TouchableOpacity
                   key={group.id}
                   style={[
                     styles.groupItem,
                     { backgroundColor: colors.background },
                   ]}
-                  onPress={() => handleShareGroup(group)}
+                  onPress={() => handleJoinGroup(group.id, group.name)}
                 >
                   <Text style={styles.groupEmoji}>{group.avatar}</Text>
                   <View style={styles.groupInfo}>
@@ -123,12 +138,15 @@ export default function ExploreScreen() {
                         { color: colors.tabIconDefault },
                       ]}
                     >
-                      {group.members?.length || 0} members
+                      {group.memberships?.length || 0} members
                     </Text>
                   </View>
-                  <Text style={[styles.shareText, { color: colors.tint }]}>
-                    Share
-                  </Text>
+                  <TouchableOpacity
+                    style={[styles.joinGroupButton, { backgroundColor: colors.tint }]}
+                    onPress={() => handleJoinGroup(group.id, group.name)}
+                  >
+                    <Text style={styles.joinGroupButtonText}>Join</Text>
+                  </TouchableOpacity>
                 </TouchableOpacity>
               ))
             )}
@@ -216,6 +234,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   shareText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  joinGroupButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  joinGroupButtonText: {
+    color: 'white',
     fontSize: 14,
     fontWeight: "600",
   },

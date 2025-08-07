@@ -44,7 +44,9 @@ function ChatScreenContent() {
 
   // Extract groups from memberships
   const profile = groupsData?.profiles?.[0];
-  const groups = profile?.memberships?.map((membership: any) => membership.group) || [];
+  const groups = (profile?.memberships || [])
+    .map((membership: any) => membership.group)
+    .filter((group: any) => group && group.id);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>

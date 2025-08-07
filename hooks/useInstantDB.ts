@@ -38,12 +38,30 @@ export function useInstantDB() {
     });
   };
 
+  const useAllGroups = () => {
+    return db.useQuery({
+      groups: {
+        admin: {
+          avatar: {},
+        },
+        memberships: {
+          profile: {
+            user: {},
+          },
+        },
+      },
+    });
+  };
+
   const useGroup = (groupId: string) => {
     return db.useQuery({
       groups: {
         $: { where: { id: groupId } },
         admin: {
           avatar: {},
+        },
+        memberships: {
+          profile: {},
         },
         messages: {
           $: { order: { createdAt: 'asc' } } as any, // Get all messages in chronological order
@@ -68,6 +86,21 @@ export function useInstantDB() {
       profiles: {
         $: { where: { "user.id": user.id } },
         avatar: {},
+      }
+    });
+  };
+
+  const useUserMembership = (groupId: string) => {
+    const { user } = db.useAuth();
+    if (!user || !groupId) {
+      return { data: null, isLoading: false, error: null };
+    }
+
+    return db.useQuery({
+      memberships: {
+        $: { where: { "group.id": groupId, "profile.user.id": user.id } },
+        profile: { user: {} },
+        group: {},
       }
     });
   };
@@ -221,16 +254,29 @@ export function useInstantDB() {
     [db]
   );
 
+  const leaveGroup = useCallback(
+    async (membershipId: string) => {
+      const result = await db.transact([
+        db.tx.memberships[membershipId].delete(),
+      ]);
+      return result;
+    },
+    [db]
+  );
+
   return {
     instantClient,
     useGroups,
+    useAllGroups,
     useGroup,
     useProfile,
+    useUserMembership,
     createProfile,
     createGroup,
     sendMessage,
     addReaction: addOrUpdateReaction,
     removeReaction,
     joinGroup,
+    leaveGroup,
   };
 }
