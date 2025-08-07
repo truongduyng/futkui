@@ -130,6 +130,11 @@ export default function ChatScreen() {
     const isOwnMessage = message.author?.id === currentProfile?.id;
     const previousMessage = index > 0 ? messages[index - 1] : null;
     const showTimestamp = shouldShowTimestamp(message, previousMessage);
+    
+    // Check if this message is from the same author as the previous message
+    const showAuthor = !previousMessage || 
+      previousMessage.author?.id !== message.author?.id || 
+      showTimestamp; // Always show author after timestamp breaks
 
     return (
       <>
@@ -154,6 +159,7 @@ export default function ChatScreen() {
           onReactionPress={(emoji: string) => handleReactionPress(message.id, emoji, message.reactions || [])}
           onAddReaction={(emoji: string) => handleAddReaction(message.id, emoji, message.reactions || [])}
           showTimestamp={false}
+          showAuthor={showAuthor}
         />
       </>
     );

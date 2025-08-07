@@ -26,6 +26,7 @@ interface MessageBubbleProps {
   onReactionPress: (emoji: string) => void;
   onAddReaction?: (emoji: string) => void;
   showTimestamp?: boolean;
+  showAuthor?: boolean;
 }
 
 export function MessageBubble({
@@ -37,6 +38,7 @@ export function MessageBubble({
   onReactionPress,
   onAddReaction,
   showTimestamp = true,
+  showAuthor = true,
 }: MessageBubbleProps) {
   const colors = Colors["light"];
   const [showReactionOptions, setShowReactionOptions] = useState(false);
@@ -87,11 +89,12 @@ export function MessageBubble({
         style={[
           styles.container,
           isOwnMessage ? styles.ownMessage : styles.otherMessage,
+          !showAuthor && !isOwnMessage && styles.groupedMessage,
         ]}
         onPress={handleTapOutside}
         activeOpacity={1}
       >
-        {!isOwnMessage && (
+        {!isOwnMessage && showAuthor && (
           <Text style={[styles.authorName, { color: colors.text }]}>
             {author?.handle || "Unknown"}
           </Text>
@@ -277,6 +280,9 @@ const styles = StyleSheet.create({
   },
   otherMessage: {
     alignSelf: "flex-start",
+  },
+  groupedMessage: {
+    marginTop: 2,
   },
   authorName: {
     fontSize: 12,
