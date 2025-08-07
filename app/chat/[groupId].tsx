@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import * as Clipboard from 'expo-clipboard';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ChatScreen() {
@@ -157,9 +158,14 @@ export default function ChatScreen() {
         [
           {
             text: "Copy Link",
-            onPress: () => {
-              // In a real app, you'd use Clipboard API
-              Alert.alert("Copied!", "Group link copied to clipboard");
+            onPress: async () => {
+              try {
+                await Clipboard.setStringAsync(group.shareLink);
+                Alert.alert("Copied!", "Group link copied to clipboard");
+              } catch (error) {
+                console.error('Copy error:', error);
+                Alert.alert("Error", "Failed to copy link to clipboard");
+              }
             },
           },
           { text: "Cancel", style: "cancel" },
@@ -199,7 +205,7 @@ export default function ChatScreen() {
         { text: "Cancel", style: "cancel" },
       ],
     );
-  }, [group?.name, currentProfile, group, userMembership, leaveGroup, router]);
+  }, [currentProfile, group, userMembership, leaveGroup, router]);
 
   const showOptionsMenu = useCallback(() => {
     Alert.alert("Group Options", "", [
