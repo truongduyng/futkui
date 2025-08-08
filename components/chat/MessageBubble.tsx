@@ -41,8 +41,6 @@ export function MessageBubble({
   showAuthor = true,
   imageUrl,
 }: MessageBubbleProps) {
-  console.log(imageUrl, 'imageUrl in MessageBubble');
-
   const colors = Colors["light"];
   const [showReactionOptions, setShowReactionOptions] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
@@ -68,7 +66,7 @@ export function MessageBubble({
   const handleLongPress = (event: any) => {
     if (onAddReaction && !isOwnMessage) {
       // Get the message bubble position
-      event.target.measure((x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
+      event.target.measure((_x: number, _y: number, width: number, height: number, pageX: number, pageY: number) => {
         setMessagePosition({ x: pageX, y: pageY, width, height });
         setShowReactionOptions(true);
       });
@@ -105,24 +103,33 @@ export function MessageBubble({
         )}
 
         <View style={styles.messageContainer}>
-          <TouchableOpacity
-            onLongPress={handleLongPress}
-            activeOpacity={1}
-            style={[
-              styles.bubble,
-              isOwnMessage
-                ? [styles.ownBubble, { backgroundColor: colors.tint }]
-                : [styles.otherBubble, { backgroundColor: "#F0F0F0" }],
-            ]}
-          >
-            {imageUrl && (
+          {/* Image without background */}
+          {imageUrl && (
+            <TouchableOpacity
+              onLongPress={handleLongPress}
+              activeOpacity={1}
+              style={styles.imageBubble}
+            >
               <Image
                 source={{ uri: imageUrl }}
                 style={styles.messageImage}
                 resizeMode="cover"
               />
-            )}
-            {content && content.trim() && (
+            </TouchableOpacity>
+          )}
+
+          {/* Text content with background bubble */}
+          {content && content.trim() && (
+            <TouchableOpacity
+              onLongPress={handleLongPress}
+              activeOpacity={1}
+              style={[
+                styles.bubble,
+                isOwnMessage
+                  ? [styles.ownBubble, { backgroundColor: colors.tint }]
+                  : [styles.otherBubble, { backgroundColor: "#F0F0F0" }],
+              ]}
+            >
               <Text
                 style={[
                   styles.messageText,
@@ -131,8 +138,8 @@ export function MessageBubble({
               >
                 {content}
               </Text>
-            )}
-          </TouchableOpacity>
+            </TouchableOpacity>
+          )}
         </View>
 
       {showReactionOptions && onAddReaction && !isOwnMessage && (
@@ -311,6 +318,14 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     maxWidth: "100%",
     zIndex: 1,
+  },
+  imageBubble: {
+    padding: 0,
+    borderRadius: 12,
+    maxWidth: "100%",
+    zIndex: 1,
+    backgroundColor: "transparent",
+    marginBottom: 4,
   },
   ownBubble: {
     borderBottomRightRadius: 4,

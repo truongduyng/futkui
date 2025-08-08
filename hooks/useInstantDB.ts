@@ -178,9 +178,8 @@ export function useInstantDB() {
           const response = await fetch(messageData.imageUri);
           const blob = await response.blob();
           const fileName = `message-${Date.now()}.jpg`;
-          const file = new File([blob], fileName, { type: 'image/jpeg' });
 
-          const uploadResult = await db.storage.uploadFile(fileName, file);
+          const uploadResult = await db.storage.uploadFile(fileName, blob);
           // For now, store the file ID and handle URL resolution in the component
           // TODO: Find a better way to get the download URL immediately after upload
           imageUrl = uploadResult.data.id;

@@ -10,12 +10,12 @@ const rules = {
       update: "isOwner",
       delete: "false",
     },
-    bind: ["isAuthenticated", "auth.id != null", "isOwner", "auth.id == data.id"]
+    bind: ["isAuthenticated", "auth.id != null", "isOwner", "auth.id in data.ref('user.id')"]
   },
   groups: {
     allow: {
       view: "true",
-      create: "isAuthenticated", 
+      create: "isAuthenticated",
       update: "isAuthenticated",
       delete: "isAdmin",
     },
@@ -25,12 +25,12 @@ const rules = {
     allow: {
       view: "true",
       create: "isAuthenticated && isGroupMember",
-      update: "isAuthor",
+      update: "isAuthor || isGroupMember",
       delete: "isAuthor",
     },
     bind: [
-      "isAuthenticated", "auth.id != null", 
-      "isAuthor", "auth.id in data.ref('author.id')",
+      "isAuthenticated", "auth.id != null",
+      "isAuthor", "auth.id in data.ref('author.user.id')",
       "isGroupMember", "auth.id in data.ref('group.memberships.profile.user.id')"
     ]
   },
@@ -42,7 +42,7 @@ const rules = {
       delete: "isOwner",
     },
     bind: [
-      "isAuthenticated", "auth.id != null", 
+      "isAuthenticated", "auth.id != null",
       "isOwner", "auth.id in data.ref('user.user.id')",
       "isGroupMember", "auth.id in data.ref('message.group.memberships.profile.user.id')"
     ]
