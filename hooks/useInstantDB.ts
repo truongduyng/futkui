@@ -150,9 +150,9 @@ export function useInstantDB() {
           createdAt: Date.now(),
           role: 'admin',
           profileGroupKey: `${groupData.adminId}_${groupId}`,
-        }).link({ 
-          group: groupId, 
-          profile: groupData.adminId 
+        }).link({
+          group: groupId,
+          profile: groupData.adminId
         }),
       ]);
 
@@ -167,13 +167,33 @@ export function useInstantDB() {
       content: string;
       authorId: string;
       authorName: string;
+      imageUri?: string;
     }) => {
+      let imageUrl: string | undefined;
+
+      // Upload image if provided
+      if (messageData.imageUri) {
+        try {
+          const response = await fetch(messageData.imageUri);
+          const blob = await response.blob();
+          const fileName = `message-${Date.now()}.jpg`;
+          const file = new File([blob], fileName, { type: 'image/jpeg' });
+
+          const uploadResult = await db.storage.uploadFile(fileName, file);
+          imageUrl = uploadResult.url;
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          throw new Error('Failed to upload image');
+        }
+      }
+
       const result = await db.transact([
         db.tx.messages[id()].update({
-          content: messageData.content,
+          content: messageData.content || '', // Allow empty content for image-only messages
           authorName: messageData.authorName,
           createdAt: Date.now(),
           updatedAt: Date.now(),
+          imageUrl: imageUrl,
         }).link({
           group: messageData.groupId,
           author: messageData.authorId
@@ -241,15 +261,15 @@ export function useInstantDB() {
     async (groupId: string, profileId: string) => {
       const membershipId = id();
       const profileGroupKey = `${profileId}_${groupId}`;
-      
+
       const result = await db.transact([
         db.tx.memberships[membershipId].update({
           createdAt: Date.now(),
           role: 'member',
           profileGroupKey,
-        }).link({ 
-          group: groupId, 
-          profile: profileId 
+        }).link({
+          group: groupId,
+          profile: profileId
         }),
       ]);
 

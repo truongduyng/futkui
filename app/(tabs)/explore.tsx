@@ -41,7 +41,7 @@ export default function ExploreScreen() {
     if (group && group.id && currentProfile) {
       // Check if user is already a member
       const isAlreadyMember = myGroups.some((myGroup: any) => myGroup && myGroup.id === group.id);
-      
+
       if (isAlreadyMember) {
         Alert.alert("Already a Member", `You are already a member of "${group.name}".`);
         setShareLink("");
@@ -68,7 +68,7 @@ export default function ExploreScreen() {
 
     // Check if user is already a member (extra safety check)
     const isAlreadyMember = myGroups.some((myGroup: any) => myGroup && myGroup.id === groupId);
-    
+
     if (isAlreadyMember) {
       Alert.alert("Already a Member", `You are already a member of "${groupName}".`);
       return;

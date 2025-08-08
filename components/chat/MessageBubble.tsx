@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface Reaction {
   id: string;
@@ -14,7 +14,7 @@ interface Reaction {
 }
 
 interface MessageBubbleProps {
-  content: string;
+  content?: string;
   author?: {
     id: string;
     handle: string;
@@ -27,6 +27,7 @@ interface MessageBubbleProps {
   onAddReaction?: (emoji: string) => void;
   showTimestamp?: boolean;
   showAuthor?: boolean;
+  imageUrl?: string;
 }
 
 export function MessageBubble({
@@ -35,11 +36,13 @@ export function MessageBubble({
   createdAt,
   isOwnMessage,
   reactions,
-  onReactionPress,
   onAddReaction,
   showTimestamp = true,
   showAuthor = true,
+  imageUrl,
 }: MessageBubbleProps) {
+  console.log(imageUrl, 'imageUrl in MessageBubble');
+
   const colors = Colors["light"];
   const [showReactionOptions, setShowReactionOptions] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
@@ -112,14 +115,23 @@ export function MessageBubble({
                 : [styles.otherBubble, { backgroundColor: "#F0F0F0" }],
             ]}
           >
-            <Text
-              style={[
-                styles.messageText,
-                isOwnMessage ? styles.ownMessageText : { color: colors.text },
-              ]}
-            >
-              {content}
-            </Text>
+            {imageUrl && (
+              <Image
+                source={{ uri: imageUrl }}
+                style={styles.messageImage}
+                resizeMode="cover"
+              />
+            )}
+            {content && content.trim() && (
+              <Text
+                style={[
+                  styles.messageText,
+                  isOwnMessage ? styles.ownMessageText : { color: colors.text },
+                ]}
+              >
+                {content}
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -309,6 +321,12 @@ const styles = StyleSheet.create({
   messageText: {
     fontSize: 16,
     lineHeight: 20,
+  },
+  messageImage: {
+    width: 200,
+    height: 150,
+    borderRadius: 12,
+    marginBottom: 4,
   },
   ownMessageText: {
     color: "white",

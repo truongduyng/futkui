@@ -28,10 +28,11 @@ const _schema = i.schema({
       shareLink: i.string().unique(),
     }),
     messages: i.entity({
-      content: i.string(),
+      content: i.string().optional(),
       authorName: i.string(),
       createdAt: i.number(),
       updatedAt: i.number(),
+      imageUrl: i.string().optional(),
     }),
     reactions: i.entity({
       createdAt: i.number(),

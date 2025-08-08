@@ -3,6 +3,7 @@ import { MessageBubble } from "@/components/chat/MessageBubble";
 import { MessageInput } from "@/components/chat/MessageInput";
 import { Colors } from "@/constants/Colors";
 import { useInstantDB } from "@/hooks/useInstantDB";
+import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef } from "react";
 import {
@@ -15,7 +16,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import * as Clipboard from 'expo-clipboard';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ChatScreen() {
@@ -68,88 +68,6 @@ export default function ChatScreen() {
     previousMessageCountRef.current = currentMessageCount;
   }, [messages.length]);
 
-  // Update navigation header when group data loads
-  useEffect(() => {
-    if (group) {
-      navigation.setOptions({
-        title: group.name,
-        headerBackTitle: "Back",
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: colors.background,
-        },
-        headerTintColor: colors.tint,
-        headerTitleStyle: {
-          color: colors.text,
-        },
-        headerRight: () => (
-          <TouchableOpacity
-            onPress={showOptionsMenu}
-            style={{ marginRight: 4, padding: 8 }}
-          >
-            <Text style={{ color: colors.tint, fontSize: 16 }}>⋯</Text>
-          </TouchableOpacity>
-        ),
-      });
-    }
-  }, [group, navigation, colors, showOptionsMenu]);
-
-  const handleSendMessage = async (content: string) => {
-    if (!groupId || !currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
-      return;
-    }
-
-    try {
-      await sendMessage({
-        groupId,
-        content,
-        authorId: currentProfile.id,
-        authorName: currentProfile.handle,
-      });
-
-      // Auto-scroll to bottom after sending message
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    } catch (error) {
-      Alert.alert("Error", "Failed to send message. Please try again.");
-      console.error("Error sending message:", error);
-    }
-  };
-
-  const handleAddReaction = async (
-    messageId: string,
-    emoji: string,
-    existingReactions: any[],
-  ) => {
-    if (!currentProfile || !user) {
-      Alert.alert("Error", "Please wait for your profile to load.");
-      return;
-    }
-
-    try {
-      await addReaction({
-        messageId,
-        emoji,
-        userId: currentProfile.id, // Use profile ID to match schema
-        userName: currentProfile.handle,
-        existingReactions,
-      });
-    } catch (error) {
-      Alert.alert("Error", "Failed to add reaction. Please try again.");
-      console.error("Error adding reaction:", error);
-    }
-  };
-
-  const handleReactionPress = (
-    messageId: string,
-    emoji: string,
-    existingReactions: any[],
-  ) => {
-    handleAddReaction(messageId, emoji, existingReactions);
-  };
-
   const handleShareGroup = useCallback(() => {
     if (group?.shareLink) {
       Alert.alert(
@@ -163,7 +81,7 @@ export default function ChatScreen() {
                 await Clipboard.setStringAsync(group.shareLink);
                 Alert.alert("Copied!", "Group link copied to clipboard");
               } catch (error) {
-                console.error('Copy error:', error);
+                console.error("Copy error:", error);
                 Alert.alert("Error", "Failed to copy link to clipboard");
               }
             },
@@ -221,6 +139,89 @@ export default function ChatScreen() {
       { text: "Cancel", style: "cancel" },
     ]);
   }, [handleShareGroup, handleLeaveGroup]);
+
+  // Update navigation header when group data loads
+  useEffect(() => {
+    if (group) {
+      navigation.setOptions({
+        title: group.name,
+        headerBackTitle: "Back",
+        headerShown: true,
+        headerStyle: {
+          backgroundColor: colors.background,
+        },
+        headerTintColor: colors.tint,
+        headerTitleStyle: {
+          color: colors.text,
+        },
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={showOptionsMenu}
+            style={{ marginRight: 4, padding: 8 }}
+          >
+            <Text style={{ color: colors.tint, fontSize: 16 }}>⋯</Text>
+          </TouchableOpacity>
+        ),
+      });
+    }
+  }, [group, navigation, colors, showOptionsMenu]);
+
+  const handleSendMessage = async (content: string, imageUri?: string) => {
+    if (!groupId || !currentProfile) {
+      Alert.alert("Error", "Please wait for your profile to load.");
+      return;
+    }
+
+    try {
+      await sendMessage({
+        groupId,
+        content,
+        authorId: currentProfile.id,
+        authorName: currentProfile.handle,
+        imageUri,
+      });
+
+      // Auto-scroll to bottom after sending message
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    } catch (error) {
+      Alert.alert("Error", "Failed to send message. Please try again.");
+      console.error("Error sending message:", error);
+    }
+  };
+
+  const handleAddReaction = async (
+    messageId: string,
+    emoji: string,
+    existingReactions: any[],
+  ) => {
+    if (!currentProfile || !user) {
+      Alert.alert("Error", "Please wait for your profile to load.");
+      return;
+    }
+
+    try {
+      await addReaction({
+        messageId,
+        emoji,
+        userId: currentProfile.id, // Use profile ID to match schema
+        userName: currentProfile.handle,
+        existingReactions,
+      });
+    } catch (error) {
+      Alert.alert("Error", "Failed to add reaction. Please try again.");
+      console.error("Error adding reaction:", error);
+    }
+  };
+
+  const handleReactionPress = (
+    messageId: string,
+    emoji: string,
+    existingReactions: any[],
+  ) => {
+    handleAddReaction(messageId, emoji, existingReactions);
+  };
 
   const shouldShowTimestamp = (
     currentMessage: any,
@@ -285,6 +286,7 @@ export default function ChatScreen() {
           }
           showTimestamp={false}
           showAuthor={showAuthor}
+          imageUrl={message.imageUrl}
         />
       </>
     );
