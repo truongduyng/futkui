@@ -148,13 +148,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   imageButton: {
-    width: 36,
+    width: 26,
     height: 36,
     borderRadius: 18,
     backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 2,
   },
   imagePreviewContainer: {
     position: 'relative',
