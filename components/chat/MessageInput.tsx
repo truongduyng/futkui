@@ -1,7 +1,8 @@
 import { Colors } from '@/constants/Colors';
-import React, { useRef, useState } from 'react';
-import { Alert, Image, Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import React, { useRef, useState } from 'react';
+import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface MessageInputProps {
   onSendMessage: (message: string, imageUri?: string) => void;
@@ -59,14 +60,19 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
           </TouchableOpacity>
         </View>
       )}
-      
+
       <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
         <TouchableOpacity
-          style={[styles.imageButton, { borderColor: colors.tabIconDefault }]}
+          style={styles.imageButton}
           onPress={pickImage}
           disabled={disabled}
+          activeOpacity={0.6}
         >
-          <Text style={[styles.imageButtonText, { color: colors.tabIconDefault }]}>📷</Text>
+          <Ionicons
+            name="camera"
+            size={20}
+            color={colors.tabIconDefault}
+          />
         </TouchableOpacity>
 
         <TextInput
@@ -145,13 +151,10 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    borderWidth: 1,
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
-  },
-  imageButtonText: {
-    fontSize: 16,
+    marginRight: 2,
   },
   imagePreviewContainer: {
     position: 'relative',
