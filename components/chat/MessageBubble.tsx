@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/Colors';
-import React, { useState } from 'react';
-import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface Reaction {
   id: string;
@@ -45,6 +45,14 @@ export function MessageBubble({
   const [showReactionOptions, setShowReactionOptions] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
   const [messagePosition, setMessagePosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [imageLoading, setImageLoading] = useState(true);
+
+  // Reset loading state when imageUrl changes
+  useEffect(() => {
+    if (imageUrl) {
+      setImageLoading(true);
+    }
+  }, [imageUrl]);
 
   const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "😡"];
 
@@ -110,11 +118,20 @@ export function MessageBubble({
               activeOpacity={1}
               style={styles.imageBubble}
             >
-              <Image
-                source={{ uri: imageUrl }}
-                style={styles.messageImage}
-                resizeMode="cover"
-              />
+              <View style={styles.imageContainer}>
+                <Image
+                  source={{ uri: imageUrl }}
+                  style={styles.messageImage}
+                  resizeMode="cover"
+                  onLoad={() => setImageLoading(false)}
+                  onError={() => setImageLoading(false)}
+                />
+                {imageLoading && (
+                  <View style={styles.imageLoadingOverlay}>
+                    <ActivityIndicator size="small" color={colors.tint} />
+                  </View>
+                )}
+              </View>
             </TouchableOpacity>
           )}
 
@@ -337,11 +354,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 20,
   },
+  imageContainer: {
+    position: "relative",
+    width: 200,
+    height: 150,
+  },
   messageImage: {
     width: 200,
     height: 150,
     borderRadius: 12,
     marginBottom: 4,
+  },
+  imageLoadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
   },
   ownMessageText: {
     color: "white",
