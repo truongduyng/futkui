@@ -45,6 +45,13 @@ export default function ChatScreen() {
 
   const group = groupData?.groups?.[0];
   const messages = group?.messages || [];
+  const files = groupData?.$files || [];
+  
+  // Helper function to resolve file URL from file ID
+  const getFileUrl = (fileId: string) => {
+    const file = files.find(f => f.id === fileId);
+    return file?.url;
+  };
 
   // Track message count changes to detect new messages
   useEffect(() => {
@@ -286,7 +293,7 @@ export default function ChatScreen() {
           }
           showTimestamp={false}
           showAuthor={showAuthor}
-          imageUrl={message.imageUrl}
+          imageUrl={message.imageUrl ? getFileUrl(message.imageUrl) : undefined}
         />
       </>
     );

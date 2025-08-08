@@ -73,6 +73,7 @@ export function useInstantDB() {
           },
         },
       },
+      $files: {}, // Include all files to resolve imageUrls
     });
   };
 
@@ -180,7 +181,9 @@ export function useInstantDB() {
           const file = new File([blob], fileName, { type: 'image/jpeg' });
 
           const uploadResult = await db.storage.uploadFile(fileName, file);
-          imageUrl = uploadResult.url;
+          // For now, store the file ID and handle URL resolution in the component
+          // TODO: Find a better way to get the download URL immediately after upload
+          imageUrl = uploadResult.data.id;
         } catch (error) {
           console.error('Error uploading image:', error);
           throw new Error('Failed to upload image');
