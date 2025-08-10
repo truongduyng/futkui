@@ -40,7 +40,7 @@ interface PollBubbleProps {
   showAuthor?: boolean;
 }
 
-export function PollBubble({
+export const PollBubble = React.memo(function PollBubble({
   poll,
   currentUserId,
   onVote,
@@ -251,7 +251,7 @@ export function PollBubble({
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

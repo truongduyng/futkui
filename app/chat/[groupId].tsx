@@ -7,7 +7,7 @@ import { Colors } from "@/constants/Colors";
 import { useInstantDB } from "@/hooks/useInstantDB";
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -49,14 +49,21 @@ export default function ChatScreen() {
   const userMembership = membershipData?.memberships?.[0];
 
   const group = groupData?.groups?.[0];
-  const messages = group?.messages || [];
-  const files = groupData?.$files || [];
+  const messages = useMemo(() => group?.messages || [], [group?.messages]);
+  const files = useMemo(() => groupData?.$files || [], [groupData?.$files]);
+  
+  // Extract members from group memberships for mention functionality
+  const members = group?.memberships?.map(membership => ({
+    id: membership.profile?.id || '',
+    handle: membership.profile?.handle || '',
+    displayName: membership.profile?.displayName,
+  })).filter(member => member.id && member.handle) || [];
 
   // Helper function to resolve file URL from file ID
-  const getFileUrl = (fileId: string) => {
+  const getFileUrl = useCallback((fileId: string) => {
     const file = files.find(f => f.id === fileId);
     return file?.url;
-  };
+  }, [files]);
 
   // Track message count changes to detect new messages
   useEffect(() => {
@@ -178,7 +185,7 @@ export default function ChatScreen() {
     }
   }, [group, navigation, colors, showOptionsMenu]);
 
-  const handleSendMessage = async (content: string, imageUri?: string) => {
+  const handleSendMessage = async (content: string, imageUri?: string, mentions?: string[]) => {
     if (!groupId || !currentProfile) {
       Alert.alert("Error", "Please wait for your profile to load.");
       return;
@@ -191,6 +198,7 @@ export default function ChatScreen() {
         authorId: currentProfile.id,
         authorName: currentProfile.handle,
         imageUri,
+        mentions,
       });
 
       // Auto-scroll to bottom after sending message
@@ -203,7 +211,7 @@ export default function ChatScreen() {
     }
   };
 
-  const handleAddReaction = async (
+  const handleAddReaction = useCallback(async (
     messageId: string,
     emoji: string,
     existingReactions: any[],
@@ -225,19 +233,19 @@ export default function ChatScreen() {
       Alert.alert("Error", "Failed to add reaction. Please try again.");
       console.error("Error adding reaction:", error);
     }
-  };
+  }, [currentProfile, user, addReaction]);
 
-  const handleReactionPress = (
+  const handleReactionPress = useCallback((
     messageId: string,
     emoji: string,
     existingReactions: any[],
   ) => {
     handleAddReaction(messageId, emoji, existingReactions);
-  };
+  }, [handleAddReaction]);
 
-  const handleImagePress = (imageUrl: string) => {
+  const handleImagePress = useCallback((imageUrl: string) => {
     setSelectedImageUrl(imageUrl);
-  };
+  }, []);
 
   const handleSendPoll = async (question: string, options: { id: string; text: string }[], allowMultiple: boolean, expiresAt?: number) => {
     if (!groupId || !currentProfile) {
@@ -266,7 +274,7 @@ export default function ChatScreen() {
     }
   };
 
-  const handleVote = async (pollId: string, optionId: string, existingVotes: any[], allowMultiple: boolean) => {
+  const handleVote = useCallback(async (pollId: string, optionId: string, existingVotes: any[], allowMultiple: boolean) => {
     if (!currentProfile) {
       Alert.alert("Error", "Please wait for your profile to load.");
       return;
@@ -284,9 +292,9 @@ export default function ChatScreen() {
       Alert.alert("Error", "Failed to vote. Please try again.");
       console.error("Error voting:", error);
     }
-  };
+  }, [currentProfile, vote]);
 
-  const shouldShowTimestamp = (
+  const shouldShowTimestamp = useCallback((
     currentMessage: any,
     previousMessage: any,
   ): boolean => {
@@ -300,9 +308,22 @@ export default function ChatScreen() {
     const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
 
     return timeDifference >= fifteenMinutes;
-  };
+  }, []);
 
-  const renderMessage = ({
+  // Create memoized callback factories to avoid recreating functions on each render
+  const createVoteHandler = useCallback((pollId: string, votes: any[], allowMultiple: boolean) => {
+    return (optionId: string) => handleVote(pollId, optionId, votes, allowMultiple);
+  }, [handleVote]);
+
+  const createReactionHandler = useCallback((messageId: string, reactions: any[]) => {
+    return (emoji: string) => handleReactionPress(messageId, emoji, reactions);
+  }, [handleReactionPress]);
+
+  const createAddReactionHandler = useCallback((messageId: string, reactions: any[]) => {
+    return (emoji: string) => handleAddReaction(messageId, emoji, reactions);
+  }, [handleAddReaction]);
+
+  const renderMessage = useCallback(({
     item: message,
     index,
   }: {
@@ -348,9 +369,7 @@ export default function ChatScreen() {
               votes: message.poll.votes || [],
             }}
             currentUserId={currentProfile?.id || ''}
-            onVote={(optionId: string) =>
-              handleVote(message.poll.id, optionId, message.poll.votes || [], message.poll.allowMultiple || false)
-            }
+            onVote={createVoteHandler(message.poll.id, message.poll.votes || [], message.poll.allowMultiple || false)}
             isOwnMessage={isOwnMessage}
             author={message.author}
             createdAt={new Date(message.createdAt)}
@@ -363,12 +382,8 @@ export default function ChatScreen() {
             createdAt={new Date(message.createdAt)}
             isOwnMessage={isOwnMessage}
             reactions={message.reactions || []}
-            onReactionPress={(emoji: string) =>
-              handleReactionPress(message.id, emoji, message.reactions || [])
-            }
-            onAddReaction={(emoji: string) =>
-              handleAddReaction(message.id, emoji, message.reactions || [])
-            }
+            onReactionPress={createReactionHandler(message.id, message.reactions || [])}
+            onAddReaction={createAddReactionHandler(message.id, message.reactions || [])}
             showTimestamp={false}
             showAuthor={showAuthor}
             imageUrl={resolvedImageUrl}
@@ -377,7 +392,19 @@ export default function ChatScreen() {
         )}
       </>
     );
-  };
+  }, [
+    messages, 
+    currentProfile?.id, 
+    shouldShowTimestamp, 
+    getFileUrl, 
+    colors.tabIconDefault,
+    createVoteHandler,
+    createReactionHandler,
+    createAddReactionHandler,
+    handleImagePress
+  ]);
+
+  const keyExtractor = useCallback((item: any) => item.id, []);
 
   if (isLoading) {
     return (
@@ -430,19 +457,28 @@ export default function ChatScreen() {
             ref={flatListRef}
             data={messages}
             renderItem={renderMessage}
-            keyExtractor={(item) => item.id}
+            keyExtractor={keyExtractor}
             style={styles.messageList}
             contentContainerStyle={styles.messageListContent}
             inverted={false}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             automaticallyAdjustKeyboardInsets={false}
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={10}
+            updateCellsBatchingPeriod={50}
+            initialNumToRender={15}
+            windowSize={10}
             onLayout={() =>
               flatListRef.current?.scrollToEnd({ animated: false })
             }
           />
 
-          <MessageInput onSendMessage={handleSendMessage} onSendPoll={handleSendPoll} />
+          <MessageInput 
+            onSendMessage={handleSendMessage} 
+            onSendPoll={handleSendPoll} 
+            members={members}
+          />
         </KeyboardAvoidingView>
 
         <ImageModal

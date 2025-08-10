@@ -1,6 +1,7 @@
 import { Colors } from '@/constants/Colors';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { MentionText } from './MentionText';
 
 interface Reaction {
   id: string;
@@ -31,7 +32,7 @@ interface MessageBubbleProps {
   onImagePress?: (imageUrl: string) => void;
 }
 
-export function MessageBubble({
+export const MessageBubble = React.memo(function MessageBubble({
   content,
   author,
   createdAt,
@@ -150,14 +151,14 @@ export function MessageBubble({
                   : [styles.otherBubble, { backgroundColor: "#F0F0F0" }],
               ]}
             >
-              <Text
+              <MentionText
+                text={content}
                 style={[
                   styles.messageText,
                   isOwnMessage ? styles.ownMessageText : { color: colors.text },
                 ]}
-              >
-                {content}
-              </Text>
+                mentionStyle={isOwnMessage ? { color: 'rgba(255, 255, 255, 0.9)' } : undefined}
+              />
             </TouchableOpacity>
           )}
         </View>
@@ -307,7 +308,7 @@ export function MessageBubble({
       </Modal>
     </>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

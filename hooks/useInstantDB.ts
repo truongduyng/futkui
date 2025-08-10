@@ -174,6 +174,7 @@ export function useInstantDB() {
       authorId: string;
       authorName: string;
       imageUri?: string;
+      mentions?: string[];
     }) => {
       let imageUrl: string | undefined;
 
@@ -202,6 +203,7 @@ export function useInstantDB() {
           updatedAt: Date.now(),
           imageUrl: imageUrl,
           type: imageUrl ? (messageData.content ? 'image' : 'image') : 'text',
+          mentions: messageData.mentions || [],
         }).link({
           group: messageData.groupId,
           author: messageData.authorId

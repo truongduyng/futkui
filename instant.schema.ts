@@ -34,6 +34,7 @@ const _schema = i.schema({
       updatedAt: i.number(),
       imageUrl: i.string().optional(),
       type: i.string().optional(), // 'text', 'image', 'poll'
+      mentions: i.json().optional(), // Array of mentioned usernames
     }),
     polls: i.entity({
       question: i.string(),

@@ -5,30 +5,46 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import React, { useRef, useState } from 'react';
 import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { CreatePollModal } from './CreatePollModal';
+import { MentionPicker } from './MentionPicker';
 
 interface PollOption {
   id: string;
   text: string;
 }
 
+interface Member {
+  id: string;
+  handle: string;
+  displayName?: string;
+}
+
 interface MessageInputProps {
-  onSendMessage: (message: string, imageUri?: string) => void;
+  onSendMessage: (message: string, imageUri?: string, mentions?: string[]) => void;
   onSendPoll?: (question: string, options: PollOption[], allowMultiple: boolean, expiresAt?: number) => void;
+  members?: Member[];
   disabled?: boolean;
 }
 
-export function MessageInput({ onSendMessage, onSendPoll, disabled }: MessageInputProps) {
+export function MessageInput({ onSendMessage, onSendPoll, members = [], disabled }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showPollModal, setShowPollModal] = useState(false);
+  const [currentMentionSearch, setCurrentMentionSearch] = useState<string>('');
+  const [showMentionPicker, setShowMentionPicker] = useState(false);
   const inputRef = useRef<TextInput>(null);
   const colors = Colors['light'];
 
   const handleSend = () => {
     if ((message.trim() || selectedImage) && !disabled) {
-      onSendMessage(message.trim(), selectedImage || undefined);
+      // Extract mentions from the message
+      const mentionMatches = message.match(/@(\w+)/g) || [];
+      const mentions = mentionMatches.map(match => match.substring(1)); // Remove @ symbol
+      
+      onSendMessage(message.trim(), selectedImage || undefined, mentions);
       setMessage('');
       setSelectedImage(null);
+      setShowMentionPicker(false);
+      setCurrentMentionSearch('');
     }
   };
 
@@ -87,6 +103,38 @@ export function MessageInput({ onSendMessage, onSendPoll, disabled }: MessageInp
     }
   };
 
+  const handleTextChange = (text: string) => {
+    setMessage(text);
+    
+    // Check for mention trigger (@)
+    const words = text.split(' ');
+    const currentWord = words[words.length - 1];
+    
+    if (currentWord.startsWith('@') && currentWord.length > 1) {
+      setCurrentMentionSearch(currentWord);
+      setShowMentionPicker(true);
+    } else if (showMentionPicker && !currentWord.startsWith('@')) {
+      setShowMentionPicker(false);
+      setCurrentMentionSearch('');
+    }
+  };
+
+  const handleSelectMention = (member: Member) => {
+    const words = message.split(' ');
+    const lastWordIndex = words.length - 1;
+    
+    // Replace the last word (which should be the partial mention) with the full mention
+    words[lastWordIndex] = `@${member.handle}`;
+    const newMessage = words.join(' ') + ' '; // Add space after mention
+    
+    setMessage(newMessage);
+    setShowMentionPicker(false);
+    setCurrentMentionSearch('');
+    
+    // Focus back to input
+    inputRef.current?.focus();
+  };
+
   return (
     <View style={styles.container}>
       {selectedImage && (
@@ -131,7 +179,7 @@ export function MessageInput({ onSendMessage, onSendPoll, disabled }: MessageInp
           ref={inputRef}
           style={[styles.textInput, { color: colors.text }]}
           value={message}
-          onChangeText={setMessage}
+          onChangeText={handleTextChange}
           placeholder="Type a message..."
           placeholderTextColor={colors.tabIconDefault}
           multiline
@@ -153,6 +201,13 @@ export function MessageInput({ onSendMessage, onSendPoll, disabled }: MessageInp
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
       </View>
+
+      <MentionPicker
+        members={members}
+        searchText={currentMentionSearch}
+        onSelectMention={handleSelectMention}
+        visible={showMentionPicker}
+      />
 
       <CreatePollModal
         visible={showPollModal}
