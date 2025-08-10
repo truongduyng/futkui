@@ -71,6 +71,11 @@ export function useInstantDB() {
           reactions: {
             user: {},
           },
+          poll: {
+            votes: {
+              user: {},
+            },
+          },
         },
       },
       $files: {}, // Include all files to resolve imageUrls
@@ -196,6 +201,7 @@ export function useInstantDB() {
           createdAt: Date.now(),
           updatedAt: Date.now(),
           imageUrl: imageUrl,
+          type: imageUrl ? (messageData.content ? 'image' : 'image') : 'text',
         }).link({
           group: messageData.groupId,
           author: messageData.authorId
@@ -290,6 +296,97 @@ export function useInstantDB() {
     [db]
   );
 
+  const sendPoll = useCallback(
+    async (pollData: {
+      groupId: string;
+      question: string;
+      options: { id: string; text: string }[];
+      authorId: string;
+      authorName: string;
+      allowMultiple: boolean;
+      expiresAt?: number;
+    }) => {
+      const messageId = id();
+      const pollId = id();
+
+      const result = await db.transact([
+        db.tx.messages[messageId].update({
+          content: '',
+          authorName: pollData.authorName,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          type: 'poll',
+        }).link({
+          group: pollData.groupId,
+          author: pollData.authorId
+        }),
+        db.tx.polls[pollId].update({
+          question: pollData.question,
+          options: pollData.options,
+          createdAt: Date.now(),
+          allowMultiple: pollData.allowMultiple,
+          expiresAt: pollData.expiresAt,
+        }).link({
+          message: messageId,
+        }),
+      ]);
+
+      return result;
+    },
+    [db]
+  );
+
+  const vote = useCallback(
+    async (voteData: {
+      pollId: string;
+      optionId: string;
+      userId: string;
+      existingVotes: any[];
+      allowMultiple: boolean;
+    }) => {
+      const existingVote = voteData.existingVotes.find(
+        (vote: any) => vote.user?.id === voteData.userId && vote.optionId === voteData.optionId
+      );
+
+      if (existingVote) {
+        // Remove vote if it already exists
+        const result = await db.transact([
+          db.tx.votes[existingVote.id].delete(),
+        ]);
+        return result;
+      } else {
+        // Add new vote
+        let transactions = [];
+
+        // If single choice and user has existing votes, remove them first
+        if (!voteData.allowMultiple) {
+          const userExistingVotes = voteData.existingVotes.filter(
+            (vote: any) => vote.user?.id === voteData.userId
+          );
+          
+          userExistingVotes.forEach((vote: any) => {
+            transactions.push(db.tx.votes[vote.id].delete());
+          });
+        }
+
+        // Add new vote
+        transactions.push(
+          db.tx.votes[id()].update({
+            optionId: voteData.optionId,
+            createdAt: Date.now(),
+          }).link({
+            poll: voteData.pollId,
+            user: voteData.userId,
+          })
+        );
+
+        const result = await db.transact(transactions);
+        return result;
+      }
+    },
+    [db]
+  );
+
   return {
     instantClient,
     useGroups,
@@ -300,6 +397,8 @@ export function useInstantDB() {
     createProfile,
     createGroup,
     sendMessage,
+    sendPoll,
+    vote,
     addReaction: addOrUpdateReaction,
     removeReaction,
     joinGroup,

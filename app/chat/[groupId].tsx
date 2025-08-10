@@ -2,6 +2,7 @@ import { AuthGate } from "@/components/AuthGate";
 import { ImageModal } from "@/components/chat/ImageModal";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { MessageInput } from "@/components/chat/MessageInput";
+import { PollBubble } from "@/components/chat/PollBubble";
 import { Colors } from "@/constants/Colors";
 import { useInstantDB } from "@/hooks/useInstantDB";
 import * as Clipboard from 'expo-clipboard';
@@ -34,6 +35,8 @@ export default function ChatScreen() {
     useProfile,
     useUserMembership,
     sendMessage,
+    sendPoll,
+    vote,
     addReaction,
     leaveGroup,
     instantClient,
@@ -236,6 +239,53 @@ export default function ChatScreen() {
     setSelectedImageUrl(imageUrl);
   };
 
+  const handleSendPoll = async (question: string, options: { id: string; text: string }[], allowMultiple: boolean, expiresAt?: number) => {
+    if (!groupId || !currentProfile) {
+      Alert.alert("Error", "Please wait for your profile to load.");
+      return;
+    }
+
+    try {
+      await sendPoll({
+        groupId,
+        question,
+        options,
+        authorId: currentProfile.id,
+        authorName: currentProfile.handle,
+        allowMultiple,
+        expiresAt,
+      });
+
+      // Auto-scroll to bottom after sending poll
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    } catch (error) {
+      Alert.alert("Error", "Failed to send poll. Please try again.");
+      console.error("Error sending poll:", error);
+    }
+  };
+
+  const handleVote = async (pollId: string, optionId: string, existingVotes: any[], allowMultiple: boolean) => {
+    if (!currentProfile) {
+      Alert.alert("Error", "Please wait for your profile to load.");
+      return;
+    }
+
+    try {
+      await vote({
+        pollId,
+        optionId,
+        userId: currentProfile.id,
+        existingVotes,
+        allowMultiple,
+      });
+    } catch (error) {
+      Alert.alert("Error", "Failed to vote. Please try again.");
+      console.error("Error voting:", error);
+    }
+  };
+
   const shouldShowTimestamp = (
     currentMessage: any,
     previousMessage: any,
@@ -287,23 +337,44 @@ export default function ChatScreen() {
             </Text>
           </View>
         )}
-        <MessageBubble
-          content={message.content}
-          author={message.author}
-          createdAt={new Date(message.createdAt)}
-          isOwnMessage={isOwnMessage}
-          reactions={message.reactions || []}
-          onReactionPress={(emoji: string) =>
-            handleReactionPress(message.id, emoji, message.reactions || [])
-          }
-          onAddReaction={(emoji: string) =>
-            handleAddReaction(message.id, emoji, message.reactions || [])
-          }
-          showTimestamp={false}
-          showAuthor={showAuthor}
-          imageUrl={resolvedImageUrl}
-          onImagePress={handleImagePress}
-        />
+        {message.type === 'poll' && message.poll ? (
+          <PollBubble
+            poll={{
+              id: message.poll.id,
+              question: message.poll.question,
+              options: message.poll.options,
+              allowMultiple: message.poll.allowMultiple || false,
+              expiresAt: message.poll.expiresAt,
+              votes: message.poll.votes || [],
+            }}
+            currentUserId={currentProfile?.id || ''}
+            onVote={(optionId: string) =>
+              handleVote(message.poll.id, optionId, message.poll.votes || [], message.poll.allowMultiple || false)
+            }
+            isOwnMessage={isOwnMessage}
+            author={message.author}
+            createdAt={new Date(message.createdAt)}
+            showAuthor={showAuthor}
+          />
+        ) : (
+          <MessageBubble
+            content={message.content}
+            author={message.author}
+            createdAt={new Date(message.createdAt)}
+            isOwnMessage={isOwnMessage}
+            reactions={message.reactions || []}
+            onReactionPress={(emoji: string) =>
+              handleReactionPress(message.id, emoji, message.reactions || [])
+            }
+            onAddReaction={(emoji: string) =>
+              handleAddReaction(message.id, emoji, message.reactions || [])
+            }
+            showTimestamp={false}
+            showAuthor={showAuthor}
+            imageUrl={resolvedImageUrl}
+            onImagePress={handleImagePress}
+          />
+        )}
       </>
     );
   };
@@ -371,9 +442,9 @@ export default function ChatScreen() {
             }
           />
 
-          <MessageInput onSendMessage={handleSendMessage} />
+          <MessageInput onSendMessage={handleSendMessage} onSendPoll={handleSendPoll} />
         </KeyboardAvoidingView>
-        
+
         <ImageModal
           visible={!!selectedImageUrl}
           imageUrl={selectedImageUrl}

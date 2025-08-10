@@ -33,6 +33,18 @@ const _schema = i.schema({
       createdAt: i.number(),
       updatedAt: i.number(),
       imageUrl: i.string().optional(),
+      type: i.string().optional(), // 'text', 'image', 'poll'
+    }),
+    polls: i.entity({
+      question: i.string(),
+      options: i.json(), // Array of option objects: [{id: string, text: string}]
+      createdAt: i.number(),
+      expiresAt: i.number().optional(),
+      allowMultiple: i.boolean().optional(),
+    }),
+    votes: i.entity({
+      optionId: i.string(),
+      createdAt: i.number(),
     }),
     reactions: i.entity({
       createdAt: i.number(),
@@ -97,6 +109,18 @@ const _schema = i.schema({
     membershipProfiles: {
       forward: { on: "memberships", has: "one", label: "profile" },
       reverse: { on: "profiles", has: "many", label: "memberships" },
+    },
+    pollMessages: {
+      forward: { on: "polls", has: "one", label: "message" },
+      reverse: { on: "messages", has: "one", label: "poll" },
+    },
+    pollVotes: {
+      forward: { on: "polls", has: "many", label: "votes" },
+      reverse: { on: "votes", has: "one", label: "poll" },
+    },
+    voteUsers: {
+      forward: { on: "votes", has: "one", label: "user" },
+      reverse: { on: "profiles", has: "many", label: "votes" },
     }
   },
   rooms: {},

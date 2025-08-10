@@ -19,8 +19,6 @@ export function ImageModal({ visible, imageUrl, onClose }: ImageModalProps) {
 
   if (!imageUrl) return null;
 
-  console.log(`ImageModal rendered with imageUrl: ${imageUrl}`);
-
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
   return (

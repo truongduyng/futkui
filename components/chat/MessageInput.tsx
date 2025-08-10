@@ -4,15 +4,23 @@ import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import React, { useRef, useState } from 'react';
 import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { CreatePollModal } from './CreatePollModal';
+
+interface PollOption {
+  id: string;
+  text: string;
+}
 
 interface MessageInputProps {
   onSendMessage: (message: string, imageUri?: string) => void;
+  onSendPoll?: (question: string, options: PollOption[], allowMultiple: boolean, expiresAt?: number) => void;
   disabled?: boolean;
 }
 
-export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
+export function MessageInput({ onSendMessage, onSendPoll, disabled }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showPollModal, setShowPollModal] = useState(false);
   const inputRef = useRef<TextInput>(null);
   const colors = Colors['light'];
 
@@ -73,6 +81,12 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
     setSelectedImage(null);
   };
 
+  const handleCreatePoll = (question: string, options: PollOption[], allowMultiple: boolean, expiresAt?: number) => {
+    if (onSendPoll) {
+      onSendPoll(question, options, allowMultiple, expiresAt);
+    }
+  };
+
   return (
     <View style={styles.container}>
       {selectedImage && (
@@ -97,6 +111,21 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
             color={colors.tabIconDefault}
           />
         </TouchableOpacity>
+
+        {onSendPoll && (
+          <TouchableOpacity
+            style={styles.pollButton}
+            onPress={() => setShowPollModal(true)}
+            disabled={disabled}
+            activeOpacity={0.6}
+          >
+            <Ionicons
+              name="bar-chart"
+              size={20}
+              color={colors.tabIconDefault}
+            />
+          </TouchableOpacity>
+        )}
 
         <TextInput
           ref={inputRef}
@@ -124,6 +153,12 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
       </View>
+
+      <CreatePollModal
+        visible={showPollModal}
+        onClose={() => setShowPollModal(false)}
+        onCreatePoll={handleCreatePoll}
+      />
     </View>
   );
 }
@@ -176,6 +211,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  pollButton: {
+    width: 26,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 4,
   },
   imagePreviewContainer: {
     position: 'relative',
