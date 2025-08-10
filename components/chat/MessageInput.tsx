@@ -1,6 +1,7 @@
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import React, { useRef, useState } from 'react';
 import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -23,6 +24,26 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
     }
   };
 
+  const compressImage = async (uri: string): Promise<string> => {
+    try {
+      const manipulatedImage = await ImageManipulator.manipulateAsync({
+        uri,
+        actions: [
+          // Resize if image is too large
+          { resize: { width: 1024 } }, // Maintain aspect ratio, max width 1024px
+        ],
+        saveOptions: {
+          compress: 0.7, // 70% quality
+          format: ImageManipulator.SaveFormat.JPEG,
+        }
+      });
+      return manipulatedImage.uri;
+    } catch (error) {
+      console.warn('Image compression failed, using original:', error);
+      return uri; // Fallback to original if compression fails
+    }
+  };
+
   const pickImage = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -35,13 +56,15 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
         mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 0.8,
+        quality: 0.9, // Use higher quality initially, we'll compress it ourselves
       });
 
       if (!result.canceled && result.assets[0]) {
-        setSelectedImage(result.assets[0].uri);
+        // Compress the selected image
+        const compressedUri = await compressImage(result.assets[0].uri);
+        setSelectedImage(compressedUri);
       }
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to pick image');
     }
   };
@@ -88,7 +111,6 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
           textAlignVertical="top"
           scrollEnabled={true}
           returnKeyType="default"
-          blurOnSubmit={false}
         />
 
         <TouchableOpacity

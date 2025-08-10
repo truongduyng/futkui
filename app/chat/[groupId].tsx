@@ -1,11 +1,12 @@
 import { AuthGate } from "@/components/AuthGate";
+import { ImageModal } from "@/components/chat/ImageModal";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { MessageInput } from "@/components/chat/MessageInput";
 import { Colors } from "@/constants/Colors";
 import { useInstantDB } from "@/hooks/useInstantDB";
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -26,6 +27,7 @@ export default function ChatScreen() {
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
   const previousMessageCountRef = useRef<number>(0);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   const {
     useGroup,
@@ -46,7 +48,7 @@ export default function ChatScreen() {
   const group = groupData?.groups?.[0];
   const messages = group?.messages || [];
   const files = groupData?.$files || [];
-  
+
   // Helper function to resolve file URL from file ID
   const getFileUrl = (fileId: string) => {
     const file = files.find(f => f.id === fileId);
@@ -230,6 +232,10 @@ export default function ChatScreen() {
     handleAddReaction(messageId, emoji, existingReactions);
   };
 
+  const handleImagePress = (imageUrl: string) => {
+    setSelectedImageUrl(imageUrl);
+  };
+
   const shouldShowTimestamp = (
     currentMessage: any,
     previousMessage: any,
@@ -263,6 +269,8 @@ export default function ChatScreen() {
       previousMessage.author?.id !== message.author?.id ||
       showTimestamp; // Always show author after timestamp breaks
 
+    const resolvedImageUrl = message.imageUrl ? getFileUrl(message.imageUrl) : undefined;
+
     return (
       <>
         {showTimestamp && (
@@ -293,7 +301,8 @@ export default function ChatScreen() {
           }
           showTimestamp={false}
           showAuthor={showAuthor}
-          imageUrl={message.imageUrl ? getFileUrl(message.imageUrl) : undefined}
+          imageUrl={resolvedImageUrl}
+          onImagePress={handleImagePress}
         />
       </>
     );
@@ -364,6 +373,12 @@ export default function ChatScreen() {
 
           <MessageInput onSendMessage={handleSendMessage} />
         </KeyboardAvoidingView>
+        
+        <ImageModal
+          visible={!!selectedImageUrl}
+          imageUrl={selectedImageUrl}
+          onClose={() => setSelectedImageUrl(null)}
+        />
       </View>
     </AuthGate>
   );

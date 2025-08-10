@@ -28,6 +28,7 @@ interface MessageBubbleProps {
   showTimestamp?: boolean;
   showAuthor?: boolean;
   imageUrl?: string;
+  onImagePress?: (imageUrl: string) => void;
 }
 
 export function MessageBubble({
@@ -40,6 +41,7 @@ export function MessageBubble({
   showTimestamp = true,
   showAuthor = true,
   imageUrl,
+  onImagePress,
 }: MessageBubbleProps) {
   const colors = Colors["light"];
   const [showReactionOptions, setShowReactionOptions] = useState(false);
@@ -114,8 +116,9 @@ export function MessageBubble({
           {/* Image without background */}
           {imageUrl && (
             <TouchableOpacity
+              onPress={() => onImagePress?.(imageUrl)}
               onLongPress={handleLongPress}
-              activeOpacity={1}
+              activeOpacity={0.8}
               style={styles.imageBubble}
             >
               <View style={styles.imageContainer}>
