@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Image, Modal, StyleSheet, Text, TouchableOpacity, View, Dimensions, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Dimensions, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface ImageModalProps {
   visible: boolean;
@@ -9,18 +9,18 @@ interface ImageModalProps {
 
 export function ImageModal({ visible, imageUrl, onClose }: ImageModalProps) {
   const [imageLoading, setImageLoading] = useState(true);
-  
+
   // Reset loading state when imageUrl changes
   useEffect(() => {
     if (imageUrl) {
       setImageLoading(true);
     }
   }, [imageUrl]);
-  
+
   if (!imageUrl) return null;
 
   console.log(`ImageModal rendered with imageUrl: ${imageUrl}`);
-  
+
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
   return (
