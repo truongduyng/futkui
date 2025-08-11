@@ -407,12 +407,138 @@ export function useInstantDB() {
     [db]
   );
 
+  // Match operations
+  const createMatch = useCallback(
+    async (matchData: {
+      groupId: string;
+      title: string;
+      description: string;
+      gameType: string;
+      location: string;
+      matchDate: number;
+      creatorId: string;
+    }) => {
+      const matchId = id();
+
+      const result = await db.transact([
+        db.tx.matches[matchId].update({
+          title: matchData.title,
+          description: matchData.description,
+          gameType: matchData.gameType,
+          location: matchData.location,
+          matchDate: matchData.matchDate,
+          createdAt: Date.now(),
+          isActive: true,
+          allowCheckIn: false, // Will be enabled on match day
+        }).link({
+          group: matchData.groupId,
+          creator: matchData.creatorId,
+        }),
+      ]);
+
+      return result;
+    },
+    [db]
+  );
+
+  const updateMatchCheckIn = useCallback(
+    async (matchId: string, allowCheckIn: boolean) => {
+      const result = await db.transact([
+        db.tx.matches[matchId].update({
+          allowCheckIn,
+        }),
+      ]);
+
+      return result;
+    },
+    [db]
+  );
+
+  const rsvpToMatch = useCallback(
+    async (rsvpData: {
+      matchId: string;
+      userId: string;
+      response: 'yes' | 'no' | 'maybe';
+      existingRsvps: any[];
+    }) => {
+      const existingRsvp = rsvpData.existingRsvps.find(
+        (rsvp: any) => rsvp.user?.id === rsvpData.userId
+      );
+
+      if (existingRsvp) {
+        // Update existing RSVP
+        const result = await db.transact([
+          db.tx.rsvps[existingRsvp.id].update({
+            response: rsvpData.response,
+            updatedAt: Date.now(),
+          }),
+        ]);
+        return result;
+      } else {
+        // Create new RSVP
+        const result = await db.transact([
+          db.tx.rsvps[id()].update({
+            response: rsvpData.response,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          }).link({
+            match: rsvpData.matchId,
+            user: rsvpData.userId,
+          }),
+        ]);
+        return result;
+      }
+    },
+    [db]
+  );
+
+  const checkInToMatch = useCallback(
+    async (checkInData: {
+      matchId: string;
+      userId: string;
+    }) => {
+      const result = await db.transact([
+        db.tx.checkIns[id()].update({
+          checkedInAt: Date.now(),
+        }).link({
+          match: checkInData.matchId,
+          user: checkInData.userId,
+        }),
+      ]);
+
+      return result;
+    },
+    [db]
+  );
+
+  const useMatches = (groupId: string) => {
+    if (!groupId) {
+      return { data: null, isLoading: false, error: null };
+    }
+
+    return db.useQuery({
+      matches: {
+        $: { 
+          where: { "group.id": groupId },
+        },
+        creator: {},
+        rsvps: {
+          user: {},
+        },
+        checkIns: {
+          user: {},
+        },
+      },
+    });
+  };
+
   return {
     instantClient,
     useGroups,
     useAllGroups,
     useGroup,
     useMessages,
+    useMatches,
     useProfile,
     useUserMembership,
     createProfile,
@@ -420,6 +546,10 @@ export function useInstantDB() {
     sendMessage,
     sendPoll,
     vote,
+    createMatch,
+    updateMatchCheckIn,
+    rsvpToMatch,
+    checkInToMatch,
     addReaction: addOrUpdateReaction,
     removeReaction,
     joinGroup,

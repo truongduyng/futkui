@@ -95,6 +95,46 @@ const rules = {
       "isGroupMember", "auth.id in data.ref('poll.message.group.memberships.profile.user.id')"
     ]
   },
+  matches: {
+    allow: {
+      view: "true",
+      create: "isAuthenticated && isGroupMember",
+      update: "isCreator || isGroupAdmin",
+      delete: "isCreator || isGroupAdmin",
+    },
+    bind: [
+      "isAuthenticated", "auth.id != null",
+      "isCreator", "auth.id in data.ref('creator.user.id')",
+      "isGroupMember", "auth.id in data.ref('group.memberships.profile.user.id')",
+      "isGroupAdmin", "auth.id in data.ref('group.admin.user.id')"
+    ]
+  },
+  rsvps: {
+    allow: {
+      view: "true",
+      create: "isAuthenticated && isGroupMember",
+      update: "isRsvpOwner",
+      delete: "isRsvpOwner",
+    },
+    bind: [
+      "isAuthenticated", "auth.id != null",
+      "isRsvpOwner", "auth.id in data.ref('user.user.id')",
+      "isGroupMember", "auth.id in data.ref('match.group.memberships.profile.user.id')"
+    ]
+  },
+  checkIns: {
+    allow: {
+      view: "true",
+      create: "isAuthenticated && isGroupMember",
+      update: "isCheckInOwner",
+      delete: "isCheckInOwner",
+    },
+    bind: [
+      "isAuthenticated", "auth.id != null",
+      "isCheckInOwner", "auth.id in data.ref('user.user.id')",
+      "isGroupMember", "auth.id in data.ref('match.group.memberships.profile.user.id')"
+    ]
+  },
   $files: {
     allow: {
       view: "true",

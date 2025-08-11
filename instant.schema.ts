@@ -47,6 +47,25 @@ const _schema = i.schema({
       optionId: i.string(),
       createdAt: i.number(),
     }),
+    matches: i.entity({
+      title: i.string(),
+      description: i.string(),
+      gameType: i.string(), // 'internal', 'external', 'friendly', etc.
+      location: i.string(),
+      matchDate: i.number(), // Unix timestamp
+      createdAt: i.number(),
+      isActive: i.boolean(), // true until match day is over
+      allowCheckIn: i.boolean(), // true on match day to allow check-ins
+    }),
+    rsvps: i.entity({
+      response: i.string(), // 'yes', 'no', 'maybe'
+      createdAt: i.number(),
+      updatedAt: i.number(),
+    }),
+    checkIns: i.entity({
+      checkedInAt: i.number(),
+      location: i.string().optional(), // Optional location data
+    }),
     reactions: i.entity({
       createdAt: i.number(),
       emoji: i.string(),
@@ -122,6 +141,30 @@ const _schema = i.schema({
     voteUsers: {
       forward: { on: "votes", has: "one", label: "user" },
       reverse: { on: "profiles", has: "many", label: "votes" },
+    },
+    matchGroups: {
+      forward: { on: "matches", has: "one", label: "group" },
+      reverse: { on: "groups", has: "many", label: "matches" },
+    },
+    matchCreators: {
+      forward: { on: "matches", has: "one", label: "creator" },
+      reverse: { on: "profiles", has: "many", label: "createdMatches" },
+    },
+    matchRsvps: {
+      forward: { on: "matches", has: "many", label: "rsvps" },
+      reverse: { on: "rsvps", has: "one", label: "match" },
+    },
+    rsvpUsers: {
+      forward: { on: "rsvps", has: "one", label: "user" },
+      reverse: { on: "profiles", has: "many", label: "rsvps" },
+    },
+    matchCheckIns: {
+      forward: { on: "matches", has: "many", label: "checkIns" },
+      reverse: { on: "checkIns", has: "one", label: "match" },
+    },
+    checkInUsers: {
+      forward: { on: "checkIns", has: "one", label: "user" },
+      reverse: { on: "profiles", has: "many", label: "checkIns" },
     }
   },
   rooms: {},

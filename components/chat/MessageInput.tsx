@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { CreatePollModal } from "./CreatePollModal";
+import { CreateMatchModal } from "./CreateMatchModal";
 import { MentionPicker } from "./MentionPicker";
 
 interface PollOption {
@@ -39,6 +40,13 @@ interface MessageInputProps {
     allowMultiple: boolean,
     expiresAt?: number,
   ) => Promise<void>;
+  onCreateMatch?: (matchData: {
+    title: string;
+    description: string;
+    gameType: string;
+    location: string;
+    matchDate: number;
+  }) => Promise<void>;
   members?: Member[];
   disabled?: boolean;
 }
@@ -46,12 +54,14 @@ interface MessageInputProps {
 export function MessageInput({
   onSendMessage,
   onSendPoll,
+  onCreateMatch,
   members = [],
   disabled,
 }: MessageInputProps) {
   const [message, setMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showPollModal, setShowPollModal] = useState(false);
+  const [showMatchModal, setShowMatchModal] = useState(false);
   const [currentMentionSearch, setCurrentMentionSearch] = useState<string>("");
   const [showMentionPicker, setShowMentionPicker] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -157,6 +167,25 @@ export function MessageInput({
     }
   };
 
+  const handleCreateMatch = async (matchData: {
+    title: string;
+    description: string;
+    gameType: string;
+    location: string;
+    matchDate: number;
+  }) => {
+    if (onCreateMatch && !isSending) {
+      setIsSending(true);
+      try {
+        await onCreateMatch(matchData);
+      } catch (error) {
+        console.error("Failed to create match:", error);
+      } finally {
+        setIsSending(false);
+      }
+    }
+  };
+
   const handleTextChange = (text: string) => {
     setMessage(text);
 
@@ -241,6 +270,21 @@ export function MessageInput({
           </TouchableOpacity>
         )}
 
+        {onCreateMatch && (
+          <TouchableOpacity
+            style={styles.matchButton}
+            onPress={() => setShowMatchModal(true)}
+            disabled={disabled || isSending}
+            activeOpacity={0.6}
+          >
+            <Ionicons
+              name="football"
+              size={20}
+              color={disabled || isSending ? colors.tabIconDefault + "40" : colors.tabIconDefault}
+            />
+          </TouchableOpacity>
+        )}
+
         <TextInput
           ref={inputRef}
           style={[styles.textInput, { 
@@ -292,6 +336,12 @@ export function MessageInput({
         visible={showPollModal}
         onClose={() => setShowPollModal(false)}
         onCreatePoll={handleCreatePoll}
+      />
+
+      <CreateMatchModal
+        visible={showMatchModal}
+        onClose={() => setShowMatchModal(false)}
+        onCreateMatch={handleCreateMatch}
       />
     </View>
   );
@@ -347,6 +397,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   pollButton: {
+    width: 26,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "transparent",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 4,
+  },
+  matchButton: {
     width: 26,
     height: 36,
     borderRadius: 18,
