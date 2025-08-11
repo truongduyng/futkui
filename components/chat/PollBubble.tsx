@@ -73,10 +73,6 @@ export const PollBubble = React.memo(function PollBubble({
   };
 
   const handleVotePress = (optionId: string) => {
-    if (!poll.allowMultiple && userVotes.length > 0 && !userVotes.includes(optionId)) {
-      // Remove existing vote first if single choice
-      return;
-    }
     onVote(optionId);
   };
 
@@ -132,7 +128,7 @@ export const PollBubble = React.memo(function PollBubble({
             const voteCount = voteCounts[option.id] || 0;
             const percentage = getVotePercentage(option.id);
             const isVoted = userVotes.includes(option.id);
-            const isDisabled = isExpired || (!poll.allowMultiple && userVotes.length > 0 && !isVoted);
+            const isDisabled = isExpired;
 
             return (
               <TouchableOpacity

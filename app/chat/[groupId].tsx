@@ -9,8 +9,8 @@ import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Alert,
   ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -30,7 +30,6 @@ export default function ChatScreen() {
   const flatListRef = useRef<FlatList>(null);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
-  const [newMessageCount, setNewMessageCount] = useState(0);
   const [isNearBottom, setIsNearBottom] = useState(true);
   const hasInitialScrolledRef = useRef(false);
   const lastMessageCountRef = useRef(0);
@@ -49,11 +48,11 @@ export default function ChatScreen() {
     leaveGroup,
     instantClient,
   } = useInstantDB();
-  
+
   // Separate queries for group info and messages
   const { data: groupData, isLoading: isLoadingGroup } = useGroup(groupId || "");
   const { data: messagesData, isLoading: isLoadingMessages } = useMessages(groupId || "", messageLimit);
-  
+
   const { data: profileData } = useProfile();
   const { data: membershipData } = useUserMembership(groupId || "");
   const { user } = instantClient.useAuth();
@@ -69,7 +68,7 @@ export default function ChatScreen() {
   const files = useMemo(() => messagesData?.$files || [], [messagesData?.$files]);
 
   const isLoading = isLoadingGroup || isLoadingMessages;
-  
+
   // Simple check if we have more messages to load
   const hasMoreMessages = messages.length >= messageLimit;
 
@@ -112,6 +111,24 @@ export default function ChatScreen() {
     }
   }, [messages.length]);
 
+  // Load older messages function
+  const loadOlderMessages = useCallback(async () => {
+    if (isLoadingOlder || !hasMoreMessages) {
+      return;
+    }
+
+    setIsLoadingOlder(true);
+
+    try {
+      // Increase limit to load more messages
+      setMessageLimit(prev => prev + 20);
+    } catch (error) {
+      console.error('Error loading older messages:', error);
+    } finally {
+      setTimeout(() => setIsLoadingOlder(false), 300);
+    }
+  }, [isLoadingOlder, hasMoreMessages]);
+
   // Track scroll position and show/hide scroll to bottom button
   const handleScroll = useCallback((event: any) => {
     const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
@@ -120,20 +137,19 @@ export default function ChatScreen() {
 
     setIsNearBottom(isAtBottom);
 
-    if (!isAtBottom && newMessageCount === 0) {
-      // User scrolled up, start counting new messages
+    if (!isAtBottom) {
+      // User scrolled up, show scroll to bottom button
       setShowScrollToBottom(true);
     } else if (isAtBottom) {
-      // User is at bottom, hide button and reset count
+      // User is at bottom, hide button
       setShowScrollToBottom(false);
-      setNewMessageCount(0);
     }
 
     // Trigger loading older messages when near top
     if (isNearTop && hasMoreMessages && !isLoadingOlder) {
       loadOlderMessages();
     }
-  }, [newMessageCount, hasMoreMessages, isLoadingOlder, loadOlderMessages]);
+  }, [hasMoreMessages, isLoadingOlder, loadOlderMessages]);
 
   // Handle new messages
   useEffect(() => {
@@ -147,9 +163,6 @@ export default function ChatScreen() {
         setTimeout(() => {
           flatListRef.current?.scrollToEnd({ animated: true });
         }, 100);
-      } else {
-        // User is scrolled up, increment counter
-        setNewMessageCount(prev => prev + (currentCount - lastCount));
       }
     }
 
@@ -159,7 +172,6 @@ export default function ChatScreen() {
   // Reset state when changing groups
   useEffect(() => {
     hasInitialScrolledRef.current = false;
-    setNewMessageCount(0);
     setShowScrollToBottom(false);
     setIsNearBottom(true);
     lastMessageCountRef.current = 0;
@@ -168,27 +180,8 @@ export default function ChatScreen() {
   // Scroll to bottom function
   const scrollToBottom = useCallback(() => {
     flatListRef.current?.scrollToEnd({ animated: true });
-    setNewMessageCount(0);
     setShowScrollToBottom(false);
   }, []);
-
-  // Load older messages function
-  const loadOlderMessages = useCallback(async () => {
-    if (isLoadingOlder || !hasMoreMessages) {
-      return;
-    }
-
-    setIsLoadingOlder(true);
-    
-    try {
-      // Increase limit to load more messages
-      setMessageLimit(prev => prev + 20);
-    } catch (error) {
-      console.error('Error loading older messages:', error);
-    } finally {
-      setTimeout(() => setIsLoadingOlder(false), 300);
-    }
-  }, [isLoadingOlder, hasMoreMessages]);
 
   // Reset limit when group changes
   useEffect(() => {
@@ -311,7 +304,6 @@ export default function ChatScreen() {
 
       // Reset scroll state and scroll to bottom after sending
       setIsNearBottom(true);
-      setNewMessageCount(0);
       setShowScrollToBottom(false);
 
       setTimeout(() => {
@@ -378,7 +370,6 @@ export default function ChatScreen() {
 
       // Reset scroll state and scroll to bottom after sending
       setIsNearBottom(true);
-      setNewMessageCount(0);
       setShowScrollToBottom(false);
 
       setTimeout(() => {
@@ -522,19 +513,16 @@ export default function ChatScreen() {
 
   const keyExtractor = useCallback((item: any) => item.id, []);
 
-  // Loading indicator for older messages
+  // Simple spinner indicator for older messages
   const renderListHeaderComponent = useCallback(() => {
     if (!isLoadingOlder) return null;
-    
+
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="small" color={colors.tint} />
-        <Text style={[styles.paginationLoadingText, { color: colors.tabIconDefault }]}>
-          Loading older messages...
-        </Text>
       </View>
     );
-  }, [isLoadingOlder, colors.tint, colors.tabIconDefault]);
+  }, [isLoadingOlder, colors.tint]);
 
   if (isLoading || !groupId) {
     return (
@@ -626,16 +614,7 @@ export default function ChatScreen() {
             onPress={scrollToBottom}
             activeOpacity={0.8}
           >
-            <View style={styles.scrollButtonContent}>
-              <Text style={styles.scrollButtonText}>↓</Text>
-              {newMessageCount > 0 && (
-                <View style={styles.newMessageBadge}>
-                  <Text style={styles.newMessageCount}>
-                    {newMessageCount > 99 ? '99+' : newMessageCount}
-                  </Text>
-                </View>
-              )}
-            </View>
+            <Text style={styles.scrollButtonText}>↓</Text>
           </TouchableOpacity>
         )}
 
@@ -697,43 +676,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
   },
-  scrollButtonContent: {
-    position: "relative",
-    justifyContent: "center",
-    alignItems: "center",
-  },
   scrollButtonText: {
     color: "white",
     fontSize: 20,
     fontWeight: "bold",
   },
-  newMessageBadge: {
-    position: "absolute",
-    top: -8,
-    right: -8,
-    backgroundColor: "#FF3B30",
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "white",
-  },
-  newMessageCount: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "bold",
-  },
   loadingContainer: {
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 16,
-    paddingHorizontal: 16,
-  },
-  paginationLoadingText: {
-    marginLeft: 8,
-    fontSize: 14,
   },
 });
