@@ -60,6 +60,41 @@ const rules = {
       "isGroupAdmin", "auth.id in data.ref('group.admin.user.id')"
     ]
   },
+  colors: {
+    allow: {
+      view: "true",
+      create: "isAuthenticated",
+      update: "isAuthenticated",
+      delete: "isAuthenticated",
+    },
+    bind: ["isAuthenticated", "auth.id != null"]
+  },
+  polls: {
+    allow: {
+      view: "true",
+      create: "isAuthenticated && isGroupMember",
+      update: "isAuthor || isGroupMember",
+      delete: "isAuthor",
+    },
+    bind: [
+      "isAuthenticated", "auth.id != null",
+      "isAuthor", "auth.id in data.ref('message.author.user.id')",
+      "isGroupMember", "auth.id in data.ref('message.group.memberships.profile.user.id')"
+    ]
+  },
+  votes: {
+    allow: {
+      view: "true",
+      create: "isAuthenticated && isGroupMember",
+      update: "isVoter",
+      delete: "isVoter",
+    },
+    bind: [
+      "isAuthenticated", "auth.id != null",
+      "isVoter", "auth.id in data.ref('user.user.id')",
+      "isGroupMember", "auth.id in data.ref('poll.message.group.memberships.profile.user.id')"
+    ]
+  },
   $files: {
     allow: {
       view: "true",
