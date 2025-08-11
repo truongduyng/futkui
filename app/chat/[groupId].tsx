@@ -72,10 +72,14 @@ export default function ChatScreen() {
 
     if (currentMessageCount > 0) {
       if (previousMessageCount === 0) {
-        // Initial load, scroll to bottom without animation
+        // Initial load, scroll to bottom with gentle animation
+        // Use multiple timeouts to ensure it works with different loading states
         setTimeout(() => {
           flatListRef.current?.scrollToEnd({ animated: false });
         }, 100);
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 400);
       } else if (currentMessageCount > previousMessageCount) {
         // New message added, scroll to bottom with animation
         setTimeout(() => {
@@ -86,6 +90,16 @@ export default function ChatScreen() {
 
     previousMessageCountRef.current = currentMessageCount;
   }, [messages.length]);
+
+  // Additional effect to ensure scroll to bottom after loading
+  useEffect(() => {
+    if (!isLoading && messages.length > 0) {
+      // Scroll to bottom once loading is complete with smooth animation
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 200);
+    }
+  }, [isLoading, messages.length]);
 
   const handleShareGroup = useCallback(() => {
     if (group?.shareLink) {
