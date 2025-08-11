@@ -4,6 +4,7 @@ import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import React, { useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   StyleSheet,
@@ -31,13 +32,13 @@ interface MessageInputProps {
     message: string,
     imageUri?: string,
     mentions?: string[],
-  ) => void;
+  ) => Promise<void>;
   onSendPoll?: (
     question: string,
     options: PollOption[],
     allowMultiple: boolean,
     expiresAt?: number,
-  ) => void;
+  ) => Promise<void>;
   members?: Member[];
   disabled?: boolean;
 }
@@ -53,20 +54,28 @@ export function MessageInput({
   const [showPollModal, setShowPollModal] = useState(false);
   const [currentMentionSearch, setCurrentMentionSearch] = useState<string>("");
   const [showMentionPicker, setShowMentionPicker] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const inputRef = useRef<TextInput>(null);
   const colors = Colors["light"];
 
-  const handleSend = () => {
-    if ((message.trim() || selectedImage) && !disabled) {
+  const handleSend = async () => {
+    if ((message.trim() || selectedImage) && !disabled && !isSending) {
       // Extract mentions from the message
       const mentionMatches = message.match(/@(\w+)/g) || [];
       const mentions = mentionMatches.map((match) => match.substring(1)); // Remove @ symbol
 
-      onSendMessage(message.trim(), selectedImage || undefined, mentions);
-      setMessage("");
-      setSelectedImage(null);
-      setShowMentionPicker(false);
-      setCurrentMentionSearch("");
+      setIsSending(true);
+      try {
+        await onSendMessage(message.trim(), selectedImage || undefined, mentions);
+        setMessage("");
+        setSelectedImage(null);
+        setShowMentionPicker(false);
+        setCurrentMentionSearch("");
+      } catch (error) {
+        console.error("Failed to send message:", error);
+      } finally {
+        setIsSending(false);
+      }
     }
   };
 
@@ -123,14 +132,21 @@ export function MessageInput({
     setSelectedImage(null);
   };
 
-  const handleCreatePoll = (
+  const handleCreatePoll = async (
     question: string,
     options: PollOption[],
     allowMultiple: boolean,
     expiresAt?: number,
   ) => {
-    if (onSendPoll) {
-      onSendPoll(question, options, allowMultiple, expiresAt);
+    if (onSendPoll && !isSending) {
+      setIsSending(true);
+      try {
+        await onSendPoll(question, options, allowMultiple, expiresAt);
+      } catch (error) {
+        console.error("Failed to send poll:", error);
+      } finally {
+        setIsSending(false);
+      }
     }
   };
 
@@ -171,11 +187,18 @@ export function MessageInput({
       {selectedImage && (
         <View style={styles.imagePreviewContainer}>
           <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+          {isSending && (
+            <View style={styles.imageLoadingOverlay}>
+              <ActivityIndicator size="small" color="white" />
+              <Text style={styles.uploadingText}>Uploading...</Text>
+            </View>
+          )}
           <TouchableOpacity
             style={styles.removeImageButton}
             onPress={removeImage}
+            disabled={isSending}
           >
-            <Text style={styles.removeImageText}>✕</Text>
+            <Text style={[styles.removeImageText, { opacity: isSending ? 0.5 : 1 }]}>✕</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -186,37 +209,44 @@ export function MessageInput({
         <TouchableOpacity
           style={styles.imageButton}
           onPress={pickImage}
-          disabled={disabled}
+          disabled={disabled || isSending}
           activeOpacity={0.6}
         >
-          <Ionicons name="camera" size={20} color={colors.tabIconDefault} />
+          <Ionicons 
+            name="camera" 
+            size={20} 
+            color={disabled || isSending ? colors.tabIconDefault + "40" : colors.tabIconDefault} 
+          />
         </TouchableOpacity>
 
         {onSendPoll && (
           <TouchableOpacity
             style={styles.pollButton}
             onPress={() => setShowPollModal(true)}
-            disabled={disabled}
+            disabled={disabled || isSending}
             activeOpacity={0.6}
           >
             <Ionicons
               name="bar-chart"
               size={20}
-              color={colors.tabIconDefault}
+              color={disabled || isSending ? colors.tabIconDefault + "40" : colors.tabIconDefault}
             />
           </TouchableOpacity>
         )}
 
         <TextInput
           ref={inputRef}
-          style={[styles.textInput, { color: colors.text }]}
+          style={[styles.textInput, { 
+            color: colors.text,
+            opacity: isSending ? 0.6 : 1
+          }]}
           value={message}
           onChangeText={handleTextChange}
-          placeholder="Type a message..."
+          placeholder={isSending ? "Sending..." : "Type a message..."}
           placeholderTextColor={colors.tabIconDefault}
           multiline
           maxLength={1000}
-          editable={!disabled}
+          editable={!disabled && !isSending}
           textAlignVertical="top"
           scrollEnabled={true}
           returnKeyType="default"
@@ -227,15 +257,20 @@ export function MessageInput({
             styles.sendButton,
             {
               backgroundColor:
-                message.trim() || selectedImage
+                (message.trim() || selectedImage) && !isSending
                   ? colors.tint
                   : colors.tabIconDefault,
+              opacity: isSending ? 0.7 : 1,
             },
           ]}
           onPress={handleSend}
-          disabled={!(message.trim() || selectedImage) || disabled}
+          disabled={!(message.trim() || selectedImage) || disabled || isSending}
         >
-          <Text style={styles.sendButtonText}>Send</Text>
+          {isSending ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <Text style={styles.sendButtonText}>Send</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -338,5 +373,23 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 12,
     fontWeight: "bold",
+  },
+  imageLoadingOverlay: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: [{ translateX: -30 }, { translateY: -10 }],
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  uploadingText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "600",
   },
 });
