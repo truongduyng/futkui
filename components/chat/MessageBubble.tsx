@@ -1,4 +1,6 @@
 import { Colors } from "@/constants/Colors";
+import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -8,7 +10,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { MentionText } from "./MentionText";
 
@@ -56,6 +58,7 @@ export const MessageBubble = React.memo(function MessageBubble({
   const colors = Colors["light"];
   const [showReactionOptions, setShowReactionOptions] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
+  const [showMessageOptions, setShowMessageOptions] = useState(false);
   const [messagePosition, setMessagePosition] = useState({
     x: 0,
     y: 0,
@@ -88,9 +91,36 @@ export const MessageBubble = React.memo(function MessageBubble({
     return acc;
   }, {} as Record<string, Reaction[]>);
 
+  const handleCopyText = async () => {
+    if (content && content.trim()) {
+      try {
+        await Clipboard.setStringAsync(content);
+        setShowMessageOptions(false);
+        // Could add a toast notification here instead of alert
+      } catch {
+        // Silent fail - could add toast notification
+      }
+    }
+  };
+
   const handleLongPress = (event: any) => {
-    if (onAddReaction && !isOwnMessage) {
-      // Get the message bubble position
+    if (content && content.trim()) {
+      // Get the message bubble position for options menu
+      event.target.measure(
+        (
+          _x: number,
+          _y: number,
+          width: number,
+          height: number,
+          pageX: number,
+          pageY: number,
+        ) => {
+          setMessagePosition({ x: pageX, y: pageY, width, height });
+          setShowMessageOptions(true);
+        },
+      );
+    } else if (onAddReaction && !isOwnMessage) {
+      // Get the message bubble position for reaction options
       event.target.measure(
         (
           _x: number,
@@ -116,6 +146,7 @@ export const MessageBubble = React.memo(function MessageBubble({
 
   const handleTapOutside = () => {
     setShowReactionOptions(false);
+    setShowMessageOptions(false);
   };
 
   return (
@@ -224,6 +255,41 @@ export const MessageBubble = React.memo(function MessageBubble({
                     <Text style={styles.reactionOptionEmoji}>{emoji}</Text>
                   </TouchableOpacity>
                 ))}
+              </View>
+            </TouchableOpacity>
+          </Modal>
+        )}
+
+        {showMessageOptions && content && content.trim() && (
+          <Modal
+            visible={showMessageOptions}
+            transparent={true}
+            animationType="none"
+            onRequestClose={handleTapOutside}
+          >
+            <TouchableOpacity
+              style={styles.reactionModalOverlay}
+              activeOpacity={1}
+              onPress={handleTapOutside}
+            >
+              <View
+                style={[
+                  styles.messageOptionsContainer,
+                  {
+                    position: "absolute",
+                    left: messagePosition.x,
+                    top: messagePosition.y + messagePosition.height + 10,
+                  },
+                ]}
+              >
+                <TouchableOpacity
+                  style={styles.messageOptionButton}
+                  onPress={handleCopyText}
+                >
+                  <View style={styles.messageOptionContent}>
+                    <Ionicons name="copy-outline" size={18} color="#666" />
+                  </View>
+                </TouchableOpacity>
               </View>
             </TouchableOpacity>
           </Modal>
@@ -507,6 +573,34 @@ const styles = StyleSheet.create({
   },
   reactionOptionEmoji: {
     fontSize: 20,
+  },
+  messageOptionsContainer: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: "white",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.1)",
+  },
+  messageOptionButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    borderRadius: 8,
+  },
+  messageOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  messageOptionText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#333",
   },
   modalOverlay: {
     flex: 1,
