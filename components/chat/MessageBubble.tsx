@@ -1,7 +1,16 @@
-import { Colors } from '@/constants/Colors';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { MentionText } from './MentionText';
+import { Colors } from "@/constants/Colors";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { MentionText } from "./MentionText";
 
 interface Reaction {
   id: string;
@@ -47,7 +56,12 @@ export const MessageBubble = React.memo(function MessageBubble({
   const colors = Colors["light"];
   const [showReactionOptions, setShowReactionOptions] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
-  const [messagePosition, setMessagePosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [messagePosition, setMessagePosition] = useState({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
   const [imageLoading, setImageLoading] = useState(true);
 
   // Reset loading state when imageUrl changes
@@ -77,10 +91,19 @@ export const MessageBubble = React.memo(function MessageBubble({
   const handleLongPress = (event: any) => {
     if (onAddReaction && !isOwnMessage) {
       // Get the message bubble position
-      event.target.measure((_x: number, _y: number, width: number, height: number, pageX: number, pageY: number) => {
-        setMessagePosition({ x: pageX, y: pageY, width, height });
-        setShowReactionOptions(true);
-      });
+      event.target.measure(
+        (
+          _x: number,
+          _y: number,
+          width: number,
+          height: number,
+          pageX: number,
+          pageY: number,
+        ) => {
+          setMessagePosition({ x: pageX, y: pageY, width, height });
+          setShowReactionOptions(true);
+        },
+      );
     }
   };
 
@@ -153,57 +176,68 @@ export const MessageBubble = React.memo(function MessageBubble({
             >
               <MentionText
                 text={content}
-                style={[
+                style={StyleSheet.flatten([
                   styles.messageText,
                   isOwnMessage ? styles.ownMessageText : { color: colors.text },
-                ]}
-                mentionStyle={isOwnMessage ? { color: 'rgba(255, 255, 255, 0.9)' } : undefined}
+                ])}
+                mentionStyle={
+                  isOwnMessage
+                    ? {
+                        color: "white",
+                        fontWeight: "700",
+                      }
+                    : undefined
+                }
               />
             </TouchableOpacity>
           )}
         </View>
 
-      {showReactionOptions && onAddReaction && !isOwnMessage && (
-        <Modal
-          visible={showReactionOptions}
-          transparent={true}
-          animationType="none"
-          onRequestClose={handleTapOutside}
-        >
-          <TouchableOpacity
-            style={styles.reactionModalOverlay}
-            activeOpacity={1}
-            onPress={handleTapOutside}
+        {showReactionOptions && onAddReaction && !isOwnMessage && (
+          <Modal
+            visible={showReactionOptions}
+            transparent={true}
+            animationType="none"
+            onRequestClose={handleTapOutside}
           >
-            <View
-              style={[
-                styles.reactionOptionsContainer,
-                {
-                  position: 'absolute',
-                  left: messagePosition.x,
-                  top: messagePosition.y + messagePosition.height + 10,
-                }
-              ]}
+            <TouchableOpacity
+              style={styles.reactionModalOverlay}
+              activeOpacity={1}
+              onPress={handleTapOutside}
             >
-              {QUICK_REACTIONS.map((emoji) => (
-                <TouchableOpacity
-                  key={emoji}
-                  style={styles.reactionOptionButton}
-                  onPress={() => handleAddReaction(emoji)}
-                >
-                  <Text style={styles.reactionOptionEmoji}>{emoji}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </TouchableOpacity>
-        </Modal>
-      )}
+              <View
+                style={[
+                  styles.reactionOptionsContainer,
+                  {
+                    position: "absolute",
+                    left: messagePosition.x,
+                    top: messagePosition.y + messagePosition.height + 10,
+                  },
+                ]}
+              >
+                {QUICK_REACTIONS.map((emoji) => (
+                  <TouchableOpacity
+                    key={emoji}
+                    style={styles.reactionOptionButton}
+                    onPress={() => handleAddReaction(emoji)}
+                  >
+                    <Text style={styles.reactionOptionEmoji}>{emoji}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </TouchableOpacity>
+          </Modal>
+        )}
 
         {Object.keys(groupedReactions).length > 0 && (
-          <View style={[
-            styles.reactionsContainer,
-            isOwnMessage ? styles.reactionsOwnMessage : styles.reactionsOtherMessage
-          ]}>
+          <View
+            style={[
+              styles.reactionsContainer,
+              isOwnMessage
+                ? styles.reactionsOwnMessage
+                : styles.reactionsOtherMessage,
+            ]}
+          >
             <TouchableOpacity
               style={styles.reactionButton}
               onPress={() => setShowReactionDetails(true)}
