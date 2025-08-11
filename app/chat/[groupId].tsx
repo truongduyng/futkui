@@ -33,6 +33,7 @@ export default function ChatScreen() {
   const [isNearBottom, setIsNearBottom] = useState(true);
   const hasInitialScrolledRef = useRef(false);
   const lastMessageCountRef = useRef(0);
+  const lastMessageIdRef = useRef<string>('');
   const [messageLimit, setMessageLimit] = useState(30);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
 
@@ -151,23 +152,32 @@ export default function ChatScreen() {
     }
   }, [hasMoreMessages, isLoadingOlder, loadOlderMessages]);
 
-  // Handle new messages
+  // Handle new messages (only scroll for truly new messages, not reactions)
   useEffect(() => {
     const currentCount = messages.length;
     const lastCount = lastMessageCountRef.current;
 
+    // Only trigger scroll behavior when message count actually increases
     if (lastCount > 0 && currentCount > lastCount) {
-      // New messages arrived
-      if (isNearBottom) {
-        // User is near bottom, scroll smoothly to new message
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
+      const currentLastMessageId = messages.length > 0 ? messages[messages.length - 1]?.id : '';
+      const lastMessageId = lastMessageIdRef.current;
+      
+      // Double check that we have a new message with a different ID
+      if (currentLastMessageId && currentLastMessageId !== lastMessageId) {
+        // Check isNearBottom at the time of execution, not as a dependency
+        if (isNearBottom) {
+          // User is near bottom, scroll smoothly to new message
+          setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+          }, 100);
+        }
+        // Update the last message ID only when we have a genuinely new message
+        lastMessageIdRef.current = currentLastMessageId;
       }
     }
 
     lastMessageCountRef.current = currentCount;
-  }, [messages.length, isNearBottom]);
+  }, [messages.length]);
 
   // Reset state when changing groups
   useEffect(() => {
@@ -175,6 +185,7 @@ export default function ChatScreen() {
     setShowScrollToBottom(false);
     setIsNearBottom(true);
     lastMessageCountRef.current = 0;
+    lastMessageIdRef.current = '';
   }, [groupId]);
 
   // Scroll to bottom function

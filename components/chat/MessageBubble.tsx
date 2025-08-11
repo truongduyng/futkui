@@ -65,12 +65,14 @@ export const MessageBubble = React.memo(function MessageBubble({
     width: 0,
     height: 0,
   });
-  const [imageLoading, setImageLoading] = useState(true);
+  const [imageLoading, setImageLoading] = useState(false);
 
   // Reset loading state when imageUrl changes
   useEffect(() => {
     if (imageUrl) {
       setImageLoading(true);
+    } else {
+      setImageLoading(false);
     }
   }, [imageUrl]);
 
@@ -96,6 +98,7 @@ export const MessageBubble = React.memo(function MessageBubble({
       try {
         await Clipboard.setStringAsync(content);
         setShowMessageOptions(false);
+        setShowReactionOptions(false);
         // Could add a toast notification here instead of alert
       } catch {
         // Silent fail - could add toast notification
@@ -104,43 +107,37 @@ export const MessageBubble = React.memo(function MessageBubble({
   };
 
   const handleLongPress = (event: any) => {
-    if (content && content.trim()) {
-      // Get the message bubble position for options menu
-      event.target.measure(
-        (
-          _x: number,
-          _y: number,
-          width: number,
-          height: number,
-          pageX: number,
-          pageY: number,
-        ) => {
-          setMessagePosition({ x: pageX, y: pageY, width, height });
+    // Get the message bubble position for options menu
+    event.target.measure(
+      (
+        _x: number,
+        _y: number,
+        width: number,
+        height: number,
+        pageX: number,
+        pageY: number,
+      ) => {
+        setMessagePosition({ x: pageX, y: pageY, width, height });
+        
+        if (content && content.trim()) {
+          // Show both reactions (above) and copy options (below) for text messages
+          if (onAddReaction && !isOwnMessage) {
+            setShowReactionOptions(true);
+          }
           setShowMessageOptions(true);
-        },
-      );
-    } else if (onAddReaction && !isOwnMessage) {
-      // Get the message bubble position for reaction options
-      event.target.measure(
-        (
-          _x: number,
-          _y: number,
-          width: number,
-          height: number,
-          pageX: number,
-          pageY: number,
-        ) => {
-          setMessagePosition({ x: pageX, y: pageY, width, height });
+        } else if (onAddReaction && !isOwnMessage) {
+          // Show only reactions for non-text messages (like images) from others
           setShowReactionOptions(true);
-        },
-      );
-    }
+        }
+      },
+    );
   };
 
   const handleAddReaction = (emoji: string) => {
     if (onAddReaction) {
       onAddReaction(emoji);
       setShowReactionOptions(false);
+      setShowMessageOptions(false);
     }
   };
 
@@ -224,9 +221,9 @@ export const MessageBubble = React.memo(function MessageBubble({
           )}
         </View>
 
-        {showReactionOptions && onAddReaction && !isOwnMessage && (
+        {(showReactionOptions || showMessageOptions) && (
           <Modal
-            visible={showReactionOptions}
+            visible={showReactionOptions || showMessageOptions}
             transparent={true}
             animationType="none"
             onRequestClose={handleTapOutside}
@@ -236,61 +233,52 @@ export const MessageBubble = React.memo(function MessageBubble({
               activeOpacity={1}
               onPress={handleTapOutside}
             >
-              <View
-                style={[
-                  styles.reactionOptionsContainer,
-                  {
-                    position: "absolute",
-                    left: messagePosition.x,
-                    top: messagePosition.y + messagePosition.height + 10,
-                  },
-                ]}
-              >
-                {QUICK_REACTIONS.map((emoji) => (
-                  <TouchableOpacity
-                    key={emoji}
-                    style={styles.reactionOptionButton}
-                    onPress={() => handleAddReaction(emoji)}
-                  >
-                    <Text style={styles.reactionOptionEmoji}>{emoji}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </TouchableOpacity>
-          </Modal>
-        )}
-
-        {showMessageOptions && content && content.trim() && (
-          <Modal
-            visible={showMessageOptions}
-            transparent={true}
-            animationType="none"
-            onRequestClose={handleTapOutside}
-          >
-            <TouchableOpacity
-              style={styles.reactionModalOverlay}
-              activeOpacity={1}
-              onPress={handleTapOutside}
-            >
-              <View
-                style={[
-                  styles.messageOptionsContainer,
-                  {
-                    position: "absolute",
-                    left: messagePosition.x,
-                    top: messagePosition.y + messagePosition.height + 10,
-                  },
-                ]}
-              >
-                <TouchableOpacity
-                  style={styles.messageOptionButton}
-                  onPress={handleCopyText}
+              {/* Reaction options above message */}
+              {showReactionOptions && onAddReaction && !isOwnMessage && (
+                <View
+                  style={[
+                    styles.reactionOptionsContainer,
+                    {
+                      position: "absolute",
+                      left: messagePosition.x,
+                      top: messagePosition.y - 60, // Position above the message
+                    },
+                  ]}
                 >
-                  <View style={styles.messageOptionContent}>
-                    <Ionicons name="copy-outline" size={18} color="#666" />
-                  </View>
-                </TouchableOpacity>
-              </View>
+                  {QUICK_REACTIONS.map((emoji) => (
+                    <TouchableOpacity
+                      key={emoji}
+                      style={styles.reactionOptionButton}
+                      onPress={() => handleAddReaction(emoji)}
+                    >
+                      <Text style={styles.reactionOptionEmoji}>{emoji}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+              
+              {/* Message options below message */}
+              {showMessageOptions && content && content.trim() && (
+                <View
+                  style={[
+                    styles.messageOptionsContainer,
+                    {
+                      position: "absolute",
+                      left: messagePosition.x,
+                      top: messagePosition.y + messagePosition.height + 10,
+                    },
+                  ]}
+                >
+                  <TouchableOpacity
+                    style={styles.messageOptionButton}
+                    onPress={handleCopyText}
+                  >
+                    <View style={styles.messageOptionContent}>
+                      <Ionicons name="copy-outline" size={18} color="#666" />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              )}
             </TouchableOpacity>
           </Modal>
         )}
