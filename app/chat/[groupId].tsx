@@ -166,10 +166,10 @@ export default function ChatScreen() {
       if (currentLastMessageId && currentLastMessageId !== lastMessageId) {
         // Check isNearBottom at the time of execution, not as a dependency
         if (isNearBottom) {
-          // User is near bottom, scroll smoothly to new message
-          setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: true });
-          }, 100);
+          // User is near bottom, scroll to new message without stealing focus
+          requestAnimationFrame(() => {
+            flatListRef.current?.scrollToEnd({ animated: false });
+          });
         }
         // Update the last message ID only when we have a genuinely new message
         lastMessageIdRef.current = currentLastMessageId;
@@ -313,13 +313,9 @@ export default function ChatScreen() {
         mentions,
       });
 
-      // Reset scroll state and scroll to bottom after sending
+      // Reset scroll state - let natural message update handle scrolling
       setIsNearBottom(true);
       setShowScrollToBottom(false);
-
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
     } catch (error) {
       Alert.alert("Error", "Failed to send message. Please try again.");
       console.error("Error sending message:", error);
@@ -379,13 +375,9 @@ export default function ChatScreen() {
         expiresAt,
       });
 
-      // Reset scroll state and scroll to bottom after sending
+      // Reset scroll state - let natural message update handle scrolling
       setIsNearBottom(true);
       setShowScrollToBottom(false);
-
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
     } catch (error) {
       Alert.alert("Error", "Failed to send poll. Please try again.");
       console.error("Error sending poll:", error);

@@ -64,9 +64,16 @@ export function MessageInput({
       const mentionMatches = message.match(/@(\w+)/g) || [];
       const mentions = mentionMatches.map((match) => match.substring(1)); // Remove @ symbol
 
+      // Store values before clearing state
+      const messageToSend = message.trim();
+      const imageToSend = selectedImage || undefined;
+      
       setIsSending(true);
+      
       try {
-        await onSendMessage(message.trim(), selectedImage || undefined, mentions);
+        await onSendMessage(messageToSend, imageToSend, mentions);
+        
+        // Clear state only after successful send
         setMessage("");
         setSelectedImage(null);
         setShowMentionPicker(false);
@@ -246,7 +253,7 @@ export function MessageInput({
           placeholderTextColor={colors.tabIconDefault}
           multiline
           maxLength={1000}
-          editable={!disabled && !isSending}
+          editable={!disabled}
           textAlignVertical="top"
           scrollEnabled={true}
           returnKeyType="default"
