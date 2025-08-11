@@ -28,7 +28,6 @@ export default function ChatScreen() {
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
-  const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const [isNearBottom, setIsNearBottom] = useState(true);
@@ -75,13 +74,13 @@ export default function ChatScreen() {
     if (!isLoading && messages.length > 0 && !hasInitialScrolledRef.current) {
       // Multiple attempts with increasing delays to ensure content is rendered
       const scrollAttempts = [50, 150, 300, 500];
-      
+
       scrollAttempts.forEach((delay) => {
         setTimeout(() => {
           flatListRef.current?.scrollToEnd({ animated: false });
         }, delay);
       });
-      
+
       hasInitialScrolledRef.current = true;
     }
   }, [isLoading, messages.length]);
@@ -99,10 +98,10 @@ export default function ChatScreen() {
   // Track scroll position and show/hide scroll to bottom button
   const handleScroll = useCallback((event: any) => {
     const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
-    const isAtBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 50;
-    
+    const isAtBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 100;
+
     setIsNearBottom(isAtBottom);
-    
+
     if (!isAtBottom && newMessageCount === 0) {
       // User scrolled up, start counting new messages
       setShowScrollToBottom(true);
@@ -117,7 +116,7 @@ export default function ChatScreen() {
   useEffect(() => {
     const currentCount = messages.length;
     const lastCount = lastMessageCountRef.current;
-    
+
     if (lastCount > 0 && currentCount > lastCount) {
       // New messages arrived
       if (isNearBottom) {
@@ -130,7 +129,7 @@ export default function ChatScreen() {
         setNewMessageCount(prev => prev + (currentCount - lastCount));
       }
     }
-    
+
     lastMessageCountRef.current = currentCount;
   }, [messages.length, isNearBottom]);
 
@@ -268,7 +267,7 @@ export default function ChatScreen() {
       setIsNearBottom(true);
       setNewMessageCount(0);
       setShowScrollToBottom(false);
-      
+
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
@@ -335,7 +334,7 @@ export default function ChatScreen() {
       setIsNearBottom(true);
       setNewMessageCount(0);
       setShowScrollToBottom(false);
-      
+
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
