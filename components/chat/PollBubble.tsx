@@ -135,8 +135,8 @@ export const PollBubble = React.memo(function PollBubble({
                 key={option.id}
                 style={[
                   styles.optionButton,
-                  isVoted && styles.votedOption,
-                  isDisabled && styles.disabledOption,
+                  isVoted ? styles.votedOption : null,
+                  isDisabled ? styles.disabledOption : null,
                   {
                     backgroundColor: isVoted
                       ? (isOwnMessage ? 'rgba(255,255,255,0.3)' : colors.tint + '20')
@@ -144,7 +144,7 @@ export const PollBubble = React.memo(function PollBubble({
                   },
                 ]}
                 onPress={() => handleVotePress(option.id)}
-                disabled={isDisabled}
+                disabled={isDisabled || false}
                 activeOpacity={0.7}
               >
                 <View style={styles.optionContent}>
