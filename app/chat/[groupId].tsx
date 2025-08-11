@@ -27,8 +27,13 @@ export default function ChatScreen() {
   const navigation = useNavigation();
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
-  const previousMessageCountRef = useRef<number>(0);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [newMessageCount, setNewMessageCount] = useState(0);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const hasInitialScrolledRef = useRef(false);
+  const lastMessageCountRef = useRef(0);
 
   const {
     useGroup,
@@ -51,7 +56,7 @@ export default function ChatScreen() {
   const group = groupData?.groups?.[0];
   const messages = useMemo(() => group?.messages || [], [group?.messages]);
   const files = useMemo(() => groupData?.$files || [], [groupData?.$files]);
-  
+
   // Extract members from group memberships for mention functionality
   const members = group?.memberships?.map(membership => ({
     id: membership.profile?.id || '',
@@ -65,41 +70,85 @@ export default function ChatScreen() {
     return file?.url;
   }, [files]);
 
-  // Track message count changes to detect new messages
+  // Initial scroll to bottom on first load
   useEffect(() => {
-    const currentMessageCount = messages.length;
-    const previousMessageCount = previousMessageCountRef.current;
-
-    if (currentMessageCount > 0) {
-      if (previousMessageCount === 0) {
-        // Initial load, scroll to bottom with gentle animation
-        // Use multiple timeouts to ensure it works with different loading states
+    if (!isLoading && messages.length > 0 && !hasInitialScrolledRef.current) {
+      // Multiple attempts with increasing delays to ensure content is rendered
+      const scrollAttempts = [50, 150, 300, 500];
+      
+      scrollAttempts.forEach((delay) => {
         setTimeout(() => {
           flatListRef.current?.scrollToEnd({ animated: false });
-        }, 100);
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }, 400);
-      } else if (currentMessageCount > previousMessageCount) {
-        // New message added, scroll to bottom with animation
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
-      }
-    }
-
-    previousMessageCountRef.current = currentMessageCount;
-  }, [messages.length]);
-
-  // Additional effect to ensure scroll to bottom after loading
-  useEffect(() => {
-    if (!isLoading && messages.length > 0) {
-      // Scroll to bottom once loading is complete with smooth animation
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 200);
+        }, delay);
+      });
+      
+      hasInitialScrolledRef.current = true;
     }
   }, [isLoading, messages.length]);
+
+  // Additional scroll trigger when content size changes
+  const handleContentSizeChange = useCallback(() => {
+    if (!hasInitialScrolledRef.current && messages.length > 0) {
+      // Immediate scroll when content size changes
+      requestAnimationFrame(() => {
+        flatListRef.current?.scrollToEnd({ animated: false });
+      });
+    }
+  }, [messages.length]);
+
+  // Track scroll position and show/hide scroll to bottom button
+  const handleScroll = useCallback((event: any) => {
+    const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
+    const isAtBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 50;
+    
+    setIsNearBottom(isAtBottom);
+    
+    if (!isAtBottom && newMessageCount === 0) {
+      // User scrolled up, start counting new messages
+      setShowScrollToBottom(true);
+    } else if (isAtBottom) {
+      // User is at bottom, hide button and reset count
+      setShowScrollToBottom(false);
+      setNewMessageCount(0);
+    }
+  }, [newMessageCount]);
+
+  // Handle new messages
+  useEffect(() => {
+    const currentCount = messages.length;
+    const lastCount = lastMessageCountRef.current;
+    
+    if (lastCount > 0 && currentCount > lastCount) {
+      // New messages arrived
+      if (isNearBottom) {
+        // User is near bottom, scroll smoothly to new message
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      } else {
+        // User is scrolled up, increment counter
+        setNewMessageCount(prev => prev + (currentCount - lastCount));
+      }
+    }
+    
+    lastMessageCountRef.current = currentCount;
+  }, [messages.length, isNearBottom]);
+
+  // Reset state when changing groups
+  useEffect(() => {
+    hasInitialScrolledRef.current = false;
+    setNewMessageCount(0);
+    setShowScrollToBottom(false);
+    setIsNearBottom(true);
+    lastMessageCountRef.current = 0;
+  }, [groupId]);
+
+  // Scroll to bottom function
+  const scrollToBottom = useCallback(() => {
+    flatListRef.current?.scrollToEnd({ animated: true });
+    setNewMessageCount(0);
+    setShowScrollToBottom(false);
+  }, []);
 
   const handleShareGroup = useCallback(() => {
     if (group?.shareLink) {
@@ -215,7 +264,11 @@ export default function ChatScreen() {
         mentions,
       });
 
-      // Auto-scroll to bottom after sending message
+      // Reset scroll state and scroll to bottom after sending
+      setIsNearBottom(true);
+      setNewMessageCount(0);
+      setShowScrollToBottom(false);
+      
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
@@ -278,7 +331,11 @@ export default function ChatScreen() {
         expiresAt,
       });
 
-      // Auto-scroll to bottom after sending poll
+      // Reset scroll state and scroll to bottom after sending
+      setIsNearBottom(true);
+      setNewMessageCount(0);
+      setShowScrollToBottom(false);
+      
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
@@ -407,10 +464,10 @@ export default function ChatScreen() {
       </>
     );
   }, [
-    messages, 
-    currentProfile?.id, 
-    shouldShowTimestamp, 
-    getFileUrl, 
+    messages,
+    currentProfile?.id,
+    shouldShowTimestamp,
+    getFileUrl,
     colors.tabIconDefault,
     createVoteHandler,
     createReactionHandler,
@@ -478,22 +535,49 @@ export default function ChatScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             automaticallyAdjustKeyboardInsets={false}
-            removeClippedSubviews={true}
-            maxToRenderPerBatch={10}
+            removeClippedSubviews={false}
+            maxToRenderPerBatch={20}
             updateCellsBatchingPeriod={50}
-            initialNumToRender={15}
+            initialNumToRender={20}
             windowSize={10}
-            onLayout={() =>
-              flatListRef.current?.scrollToEnd({ animated: false })
-            }
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            onContentSizeChange={handleContentSizeChange}
+            onLayout={() => {
+              // Additional scroll attempt when layout completes
+              if (!hasInitialScrolledRef.current && messages.length > 0) {
+                setTimeout(() => {
+                  flatListRef.current?.scrollToEnd({ animated: false });
+                }, 0);
+              }
+            }}
           />
 
-          <MessageInput 
-            onSendMessage={handleSendMessage} 
-            onSendPoll={handleSendPoll} 
+          <MessageInput
+            onSendMessage={handleSendMessage}
+            onSendPoll={handleSendPoll}
             members={members}
           />
         </KeyboardAvoidingView>
+
+        {showScrollToBottom && (
+          <TouchableOpacity
+            style={[styles.scrollToBottomButton, { backgroundColor: colors.tint }]}
+            onPress={scrollToBottom}
+            activeOpacity={0.8}
+          >
+            <View style={styles.scrollButtonContent}>
+              <Text style={styles.scrollButtonText}>↓</Text>
+              {newMessageCount > 0 && (
+                <View style={styles.newMessageBadge}>
+                  <Text style={styles.newMessageCount}>
+                    {newMessageCount > 99 ? '99+' : newMessageCount}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+        )}
 
         <ImageModal
           visible={!!selectedImageUrl}
@@ -537,5 +621,48 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
+  },
+  scrollToBottomButton: {
+    position: "absolute",
+    right: 16,
+    bottom: 80,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  scrollButtonContent: {
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  scrollButtonText: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  newMessageBadge: {
+    position: "absolute",
+    top: -8,
+    right: -8,
+    backgroundColor: "#FF3B30",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "white",
+  },
+  newMessageCount: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
   },
 });
