@@ -161,7 +161,7 @@ export default function ChatScreen() {
     if (lastCount > 0 && currentCount > lastCount) {
       const currentLastMessageId = messages.length > 0 ? messages[messages.length - 1]?.id : '';
       const lastMessageId = lastMessageIdRef.current;
-      
+
       // Double check that we have a new message with a different ID
       if (currentLastMessageId && currentLastMessageId !== lastMessageId) {
         // Check isNearBottom at the time of execution, not as a dependency
@@ -578,7 +578,7 @@ export default function ChatScreen() {
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={
-            Platform.OS === "ios" ? insets.bottom + 49 : 0
+            Platform.OS === "ios" ? insets.top + 20 : 0
           }
           enabled
         >
@@ -592,7 +592,8 @@ export default function ChatScreen() {
             inverted={false}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
-            automaticallyAdjustKeyboardInsets={false}
+            automaticallyAdjustKeyboardInsets={true}
+            keyboardDismissMode="interactive"
             removeClippedSubviews={false}
             maxToRenderPerBatch={20}
             updateCellsBatchingPeriod={50}

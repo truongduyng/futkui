@@ -275,6 +275,7 @@ export const MessageBubble = React.memo(function MessageBubble({
                   >
                     <View style={styles.messageOptionContent}>
                       <Ionicons name="copy-outline" size={18} color="#666" />
+                      <Text style={styles.messageOptionText}>Copy text</Text>
                     </View>
                   </TouchableOpacity>
                 </View>
