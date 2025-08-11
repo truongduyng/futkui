@@ -10,6 +10,7 @@ import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
+  ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -33,9 +34,12 @@ export default function ChatScreen() {
   const [isNearBottom, setIsNearBottom] = useState(true);
   const hasInitialScrolledRef = useRef(false);
   const lastMessageCountRef = useRef(0);
+  const [messageLimit, setMessageLimit] = useState(30);
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false);
 
   const {
     useGroup,
+    useMessages,
     useProfile,
     useUserMembership,
     sendMessage,
@@ -45,7 +49,11 @@ export default function ChatScreen() {
     leaveGroup,
     instantClient,
   } = useInstantDB();
-  const { data: groupData, isLoading } = useGroup(groupId || "");
+  
+  // Separate queries for group info and messages
+  const { data: groupData, isLoading: isLoadingGroup } = useGroup(groupId || "");
+  const { data: messagesData, isLoading: isLoadingMessages } = useMessages(groupId || "", messageLimit);
+  
   const { data: profileData } = useProfile();
   const { data: membershipData } = useUserMembership(groupId || "");
   const { user } = instantClient.useAuth();
@@ -53,8 +61,17 @@ export default function ChatScreen() {
   const userMembership = membershipData?.memberships?.[0];
 
   const group = groupData?.groups?.[0];
-  const messages = useMemo(() => group?.messages || [], [group?.messages]);
-  const files = useMemo(() => groupData?.$files || [], [groupData?.$files]);
+  // Reverse messages since we fetch newest first but display oldest first
+  const messages = useMemo(() => {
+    const msgs = messagesData?.messages || [];
+    return [...msgs].reverse();
+  }, [messagesData?.messages]);
+  const files = useMemo(() => messagesData?.$files || [], [messagesData?.$files]);
+
+  const isLoading = isLoadingGroup || isLoadingMessages;
+  
+  // Simple check if we have more messages to load
+  const hasMoreMessages = messages.length >= messageLimit;
 
   // Extract members from group memberships for mention functionality
   const members = group?.memberships?.map(membership => ({
@@ -99,6 +116,7 @@ export default function ChatScreen() {
   const handleScroll = useCallback((event: any) => {
     const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
     const isAtBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 100;
+    const isNearTop = contentOffset.y < 200; // Within 200px of top
 
     setIsNearBottom(isAtBottom);
 
@@ -110,7 +128,12 @@ export default function ChatScreen() {
       setShowScrollToBottom(false);
       setNewMessageCount(0);
     }
-  }, [newMessageCount]);
+
+    // Trigger loading older messages when near top
+    if (isNearTop && hasMoreMessages && !isLoadingOlder) {
+      loadOlderMessages();
+    }
+  }, [newMessageCount, hasMoreMessages, isLoadingOlder, loadOlderMessages]);
 
   // Handle new messages
   useEffect(() => {
@@ -148,6 +171,29 @@ export default function ChatScreen() {
     setNewMessageCount(0);
     setShowScrollToBottom(false);
   }, []);
+
+  // Load older messages function
+  const loadOlderMessages = useCallback(async () => {
+    if (isLoadingOlder || !hasMoreMessages) {
+      return;
+    }
+
+    setIsLoadingOlder(true);
+    
+    try {
+      // Increase limit to load more messages
+      setMessageLimit(prev => prev + 20);
+    } catch (error) {
+      console.error('Error loading older messages:', error);
+    } finally {
+      setTimeout(() => setIsLoadingOlder(false), 300);
+    }
+  }, [isLoadingOlder, hasMoreMessages]);
+
+  // Reset limit when group changes
+  useEffect(() => {
+    setMessageLimit(30);
+  }, [groupId]);
 
   const handleShareGroup = useCallback(() => {
     if (group?.shareLink) {
@@ -476,7 +522,21 @@ export default function ChatScreen() {
 
   const keyExtractor = useCallback((item: any) => item.id, []);
 
-  if (isLoading) {
+  // Loading indicator for older messages
+  const renderListHeaderComponent = useCallback(() => {
+    if (!isLoadingOlder) return null;
+    
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="small" color={colors.tint} />
+        <Text style={[styles.paginationLoadingText, { color: colors.tabIconDefault }]}>
+          Loading older messages...
+        </Text>
+      </View>
+    );
+  }, [isLoadingOlder, colors.tint, colors.tabIconDefault]);
+
+  if (isLoading || !groupId) {
     return (
       <AuthGate>
         <View
@@ -550,6 +610,7 @@ export default function ChatScreen() {
                 }, 0);
               }
             }}
+            ListHeaderComponent={renderListHeaderComponent}
           />
 
           <MessageInput
@@ -663,5 +724,16 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 12,
     fontWeight: "bold",
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  paginationLoadingText: {
+    marginLeft: 8,
+    fontSize: 14,
   },
 });

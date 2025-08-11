@@ -54,6 +54,10 @@ export function useInstantDB() {
   };
 
   const useGroup = (groupId: string) => {
+    if (!groupId) {
+      return { data: null, isLoading: false, error: null };
+    }
+
     return db.useQuery({
       groups: {
         $: { where: { id: groupId } },
@@ -63,22 +67,36 @@ export function useInstantDB() {
         memberships: {
           profile: {},
         },
-        messages: {
-          $: { order: { createdAt: 'asc' } } as any, // Get all messages in chronological order
-          author: {
-            avatar: {},
-          },
-          reactions: {
+      },
+    });
+  };
+
+  const useMessages = (groupId: string, limit = 30) => {
+    if (!groupId) {
+      return { data: null, isLoading: false, error: null };
+    }
+
+    return db.useQuery({
+      messages: {
+        $: {
+          where: { "group.id": groupId },
+          order: { serverCreatedAt: 'desc' },
+          limit: limit,
+        },
+        author: {
+          avatar: {},
+        },
+        reactions: {
+          user: {},
+        },
+        poll: {
+          votes: {
             user: {},
           },
-          poll: {
-            votes: {
-              user: {},
-            },
-          },
         },
+        group: {},
       },
-      $files: {}, // Include all files to resolve imageUrls
+      $files: {},
     });
   };
 
@@ -365,7 +383,7 @@ export function useInstantDB() {
           const userExistingVotes = voteData.existingVotes.filter(
             (vote: any) => vote.user?.id === voteData.userId
           );
-          
+
           userExistingVotes.forEach((vote: any) => {
             transactions.push(db.tx.votes[vote.id].delete());
           });
@@ -394,6 +412,7 @@ export function useInstantDB() {
     useGroups,
     useAllGroups,
     useGroup,
+    useMessages,
     useProfile,
     useUserMembership,
     createProfile,
