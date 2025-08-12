@@ -532,10 +532,9 @@ export default function ChatScreen() {
       const previousItem = index > 0 ? chatItems[index - 1] : null;
       const showTimestamp = shouldShowTimestamp(item, previousItem);
 
+      const previousAuthorId = (previousItem as any)?.author?.id || (previousItem as any)?.creator?.id;
       const showAuthor = !previousItem ||
-        (previousItem as any).creator?.id !== matchItem.creator?.id ||
-        (previousItem as any).author?.id !== matchItem.creator?.id ||
-        showTimestamp;
+        previousAuthorId !== matchItem.creator?.id;
 
       return (
         <>
@@ -574,11 +573,10 @@ export default function ChatScreen() {
     const showTimestamp = shouldShowTimestamp(message, previousItem);
 
     // Check if this message is from the same author as the previous message
+    const previousAuthorId = (previousItem as any)?.author?.id || (previousItem as any)?.creator?.id;
     const showAuthor =
       !previousItem ||
-      (previousItem as any).author?.id !== message.author?.id ||
-      (previousItem as any).creator?.id !== message.author?.id ||
-      showTimestamp; // Always show author after timestamp breaks
+      previousAuthorId !== message.author?.id;
 
     const resolvedImageUrl = message.imageUrl ? getFileUrl(message.imageUrl) : undefined;
 
