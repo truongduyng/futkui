@@ -35,7 +35,7 @@ export default function ChatScreen() {
   const hasInitialScrolledRef = useRef(false);
   const lastMessageCountRef = useRef(0);
   const lastMessageIdRef = useRef<string>('');
-  const [messageLimit, setMessageLimit] = useState(10);
+  const [messageLimit, setMessageLimit] = useState(500);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
 
   const {
@@ -137,7 +137,7 @@ export default function ChatScreen() {
 
     try {
       // Increase limit to load more messages
-      setMessageLimit(prev => prev + 20);
+      setMessageLimit(prev => prev + 500);
     } catch (error) {
       console.error('Error loading older messages:', error);
     } finally {
@@ -211,7 +211,7 @@ export default function ChatScreen() {
 
   // Reset limit when group changes
   useEffect(() => {
-    setMessageLimit(30);
+    setMessageLimit(500);
   }, [groupId]);
 
   const handleShareGroup = useCallback(() => {
