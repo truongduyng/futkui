@@ -5,10 +5,10 @@ import { MessageBubble } from "@/components/chat/MessageBubble";
 import { MessageInput } from "@/components/chat/MessageInput";
 import { PollBubble } from "@/components/chat/PollBubble";
 import { Colors } from "@/constants/Colors";
-import { useInstantDB } from "@/hooks/useInstantDB";
+import { useChatHandlers } from "@/hooks/useChatHandlers";
 import { useChatScroll } from "@/hooks/useChatScroll";
-import * as Clipboard from 'expo-clipboard';
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { useInstantDB } from "@/hooks/useInstantDB";
+import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -28,7 +28,6 @@ export default function ChatScreen() {
   const colors = Colors["light"];
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const router = useRouter();
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [messageLimit, setMessageLimit] = useState(500);
 
@@ -46,7 +45,6 @@ export default function ChatScreen() {
     checkInToMatch,
     addReaction,
     leaveGroup,
-    instantClient,
   } = useInstantDB();
 
   // Separate queries for group info and messages
@@ -56,7 +54,6 @@ export default function ChatScreen() {
 
   const { data: profileData } = useProfile();
   const { data: membershipData } = useUserMembership(groupId || "");
-  const { user } = instantClient.useAuth();
   const currentProfile = profileData?.profiles?.[0];
   const userMembership = membershipData?.memberships?.[0];
 
@@ -71,10 +68,10 @@ export default function ChatScreen() {
   // Combine messages and matches for display, sorted by creation time
   const chatItems = useMemo(() => {
     if (messages.length === 0 && matches.length === 0) return [];
-    
+
     const messageItems = messages.map(msg => ({ ...msg, itemType: 'message' as const }));
     const matchItems = matches.map(match => ({ ...match, itemType: 'match' as const }));
-    
+
     return [...messageItems, ...matchItems].sort((a, b) => a.createdAt - b.createdAt);
   }, [messages, matches]);
   const files = useMemo(() => messagesData?.$files || [], [messagesData?.$files]);
@@ -123,68 +120,42 @@ export default function ChatScreen() {
     groupId: groupId || "",
   });
 
+  // Use handlers hook for managing all event handlers
+  const {
+    handleShareGroup,
+    handleLeaveGroup,
+    handleSendMessage,
+    handleSendPoll,
+    handleCreateMatch,
+    handleAddReaction,
+    handleReactionPress,
+    handleImagePress,
+    handleVote,
+    handleRsvp,
+    handleCheckIn,
+  } = useChatHandlers({
+    currentProfile,
+    group,
+    userMembership,
+    matches,
+    sendMessage,
+    sendPoll,
+    createMatch,
+    addReaction,
+    vote,
+    rsvpToMatch,
+    checkInToMatch,
+    leaveGroup,
+    setIsNearBottom,
+    setShowScrollToBottom,
+    setSelectedImageUrl,
+  });
 
   // Reset limit when group changes
   useEffect(() => {
     setMessageLimit(500);
   }, [groupId]);
 
-  const handleShareGroup = useCallback(() => {
-    if (group?.shareLink) {
-      Alert.alert(
-        "Share Group",
-        `Share this link to invite others to join "${group.name}":\n\n${group.shareLink}`,
-        [
-          {
-            text: "Copy Link",
-            onPress: async () => {
-              try {
-                await Clipboard.setStringAsync(group.shareLink);
-                Alert.alert("Copied!", "Group link copied to clipboard");
-              } catch (error) {
-                console.error("Copy error:", error);
-                Alert.alert("Error", "Failed to copy link to clipboard");
-              }
-            },
-          },
-          { text: "Cancel", style: "cancel" },
-        ],
-      );
-    }
-  }, [group?.shareLink, group?.name]);
-
-  const handleLeaveGroup = useCallback(() => {
-    Alert.alert(
-      "Leave Group",
-      `Are you sure you want to leave "${group?.name}"?`,
-      [
-        {
-          text: "Leave",
-          style: "destructive",
-          onPress: async () => {
-            if (!currentProfile || !group) return;
-
-            try {
-              if (userMembership) {
-                await leaveGroup(userMembership.id);
-                router.back();
-                Alert.alert("Left Group", `You have left ${group.name}`);
-              } else {
-                Alert.alert(
-                  "Error",
-                  "Unable to find your membership in this group.",
-                );
-              }
-            } catch (error) {
-              console.error("Leave group error:", error);
-              Alert.alert("Error", "Failed to leave group. Please try again.");
-            }
-          },
-        },
-        { text: "Cancel", style: "cancel" },
-      ],
-    );
-  }, [currentProfile, group, userMembership, leaveGroup, router]);
 
   const showOptionsMenu = useCallback(() => {
     Alert.alert("Group Options", "", [
@@ -227,182 +198,6 @@ export default function ChatScreen() {
     }
   }, [group, navigation, colors, showOptionsMenu]);
 
-  const handleSendMessage = async (content: string, imageUri?: string, mentions?: string[]) => {
-    if (!groupId || !currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
-      return;
-    }
-
-    try {
-      await sendMessage({
-        groupId,
-        content,
-        authorId: currentProfile.id,
-        authorName: currentProfile.handle,
-        imageUri,
-        mentions,
-      });
-
-      // Reset scroll state - let natural message update handle scrolling
-      setIsNearBottom(true);
-      setShowScrollToBottom(false);
-    } catch (error) {
-      Alert.alert("Error", "Failed to send message. Please try again.");
-      console.error("Error sending message:", error);
-    }
-  };
-
-  const handleAddReaction = useCallback(async (
-    messageId: string,
-    emoji: string,
-    existingReactions: any[],
-  ) => {
-    if (!currentProfile || !user) {
-      Alert.alert("Error", "Please wait for your profile to load.");
-      return;
-    }
-
-    try {
-      await addReaction({
-        messageId,
-        emoji,
-        userId: currentProfile.id, // Use profile ID to match schema
-        userName: currentProfile.handle,
-        existingReactions,
-      });
-    } catch (error) {
-      Alert.alert("Error", "Failed to add reaction. Please try again.");
-      console.error("Error adding reaction:", error);
-    }
-  }, [currentProfile, user, addReaction]);
-
-  const handleReactionPress = useCallback((
-    messageId: string,
-    emoji: string,
-    existingReactions: any[],
-  ) => {
-    handleAddReaction(messageId, emoji, existingReactions);
-  }, [handleAddReaction]);
-
-  const handleImagePress = useCallback((imageUrl: string) => {
-    setSelectedImageUrl(imageUrl);
-  }, []);
-
-  const handleSendPoll = async (question: string, options: { id: string; text: string }[], allowMultiple: boolean, expiresAt?: number) => {
-    if (!groupId || !currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
-      return;
-    }
-
-    try {
-      await sendPoll({
-        groupId,
-        question,
-        options,
-        authorId: currentProfile.id,
-        authorName: currentProfile.handle,
-        allowMultiple,
-        expiresAt,
-      });
-
-      // Reset scroll state - let natural message update handle scrolling
-      setIsNearBottom(true);
-      setShowScrollToBottom(false);
-    } catch (error) {
-      Alert.alert("Error", "Failed to send poll. Please try again.");
-      console.error("Error sending poll:", error);
-    }
-  };
-
-  const handleVote = useCallback(async (pollId: string, optionId: string, existingVotes: any[], allowMultiple: boolean) => {
-    if (!currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
-      return;
-    }
-
-    try {
-      await vote({
-        pollId,
-        optionId,
-        userId: currentProfile.id,
-        existingVotes,
-        allowMultiple,
-      });
-    } catch (error) {
-      Alert.alert("Error", "Failed to vote. Please try again.");
-      console.error("Error voting:", error);
-    }
-  }, [currentProfile, vote]);
-
-  const handleCreateMatch = async (matchData: {
-    title: string;
-    description: string;
-    gameType: string;
-    location: string;
-    matchDate: number;
-  }) => {
-    if (!groupId || !currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
-      return;
-    }
-
-    try {
-      await createMatch({
-        groupId,
-        title: matchData.title,
-        description: matchData.description,
-        gameType: matchData.gameType,
-        location: matchData.location,
-        matchDate: matchData.matchDate,
-        creatorId: currentProfile.id,
-      });
-
-      // Reset scroll state - let natural message update handle scrolling
-      setIsNearBottom(true);
-      setShowScrollToBottom(false);
-    } catch (error) {
-      Alert.alert("Error", "Failed to create match. Please try again.");
-      console.error("Error creating match:", error);
-    }
-  };
-
-  const handleRsvp = useCallback(async (matchId: string, response: 'yes' | 'no' | 'maybe') => {
-    if (!currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
-      return;
-    }
-
-    try {
-      const match = matches.find(m => m.id === matchId);
-      await rsvpToMatch({
-        matchId,
-        userId: currentProfile.id,
-        response,
-        existingRsvps: (match as any)?.rsvps || [],
-      });
-    } catch (error) {
-      Alert.alert("Error", "Failed to RSVP. Please try again.");
-      console.error("Error RSVPing to match:", error);
-    }
-  }, [currentProfile, rsvpToMatch, matches]);
-
-  const handleCheckIn = useCallback(async (matchId: string) => {
-    if (!currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
-      return;
-    }
-
-    try {
-      await checkInToMatch({
-        matchId,
-        userId: currentProfile.id,
-      });
-      Alert.alert("Success", "You've checked in to the match!");
-    } catch (error) {
-      Alert.alert("Error", "Failed to check in. Please try again.");
-      console.error("Error checking in to match:", error);
-    }
-  }, [currentProfile, checkInToMatch]);
 
   const shouldShowTimestamp = useCallback((
     currentMessage: any,
