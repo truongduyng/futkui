@@ -46,8 +46,13 @@ export default function ChatScreen() {
   } = useInstantDB();
 
   // Separate queries for group info and messages
-  const { data: groupData, isLoading: isLoadingGroup } = useGroup(groupId || "");
-  const { data: messagesData, isLoading: isLoadingMessages } = useMessages(groupId || "", messageLimit);
+  const { data: groupData, isLoading: isLoadingGroup } = useGroup(
+    groupId || "",
+  );
+  const { data: messagesData, isLoading: isLoadingMessages } = useMessages(
+    groupId || "",
+    messageLimit,
+  );
   const { data: matchesData } = useMatches(groupId || "");
 
   const { data: profileData } = useProfile();
@@ -56,7 +61,10 @@ export default function ChatScreen() {
   const userMembership = membershipData?.memberships?.[0];
 
   const group = groupData?.groups?.[0];
-  const matches = useMemo(() => matchesData?.matches || [], [matchesData?.matches]);
+  const matches = useMemo(
+    () => matchesData?.matches || [],
+    [matchesData?.matches],
+  );
   // Reverse messages since we fetch newest first but display oldest first
   const messages = useMemo(() => {
     if (!messagesData?.messages) return [];
@@ -67,37 +75,53 @@ export default function ChatScreen() {
   const chatItems = useMemo(() => {
     if (messages.length === 0 && matches.length === 0) return [];
 
-    const messageItems = messages.map(msg => ({ ...msg, itemType: 'message' as const }));
-    const matchItems = matches.map(match => ({ ...match, itemType: 'match' as const }));
+    const messageItems = messages.map((msg) => ({
+      ...msg,
+      itemType: "message" as const,
+    }));
+    const matchItems = matches.map((match) => ({
+      ...match,
+      itemType: "match" as const,
+    }));
 
-    return [...messageItems, ...matchItems].sort((a, b) => a.createdAt - b.createdAt);
+    return [...messageItems, ...matchItems].sort(
+      (a, b) => a.createdAt - b.createdAt,
+    );
   }, [messages, matches]);
-  const files = useMemo(() => messagesData?.$files || [], [messagesData?.$files]);
+  const files = useMemo(
+    () => messagesData?.$files || [],
+    [messagesData?.$files],
+  );
 
   // Memoize file lookup for better performance
   const fileUrlMap = useMemo(() => {
     const map = new Map();
-    files.forEach(file => {
+    files.forEach((file) => {
       map.set(file.id, file.url);
     });
     return map;
   }, [files]);
 
-
   // Simple check if we have more messages to load
   const hasMoreMessages = messages.length >= messageLimit;
 
   // Extract members from group memberships for mention functionality
-  const members = group?.memberships?.map(membership => ({
-    id: membership.profile?.id || '',
-    handle: membership.profile?.handle || '',
-    displayName: membership.profile?.displayName,
-  })).filter(member => member.id && member.handle) || [];
+  const members =
+    group?.memberships
+      ?.map((membership) => ({
+        id: membership.profile?.id || "",
+        handle: membership.profile?.handle || "",
+        displayName: membership.profile?.displayName,
+      }))
+      .filter((member) => member.id && member.handle) || [];
 
   // Helper function to resolve file URL from file ID
-  const getFileUrl = useCallback((fileId: string) => {
-    return fileUrlMap.get(fileId);
-  }, [fileUrlMap]);
+  const getFileUrl = useCallback(
+    (fileId: string) => {
+      return fileUrlMap.get(fileId);
+    },
+    [fileUrlMap],
+  );
 
   // Use scroll hook for managing scroll behavior
   const {
@@ -195,11 +219,11 @@ export default function ChatScreen() {
     chatItems,
     currentProfile,
     getFileUrl,
-    stableHandleVote: (pollId, optionId, votes, allowMultiple) => 
+    stableHandleVote: (pollId, optionId, votes, allowMultiple) =>
       handleVote(pollId, optionId, votes, allowMultiple),
-    stableHandleReaction: (messageId, emoji, reactions) => 
+    stableHandleReaction: (messageId, emoji, reactions) =>
       handleReactionPress(messageId, emoji, reactions),
-    stableHandleAddReaction: (messageId, emoji, reactions) => 
+    stableHandleAddReaction: (messageId, emoji, reactions) =>
       handleAddReaction(messageId, emoji, reactions),
     handleImagePress,
     handleRsvp,
@@ -210,10 +234,6 @@ export default function ChatScreen() {
   useEffect(() => {
     setMessageLimit(500);
   }, [groupId]);
-
-
-
-
 
   if (!groupId) {
     return (
@@ -275,9 +295,7 @@ export default function ChatScreen() {
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={
-            Platform.OS === "ios" ? insets.top + 20 : 0
-          }
+          keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 20 : 0}
           enabled
         >
           {isLoadingMessages && chatItems.length === 0 ? (
@@ -310,7 +328,9 @@ export default function ChatScreen() {
               onLayout={() => {
                 // Layout handled by scroll hook
               }}
-              ListHeaderComponent={() => <LoadingHeader isLoading={isLoadingOlder} />}
+              ListHeaderComponent={() => (
+                <LoadingHeader isLoading={isLoadingOlder} />
+              )}
             />
           )}
 
@@ -324,7 +344,10 @@ export default function ChatScreen() {
 
         {showScrollToBottom && (
           <TouchableOpacity
-            style={[styles.scrollToBottomButton, { backgroundColor: colors.tint }]}
+            style={[
+              styles.scrollToBottomButton,
+              { backgroundColor: colors.tint },
+            ]}
             onPress={scrollToBottom}
             activeOpacity={0.8}
           >

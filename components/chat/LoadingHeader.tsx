@@ -10,7 +10,7 @@ export const LoadingHeader = React.memo(function LoadingHeader({
   isLoading,
 }: LoadingHeaderProps) {
   const colors = Colors["light"];
-  
+
   if (!isLoading) return null;
 
   return (
