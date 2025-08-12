@@ -8,7 +8,7 @@ import { Colors } from "@/constants/Colors";
 import { useInstantDB } from "@/hooks/useInstantDB";
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -70,19 +70,29 @@ export default function ChatScreen() {
   const matches = useMemo(() => matchesData?.matches || [], [matchesData?.matches]);
   // Reverse messages since we fetch newest first but display oldest first
   const messages = useMemo(() => {
-    const msgs = messagesData?.messages || [];
-    return [...msgs].reverse();
+    if (!messagesData?.messages) return [];
+    return messagesData.messages.slice().reverse();
   }, [messagesData?.messages]);
 
   // Combine messages and matches for display, sorted by creation time
   const chatItems = useMemo(() => {
-    const items = [
-      ...messages.map(msg => ({ ...msg, itemType: 'message' })),
-      ...matches.map(match => ({ ...match, itemType: 'match' }))
-    ];
-    return items.sort((a, b) => a.createdAt - b.createdAt);
+    if (messages.length === 0 && matches.length === 0) return [];
+    
+    const messageItems = messages.map(msg => ({ ...msg, itemType: 'message' as const }));
+    const matchItems = matches.map(match => ({ ...match, itemType: 'match' as const }));
+    
+    return [...messageItems, ...matchItems].sort((a, b) => a.createdAt - b.createdAt);
   }, [messages, matches]);
   const files = useMemo(() => messagesData?.$files || [], [messagesData?.$files]);
+
+  // Memoize file lookup for better performance
+  const fileUrlMap = useMemo(() => {
+    const map = new Map();
+    files.forEach(file => {
+      map.set(file.id, file.url);
+    });
+    return map;
+  }, [files]);
 
 
   // Simple check if we have more messages to load
@@ -97,9 +107,8 @@ export default function ChatScreen() {
 
   // Helper function to resolve file URL from file ID
   const getFileUrl = useCallback((fileId: string) => {
-    const file = files.find(f => f.id === fileId);
-    return file?.url;
-  }, [files]);
+    return fileUrlMap.get(fileId);
+  }, [fileUrlMap]);
 
   // Initial scroll to bottom on first load
   useEffect(() => {
@@ -505,17 +514,17 @@ export default function ChatScreen() {
     return timeDifference >= fifteenMinutes;
   }, []);
 
-  // Create memoized callback factories to avoid recreating functions on each render
-  const createVoteHandler = useCallback((pollId: string, votes: any[], allowMultiple: boolean) => {
-    return (optionId: string) => handleVote(pollId, optionId, votes, allowMultiple);
+  // Stable callback references to prevent re-renders
+  const stableHandleVote = useCallback((pollId: string, optionId: string, votes: any[], allowMultiple: boolean) => {
+    return handleVote(pollId, optionId, votes, allowMultiple);
   }, [handleVote]);
 
-  const createReactionHandler = useCallback((messageId: string, reactions: any[]) => {
-    return (emoji: string) => handleReactionPress(messageId, emoji, reactions);
+  const stableHandleReaction = useCallback((messageId: string, emoji: string, reactions: any[]) => {
+    return handleReactionPress(messageId, emoji, reactions);
   }, [handleReactionPress]);
 
-  const createAddReactionHandler = useCallback((messageId: string, reactions: any[]) => {
-    return (emoji: string) => handleAddReaction(messageId, emoji, reactions);
+  const stableHandleAddReaction = useCallback((messageId: string, emoji: string, reactions: any[]) => {
+    return handleAddReaction(messageId, emoji, reactions);
   }, [handleAddReaction]);
 
   const renderChatItem = useCallback(({
@@ -607,7 +616,7 @@ export default function ChatScreen() {
               votes: message.poll.votes || [],
             }}
             currentUserId={currentProfile?.id || ''}
-            onVote={createVoteHandler(message.poll.id, message.poll.votes || [], message.poll.allowMultiple || false)}
+            onVote={(optionId) => stableHandleVote(message.poll.id, optionId, message.poll.votes || [], message.poll.allowMultiple || false)}
             isOwnMessage={isOwnMessage}
             author={message.author}
             createdAt={new Date(message.createdAt)}
@@ -620,8 +629,8 @@ export default function ChatScreen() {
             createdAt={new Date(message.createdAt)}
             isOwnMessage={isOwnMessage}
             reactions={message.reactions || []}
-            onReactionPress={createReactionHandler(message.id, message.reactions || [])}
-            onAddReaction={createAddReactionHandler(message.id, message.reactions || [])}
+            onReactionPress={(emoji) => stableHandleReaction(message.id, emoji, message.reactions || [])}
+            onAddReaction={(emoji) => stableHandleAddReaction(message.id, emoji, message.reactions || [])}
             showTimestamp={false}
             showAuthor={showAuthor}
             imageUrl={resolvedImageUrl}
@@ -636,9 +645,9 @@ export default function ChatScreen() {
     shouldShowTimestamp,
     getFileUrl,
     colors.tabIconDefault,
-    createVoteHandler,
-    createReactionHandler,
-    createAddReactionHandler,
+    stableHandleVote,
+    stableHandleReaction,
+    stableHandleAddReaction,
     handleImagePress,
     handleRsvp,
     handleCheckIn
@@ -741,11 +750,11 @@ export default function ChatScreen() {
               showsVerticalScrollIndicator={false}
               automaticallyAdjustKeyboardInsets={true}
               keyboardDismissMode="interactive"
-              removeClippedSubviews={false}
-              maxToRenderPerBatch={20}
-              updateCellsBatchingPeriod={50}
-              initialNumToRender={20}
-              windowSize={10}
+              removeClippedSubviews={true}
+              maxToRenderPerBatch={10}
+              updateCellsBatchingPeriod={100}
+              initialNumToRender={15}
+              windowSize={5}
               onScroll={handleScroll}
               scrollEventThrottle={16}
               onContentSizeChange={handleContentSizeChange}

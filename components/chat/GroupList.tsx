@@ -35,7 +35,7 @@ interface GroupListProps {
   onCreateGroup: () => void;
 }
 
-export function GroupList({ groups, onGroupPress, onCreateGroup }: GroupListProps) {
+export const GroupList = React.memo(function GroupList({ groups, onGroupPress, onCreateGroup }: GroupListProps) {
   const colors = Colors['light'];
   const router = useRouter();
 
@@ -154,7 +154,7 @@ export function GroupList({ groups, onGroupPress, onCreateGroup }: GroupListProp
       />
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
