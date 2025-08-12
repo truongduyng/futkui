@@ -1,9 +1,8 @@
 import { AuthGate } from "@/components/AuthGate";
+import { useChatItemRenderer } from "@/components/chat/ChatItemRenderer";
 import { ImageModal } from "@/components/chat/ImageModal";
-import { MatchCard } from "@/components/chat/MatchCard";
-import { MessageBubble } from "@/components/chat/MessageBubble";
+import { LoadingHeader } from "@/components/chat/LoadingHeader";
 import { MessageInput } from "@/components/chat/MessageInput";
-import { PollBubble } from "@/components/chat/PollBubble";
 import { Colors } from "@/constants/Colors";
 import { useChatHandlers } from "@/hooks/useChatHandlers";
 import { useChatScroll } from "@/hooks/useChatScroll";
@@ -11,7 +10,6 @@ import { useInstantDB } from "@/hooks/useInstantDB";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   KeyboardAvoidingView,
@@ -151,12 +149,7 @@ export default function ChatScreen() {
     setSelectedImageUrl,
   });
 
-  // Reset limit when group changes
-  useEffect(() => {
-    setMessageLimit(500);
-  }, [groupId]);
-
-
+  // Navigation header management (keeping inline for now due to JSX complexity)
   const showOptionsMenu = useCallback(() => {
     Alert.alert("Group Options", "", [
       {
@@ -172,7 +165,6 @@ export default function ChatScreen() {
     ]);
   }, [handleShareGroup, handleLeaveGroup]);
 
-  // Update navigation header when group data loads
   useEffect(() => {
     if (group) {
       navigation.setOptions({
@@ -198,174 +190,30 @@ export default function ChatScreen() {
     }
   }, [group, navigation, colors, showOptionsMenu]);
 
-
-  const shouldShowTimestamp = useCallback((
-    currentMessage: any,
-    previousMessage: any,
-  ): boolean => {
-    if (!previousMessage) return true;
-
-    const currentTime = new Date(currentMessage.createdAt);
-    const previousTime = new Date(previousMessage.createdAt);
-
-    // Show timestamp if messages are more than 15 minutes apart
-    const timeDifference = currentTime.getTime() - previousTime.getTime();
-    const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
-
-    return timeDifference >= fifteenMinutes;
-  }, []);
-
-  // Stable callback references to prevent re-renders
-  const stableHandleVote = useCallback((pollId: string, optionId: string, votes: any[], allowMultiple: boolean) => {
-    return handleVote(pollId, optionId, votes, allowMultiple);
-  }, [handleVote]);
-
-  const stableHandleReaction = useCallback((messageId: string, emoji: string, reactions: any[]) => {
-    return handleReactionPress(messageId, emoji, reactions);
-  }, [handleReactionPress]);
-
-  const stableHandleAddReaction = useCallback((messageId: string, emoji: string, reactions: any[]) => {
-    return handleAddReaction(messageId, emoji, reactions);
-  }, [handleAddReaction]);
-
-  const renderChatItem = useCallback(({
-    item,
-    index,
-  }: {
-    item: any;
-    index: number;
-  }) => {
-    // Handle match items
-    if (item.itemType === 'match') {
-      const matchItem = item as any; // Cast to any to access match properties
-      const isOwnMatch = matchItem.creator?.id === currentProfile?.id;
-      const previousItem = index > 0 ? chatItems[index - 1] : null;
-      const showTimestamp = shouldShowTimestamp(item, previousItem);
-
-      const previousAuthorId = (previousItem as any)?.author?.id || (previousItem as any)?.creator?.id;
-      const showAuthor = !previousItem ||
-        previousAuthorId !== matchItem.creator?.id;
-
-      return (
-        <>
-          {showTimestamp && (
-            <View style={styles.timestampHeader}>
-              <Text
-                style={[styles.timestampText, { color: colors.tabIconDefault }]}
-              >
-                {new Date(item.createdAt).toLocaleString([], {
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Text>
-            </View>
-          )}
-          <MatchCard
-            match={matchItem}
-            currentUserId={currentProfile?.id || ''}
-            onRsvp={(response) => handleRsvp(matchItem.id, response)}
-            onCheckIn={() => handleCheckIn(matchItem.id)}
-            isOwnMessage={isOwnMatch}
-            author={matchItem.creator}
-            createdAt={new Date(matchItem.createdAt)}
-            showAuthor={showAuthor}
-          />
-        </>
-      );
-    }
-
-    // Handle message items
-    const message = item;
-    const isOwnMessage = message.author?.id === currentProfile?.id;
-    const previousItem = index > 0 ? chatItems[index - 1] : null;
-    const showTimestamp = shouldShowTimestamp(message, previousItem);
-
-    // Check if this message is from the same author as the previous message
-    const previousAuthorId = (previousItem as any)?.author?.id || (previousItem as any)?.creator?.id;
-    const showAuthor =
-      !previousItem ||
-      previousAuthorId !== message.author?.id;
-
-    const resolvedImageUrl = message.imageUrl ? getFileUrl(message.imageUrl) : undefined;
-
-    return (
-      <>
-        {showTimestamp && (
-          <View style={styles.timestampHeader}>
-            <Text
-              style={[styles.timestampText, { color: colors.tabIconDefault }]}
-            >
-              {new Date(message.createdAt).toLocaleString([], {
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </Text>
-          </View>
-        )}
-        {message.type === 'poll' && message.poll ? (
-          <PollBubble
-            poll={{
-              id: message.poll.id,
-              question: message.poll.question,
-              options: message.poll.options,
-              allowMultiple: message.poll.allowMultiple || false,
-              expiresAt: message.poll.expiresAt,
-              votes: message.poll.votes || [],
-            }}
-            currentUserId={currentProfile?.id || ''}
-            onVote={(optionId) => stableHandleVote(message.poll.id, optionId, message.poll.votes || [], message.poll.allowMultiple || false)}
-            isOwnMessage={isOwnMessage}
-            author={message.author}
-            createdAt={new Date(message.createdAt)}
-            showAuthor={showAuthor}
-          />
-        ) : (
-          <MessageBubble
-            content={message.content}
-            author={message.author}
-            createdAt={new Date(message.createdAt)}
-            isOwnMessage={isOwnMessage}
-            reactions={message.reactions || []}
-            onReactionPress={(emoji) => stableHandleReaction(message.id, emoji, message.reactions || [])}
-            onAddReaction={(emoji) => stableHandleAddReaction(message.id, emoji, message.reactions || [])}
-            showTimestamp={false}
-            showAuthor={showAuthor}
-            imageUrl={resolvedImageUrl}
-            onImagePress={handleImagePress}
-          />
-        )}
-      </>
-    );
-  }, [
+  // Use chat item renderer
+  const { renderChatItem, keyExtractor } = useChatItemRenderer({
     chatItems,
-    currentProfile?.id,
-    shouldShowTimestamp,
+    currentProfile,
     getFileUrl,
-    colors.tabIconDefault,
-    stableHandleVote,
-    stableHandleReaction,
-    stableHandleAddReaction,
+    stableHandleVote: (pollId, optionId, votes, allowMultiple) => 
+      handleVote(pollId, optionId, votes, allowMultiple),
+    stableHandleReaction: (messageId, emoji, reactions) => 
+      handleReactionPress(messageId, emoji, reactions),
+    stableHandleAddReaction: (messageId, emoji, reactions) => 
+      handleAddReaction(messageId, emoji, reactions),
     handleImagePress,
     handleRsvp,
-    handleCheckIn
-  ]);
+    handleCheckIn,
+  });
 
-  const keyExtractor = useCallback((item: any) => item.id, []);
+  // Reset limit when group changes
+  useEffect(() => {
+    setMessageLimit(500);
+  }, [groupId]);
 
-  // Simple spinner indicator for older messages
-  const renderListHeaderComponent = useCallback(() => {
-    if (!isLoadingOlder) return null;
 
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.tint} />
-      </View>
-    );
-  }, [isLoadingOlder, colors.tint]);
+
+
 
   if (!groupId) {
     return (
@@ -462,7 +310,7 @@ export default function ChatScreen() {
               onLayout={() => {
                 // Layout handled by scroll hook
               }}
-              ListHeaderComponent={renderListHeaderComponent}
+              ListHeaderComponent={() => <LoadingHeader isLoading={isLoadingOlder} />}
             />
           )}
 
