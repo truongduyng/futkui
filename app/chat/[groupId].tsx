@@ -1,9 +1,9 @@
 import { AuthGate } from "@/components/AuthGate";
 import { ImageModal } from "@/components/chat/ImageModal";
+import { MatchCard } from "@/components/chat/MatchCard";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { MessageInput } from "@/components/chat/MessageInput";
 import { PollBubble } from "@/components/chat/PollBubble";
-import { MatchCard } from "@/components/chat/MatchCard";
 import { Colors } from "@/constants/Colors";
 import { useInstantDB } from "@/hooks/useInstantDB";
 import * as Clipboard from 'expo-clipboard';
@@ -35,7 +35,7 @@ export default function ChatScreen() {
   const hasInitialScrolledRef = useRef(false);
   const lastMessageCountRef = useRef(0);
   const lastMessageIdRef = useRef<string>('');
-  const [messageLimit, setMessageLimit] = useState(30);
+  const [messageLimit, setMessageLimit] = useState(10);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
 
   const {
@@ -84,7 +84,6 @@ export default function ChatScreen() {
   }, [messages, matches]);
   const files = useMemo(() => messagesData?.$files || [], [messagesData?.$files]);
 
-  const isLoading = isLoadingGroup || isLoadingMessages;
 
   // Simple check if we have more messages to load
   const hasMoreMessages = messages.length >= messageLimit;
@@ -104,7 +103,7 @@ export default function ChatScreen() {
 
   // Initial scroll to bottom on first load
   useEffect(() => {
-    if (!isLoading && chatItems.length > 0 && !hasInitialScrolledRef.current) {
+    if (!isLoadingMessages && chatItems.length > 0 && !hasInitialScrolledRef.current) {
       // Multiple attempts with increasing delays to ensure content is rendered
       const scrollAttempts = [50, 150, 300, 500];
 
@@ -116,7 +115,7 @@ export default function ChatScreen() {
 
       hasInitialScrolledRef.current = true;
     }
-  }, [isLoading, chatItems.length]);
+  }, [isLoadingMessages, chatItems.length]);
 
   // Additional scroll trigger when content size changes
   const handleContentSizeChange = useCallback(() => {
@@ -533,9 +532,9 @@ export default function ChatScreen() {
       const previousItem = index > 0 ? chatItems[index - 1] : null;
       const showTimestamp = shouldShowTimestamp(item, previousItem);
 
-      const showAuthor = !previousItem || 
-        (previousItem as any).creator?.id !== matchItem.creator?.id || 
-        (previousItem as any).author?.id !== matchItem.creator?.id || 
+      const showAuthor = !previousItem ||
+        (previousItem as any).creator?.id !== matchItem.creator?.id ||
+        (previousItem as any).author?.id !== matchItem.creator?.id ||
         showTimestamp;
 
       return (
@@ -660,7 +659,7 @@ export default function ChatScreen() {
     );
   }, [isLoadingOlder, colors.tint]);
 
-  if (isLoading || !groupId) {
+  if (!groupId) {
     return (
       <AuthGate>
         <View
@@ -672,6 +671,24 @@ export default function ChatScreen() {
         >
           <Text style={[styles.loadingText, { color: colors.text }]}>
             Loading...
+          </Text>
+        </View>
+      </AuthGate>
+    );
+  }
+
+  if (isLoadingGroup) {
+    return (
+      <AuthGate>
+        <View
+          style={[
+            styles.container,
+            styles.centered,
+            { backgroundColor: colors.background },
+          ]}
+        >
+          <Text style={[styles.loadingText, { color: colors.text }]}>
+            Loading group...
           </Text>
         </View>
       </AuthGate>
@@ -707,36 +724,44 @@ export default function ChatScreen() {
           }
           enabled
         >
-          <FlatList
-            ref={flatListRef}
-            data={chatItems}
-            renderItem={renderChatItem}
-            keyExtractor={keyExtractor}
-            style={styles.messageList}
-            contentContainerStyle={styles.messageListContent}
-            inverted={false}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            automaticallyAdjustKeyboardInsets={true}
-            keyboardDismissMode="interactive"
-            removeClippedSubviews={false}
-            maxToRenderPerBatch={20}
-            updateCellsBatchingPeriod={50}
-            initialNumToRender={20}
-            windowSize={10}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-            onContentSizeChange={handleContentSizeChange}
-            onLayout={() => {
-              // Additional scroll attempt when layout completes
-              if (!hasInitialScrolledRef.current && chatItems.length > 0) {
-                setTimeout(() => {
-                  flatListRef.current?.scrollToEnd({ animated: false });
-                }, 0);
-              }
-            }}
-            ListHeaderComponent={renderListHeaderComponent}
-          />
+          {isLoadingMessages && chatItems.length === 0 ? (
+            <View style={[styles.centered, { flex: 1 }]}>
+              <Text style={[styles.loadingText, { color: colors.text }]}>
+                Loading messages...
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              ref={flatListRef}
+              data={chatItems}
+              renderItem={renderChatItem}
+              keyExtractor={keyExtractor}
+              style={styles.messageList}
+              contentContainerStyle={styles.messageListContent}
+              inverted={false}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              automaticallyAdjustKeyboardInsets={true}
+              keyboardDismissMode="interactive"
+              removeClippedSubviews={false}
+              maxToRenderPerBatch={20}
+              updateCellsBatchingPeriod={50}
+              initialNumToRender={20}
+              windowSize={10}
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
+              onContentSizeChange={handleContentSizeChange}
+              onLayout={() => {
+                // Additional scroll attempt when layout completes
+                if (!hasInitialScrolledRef.current && chatItems.length > 0) {
+                  setTimeout(() => {
+                    flatListRef.current?.scrollToEnd({ animated: false });
+                  }, 0);
+                }
+              }}
+              ListHeaderComponent={renderListHeaderComponent}
+            />
+          )}
 
           <MessageInput
             onSendMessage={handleSendMessage}
