@@ -32,7 +32,6 @@ interface MatchData {
   matchDate: number;
   createdAt: number;
   isActive: boolean;
-  allowCheckIn: boolean;
   rsvps: RsvpData[];
   checkIns: CheckInData[];
   creator: {
@@ -73,6 +72,12 @@ export const MatchCard = React.memo(function MatchCard({
   const matchDateTime = new Date(match.matchDate);
   const isMatchToday = new Date().toDateString() === matchDateTime.toDateString();
   const isMatchPast = match.matchDate < Date.now();
+  
+  // Checkin window: 15 minutes before match to 2 hours after match
+  const now = Date.now();
+  const fifteenMinBeforeMatch = match.matchDate - (15 * 60 * 1000); // 15 minutes in milliseconds
+  const twoHoursAfterMatch = match.matchDate + (2 * 60 * 60 * 1000); // 2 hours in milliseconds
+  const isInCheckinWindow = now >= fifteenMinBeforeMatch && now <= twoHoursAfterMatch;
 
   // Calculate RSVP counts
   const rsvpCounts = match.rsvps.reduce((acc, rsvp) => {
@@ -134,8 +139,8 @@ export const MatchCard = React.memo(function MatchCard({
     return { backgroundColor, borderColor, textColor };
   };
 
-  const canCheckIn = isMatchToday && match.allowCheckIn && !userCheckedIn && !isMatchPast;
-  const showCheckIn = isMatchToday && match.allowCheckIn;
+  const canCheckIn = isInCheckinWindow && match.isActive && !userCheckedIn;
+  const showCheckIn = isInCheckinWindow && match.isActive;
 
   return (
     <View

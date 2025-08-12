@@ -99,7 +99,7 @@ const rules = {
     allow: {
       view: "true",
       create: "isAuthenticated && isGroupMember",
-      update: "isCreator || isGroupAdmin",
+      update: "isCreator || isGroupAdmin || isGroupMember",
       delete: "isCreator || isGroupAdmin",
     },
     bind: [

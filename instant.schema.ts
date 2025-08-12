@@ -55,7 +55,6 @@ const _schema = i.schema({
       matchDate: i.number(), // Unix timestamp
       createdAt: i.number(),
       isActive: i.boolean(), // true until match day is over
-      allowCheckIn: i.boolean(), // true on match day to allow check-ins
     }),
     rsvps: i.entity({
       response: i.string(), // 'yes', 'no', 'maybe'

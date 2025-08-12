@@ -429,7 +429,6 @@ export function useInstantDB() {
           matchDate: matchData.matchDate,
           createdAt: Date.now(),
           isActive: true,
-          allowCheckIn: false, // Will be enabled on match day
         }).link({
           group: matchData.groupId,
           creator: matchData.creatorId,
@@ -441,18 +440,6 @@ export function useInstantDB() {
     [db]
   );
 
-  const updateMatchCheckIn = useCallback(
-    async (matchId: string, allowCheckIn: boolean) => {
-      const result = await db.transact([
-        db.tx.matches[matchId].update({
-          allowCheckIn,
-        }),
-      ]);
-
-      return result;
-    },
-    [db]
-  );
 
   const rsvpToMatch = useCallback(
     async (rsvpData: {
@@ -518,7 +505,7 @@ export function useInstantDB() {
 
     return db.useQuery({
       matches: {
-        $: { 
+        $: {
           where: { "group.id": groupId },
         },
         creator: {},
@@ -547,7 +534,6 @@ export function useInstantDB() {
     sendPoll,
     vote,
     createMatch,
-    updateMatchCheckIn,
     rsvpToMatch,
     checkInToMatch,
     addReaction: addOrUpdateReaction,
