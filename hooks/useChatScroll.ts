@@ -25,6 +25,7 @@ export function useChatScroll({
   const lastMessageCountRef = useRef(0);
   const lastMessageIdRef = useRef<string>('');
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
+  const allowContentSizeScrollRef = useRef(true);
 
   // Initial scroll to bottom on first load
   useEffect(() => {
@@ -39,17 +40,23 @@ export function useChatScroll({
       });
 
       hasInitialScrolledRef.current = true;
+      // Disable content size scroll after initial load is complete
+      setTimeout(() => {
+        allowContentSizeScrollRef.current = false;
+      }, 1000);
     }
   }, [isLoadingMessages, chatItems.length]);
 
-  // Additional scroll trigger when content size changes
+  // Additional scroll trigger when content size changes - only during initial load
   const handleContentSizeChange = useCallback(() => {
-    if (!hasInitialScrolledRef.current && chatItems.length > 0) {
-      // Immediate scroll when content size changes
+    // Only scroll on content size change during initial load, not for updates like reactions
+    if (allowContentSizeScrollRef.current && !hasInitialScrolledRef.current && chatItems.length > 0) {
+      // Immediate scroll when content size changes during initial load
       requestAnimationFrame(() => {
         flatListRef.current?.scrollToEnd({ animated: false });
       });
     }
+    // Do nothing after initial load - prevents reactions from causing scroll
   }, [chatItems.length]);
 
   // Load older messages function
@@ -117,7 +124,7 @@ export function useChatScroll({
     }
 
     lastMessageCountRef.current = currentCount;
-  }, [chatItems.length, chatItems, isNearBottom]);
+  }, [chatItems.length, isNearBottom]);
 
   // Reset state when changing groups
   useEffect(() => {
@@ -126,6 +133,7 @@ export function useChatScroll({
     setIsNearBottom(true);
     lastMessageCountRef.current = 0;
     lastMessageIdRef.current = '';
+    allowContentSizeScrollRef.current = true;
   }, [groupId]);
 
   // Scroll to bottom function
