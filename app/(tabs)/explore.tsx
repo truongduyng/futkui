@@ -109,6 +109,7 @@ export default function ExploreScreen() {
             <TouchableOpacity
               style={[styles.joinButton, { backgroundColor: colors.tint }]}
               onPress={handleJoinViaLink}
+              activeOpacity={0.8}
             >
               <Text style={styles.joinButtonText}>Join</Text>
             </TouchableOpacity>
@@ -161,6 +162,7 @@ export default function ExploreScreen() {
                   <TouchableOpacity
                     style={[styles.joinGroupButton, { backgroundColor: colors.tint }]}
                     onPress={() => handleJoinGroup(group.id, group.name)}
+                    activeOpacity={0.8}
                   >
                     <Text style={styles.joinGroupButtonText}>Join</Text>
                   </TouchableOpacity>
@@ -195,22 +197,31 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontSize: 16,
-    marginRight: 8,
+    marginRight: 12,
   },
   joinButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    minWidth: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   joinButtonText: {
     color: "white",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
+    letterSpacing: 0.5,
   },
   emptyText: {
     textAlign: "center",
@@ -221,48 +232,68 @@ const styles = StyleSheet.create({
   groupItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginVertical: 4,
-    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginVertical: 6,
+    borderRadius: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   groupEmoji: {
-    fontSize: 24,
-    marginRight: 12,
+    fontSize: 32,
+    marginRight: 16,
+    textAlign: 'center',
+    width: 48,
+    height: 48,
+    lineHeight: 48,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 24,
+    overflow: 'hidden',
   },
   groupInfo: {
     flex: 1,
   },
   groupName: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 2,
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 4,
+    letterSpacing: 0.3,
   },
   groupDescription: {
     fontSize: 14,
-    marginBottom: 2,
+    marginBottom: 4,
+    lineHeight: 20,
   },
   memberCount: {
     fontSize: 12,
+    fontWeight: "500",
+    opacity: 0.8,
   },
   shareText: {
     fontSize: 14,
     fontWeight: "600",
   },
   joinGroupButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    minWidth: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   joinGroupButtonText: {
     color: 'white',
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
+    letterSpacing: 0.5,
   },
   groupList: {
     paddingHorizontal: 16,

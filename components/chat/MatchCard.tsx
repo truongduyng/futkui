@@ -57,13 +57,6 @@ interface MatchCardProps {
   showAuthor?: boolean;
 }
 
-const GAME_TYPE_EMOJIS: Record<string, string> = {
-  internal: '🏠',
-  external: '🆚',
-  friendly: '🤝',
-  tournament: '🏆',
-  training: '💪',
-};
 
 export const MatchCard = React.memo(function MatchCard({
   match,
@@ -76,11 +69,11 @@ export const MatchCard = React.memo(function MatchCard({
   showAuthor = true,
 }: MatchCardProps) {
   const colors = Colors['light'];
-  
+
   const matchDateTime = new Date(match.matchDate);
   const isMatchToday = new Date().toDateString() === matchDateTime.toDateString();
   const isMatchPast = match.matchDate < Date.now();
-  
+
   // Calculate RSVP counts
   const rsvpCounts = match.rsvps.reduce((acc, rsvp) => {
     acc[rsvp.response] = (acc[rsvp.response] || 0) + 1;
@@ -89,7 +82,7 @@ export const MatchCard = React.memo(function MatchCard({
 
   const userRsvp = match.rsvps.find(rsvp => rsvp.user.id === currentUserId);
   const userCheckedIn = match.checkIns.some(checkIn => checkIn.user.id === currentUserId);
-  
+
   const formatDate = (date: Date) => {
     return date.toLocaleDateString([], {
       weekday: 'short',
@@ -114,8 +107,8 @@ export const MatchCard = React.memo(function MatchCard({
 
   const getRsvpButtonStyle = (response: 'yes' | 'no' | 'maybe') => {
     const isSelected = userRsvp?.response === response;
-    let backgroundColor = 'transparent';
-    let borderColor = colors.tabIconDefault;
+    let backgroundColor = '#D1D5DB';
+    let borderColor = '#D1D5DB';
     let textColor = colors.text;
 
     if (isSelected) {
@@ -168,27 +161,14 @@ export const MatchCard = React.memo(function MatchCard({
         {/* Header */}
         <View style={styles.matchHeader}>
           <View style={styles.titleRow}>
-            <Text style={styles.gameTypeEmoji}>
-              {GAME_TYPE_EMOJIS[match.gameType] || '⚽'}
-            </Text>
+            <Text style={styles.gameTypeEmoji}>⚽</Text>
             <Text
               style={[
                 styles.matchTitle,
                 isOwnMessage ? styles.ownText : { color: colors.text },
               ]}
             >
-              {match.title}
-            </Text>
-          </View>
-          <View style={[
-            styles.gameTypeTag,
-            { backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }
-          ]}>
-            <Text style={[
-              styles.gameTypeText,
-              { color: isOwnMessage ? 'white' : colors.text }
-            ]}>
-              {match.gameType.charAt(0).toUpperCase() + match.gameType.slice(1)}
+              Match Event
             </Text>
           </View>
         </View>
@@ -196,10 +176,10 @@ export const MatchCard = React.memo(function MatchCard({
         {/* Match Info */}
         <View style={styles.matchInfo}>
           <View style={styles.infoRow}>
-            <Ionicons 
-              name="calendar" 
-              size={14} 
-              color={isOwnMessage ? 'white' : colors.tabIconDefault} 
+            <Ionicons
+              name="calendar"
+              size={14}
+              color={isOwnMessage ? 'white' : colors.tabIconDefault}
             />
             <Text style={[
               styles.infoText,
@@ -211,20 +191,6 @@ export const MatchCard = React.memo(function MatchCard({
                   {' '}• TODAY
                 </Text>
               )}
-            </Text>
-          </View>
-          
-          <View style={styles.infoRow}>
-            <Ionicons 
-              name="location" 
-              size={14} 
-              color={isOwnMessage ? 'white' : colors.tabIconDefault} 
-            />
-            <Text style={[
-              styles.infoText,
-              isOwnMessage ? styles.ownText : { color: colors.text }
-            ]}>
-              {match.location}
             </Text>
           </View>
         </View>
@@ -331,10 +297,10 @@ export const MatchCard = React.memo(function MatchCard({
             ))}
             {match.checkIns.length > 0 && (
               <View style={styles.rsvpCount}>
-                <Ionicons 
-                  name="checkmark-circle" 
-                  size={12} 
-                  color={isOwnMessage ? 'white' : colors.text} 
+                <Ionicons
+                  name="checkmark-circle"
+                  size={12}
+                  color={isOwnMessage ? 'white' : colors.text}
                 />
                 <Text style={[
                   styles.rsvpCountText,
@@ -404,17 +370,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     flex: 1,
   },
-  gameTypeTag: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  gameTypeText: {
-    fontSize: 10,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
   matchInfo: {
     marginBottom: 12,
   },
@@ -458,6 +413,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
+    borderColor: '#D1D5DB',
     alignItems: 'center',
   },
   rsvpButtonText: {
