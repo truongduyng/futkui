@@ -1,3 +1,4 @@
+import { ActivityBar } from "@/components/chat/ActivityBar";
 import { useChatItemRenderer } from "@/components/chat/ChatItemRenderer";
 import { ImageModal } from "@/components/chat/ImageModal";
 import { LoadingHeader } from "@/components/chat/LoadingHeader";
@@ -70,6 +71,20 @@ export default function ChatScreen() {
     if (!messagesData?.messages) return [];
     return messagesData.messages.slice().reverse();
   }, [messagesData?.messages]);
+
+  // Extract polls from messages for ActivityBar
+  const polls = useMemo(() => {
+    return messages
+      .filter((message) => message.poll)
+      .map((message) => ({
+        ...message.poll,
+        message: {
+          group: {
+            id: groupId || "",
+          },
+        },
+      }));
+  }, [messages, groupId]);
 
   // Combine messages and matches for display, sorted by creation time
   const chatItems = useMemo(() => {
@@ -288,6 +303,11 @@ export default function ChatScreen() {
 
   return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <ActivityBar 
+          polls={polls} 
+          matches={matches.map(match => ({ ...match }))} 
+          groupId={groupId || ""} 
+        />
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
