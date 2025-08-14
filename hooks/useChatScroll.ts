@@ -26,39 +26,51 @@ export function useChatScroll({
   const lastMessageIdRef = useRef<string>('');
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const allowContentSizeScrollRef = useRef(true);
+  const initialScrollAttempts = useRef(0);
+  const maxInitialScrollAttempts = 10;
 
   // Initial scroll to bottom on first load
   useEffect(() => {
     if (!isLoadingMessages && chatItems.length > 0 && !hasInitialScrolledRef.current) {
-      // Multiple attempts with increasing delays to ensure content is rendered
-      const scrollAttempts = [50, 150, 300, 500];
-
-      scrollAttempts.forEach((delay, index) => {
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: false });
-          // Mark as scrolled only after the last attempt
-          if (index === scrollAttempts.length - 1) {
-            hasInitialScrolledRef.current = true;
-            // Ensure we're marked as at bottom after initial scroll
-            setIsNearBottom(true);
-            setShowScrollToBottom(false);
-            // Disable content size scroll after initial load is complete
-            setTimeout(() => {
-              allowContentSizeScrollRef.current = false;
-            }, 500);
-          }
-        }, delay);
-      });
+      const attemptScroll = () => {
+        initialScrollAttempts.current += 1;
+        
+        // Try to scroll to bottom
+        flatListRef.current?.scrollToEnd({ animated: false });
+        
+        // Check if we've reached the maximum attempts or if we should continue
+        if (initialScrollAttempts.current >= maxInitialScrollAttempts) {
+          // Mark as completed after max attempts
+          hasInitialScrolledRef.current = true;
+          setIsNearBottom(true);
+          setShowScrollToBottom(false);
+          allowContentSizeScrollRef.current = false;
+        } else {
+          // Continue attempting with increasing delays
+          const delay = Math.min(100 * initialScrollAttempts.current, 1000);
+          setTimeout(attemptScroll, delay);
+        }
+      };
+      
+      // Start the scroll attempts
+      attemptScroll();
     }
   }, [isLoadingMessages, chatItems.length]);
 
   // Additional scroll trigger when content size changes - only during initial load
   const handleContentSizeChange = useCallback(() => {
-    // Only scroll on content size change during initial load, not for updates like reactions
+    // Enhanced content size change handling for initial load
     if (allowContentSizeScrollRef.current && !hasInitialScrolledRef.current && chatItems.length > 0) {
       // Immediate scroll when content size changes during initial load
       requestAnimationFrame(() => {
         flatListRef.current?.scrollToEnd({ animated: false });
+        
+        // If we haven't completed initial scroll, try one more time after a short delay
+        if (!hasInitialScrolledRef.current) {
+          setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: false });
+          }, 100);
+        }
       });
     }
     // Do nothing after initial load - prevents reactions from causing scroll
@@ -134,6 +146,7 @@ export function useChatScroll({
   // Reset state when changing groups
   useEffect(() => {
     hasInitialScrolledRef.current = false;
+    initialScrollAttempts.current = 0;
     setShowScrollToBottom(false);
     setIsNearBottom(true);
     lastMessageCountRef.current = 0;
