@@ -33,7 +33,6 @@ export default function ChatScreen() {
   const {
     useGroup,
     useMessages,
-    useMatches,
     useProfile,
     useUserMembership,
     sendMessage,
@@ -56,7 +55,6 @@ export default function ChatScreen() {
     groupId || "",
     messageLimit,
   );
-  const { data: matchesData } = useMatches(groupId || "");
 
   const { data: profileData } = useProfile();
   const { data: membershipData } = useUserMembership(groupId || "");
@@ -64,15 +62,7 @@ export default function ChatScreen() {
   const userMembership = membershipData?.memberships?.[0];
 
   const group = groupData?.groups?.[0];
-  const matches = useMemo(
-    () => matchesData?.matches || [],
-    [matchesData?.matches],
-  );
-  // Reverse messages since we fetch newest first but display oldest first
-  const messages = useMemo(() => {
-    if (!messagesData?.messages) return [];
-    return messagesData.messages.slice().reverse();
-  }, [messagesData?.messages]);
+  const messages = useMemo(() => messagesData?.messages || [], [messagesData?.messages]);
 
   // Extract polls from messages for ActivityBar
   const polls = useMemo(() => {
@@ -88,23 +78,18 @@ export default function ChatScreen() {
       }));
   }, [messages, groupId]);
 
-  // Combine messages and matches for display, sorted by creation time
+  // Extract matches from messages for ActivityBar
+  const matches = useMemo(() => {
+    return messages
+      .filter((message) => message.match)
+      .map((message) => message.match!)
+      .filter((match): match is NonNullable<typeof match> => match !== null && match !== undefined);
+  }, [messages]);
+
+  // Use messages directly as chat items since matches are now linked to messages
   const chatItems = useMemo(() => {
-    if (messages.length === 0 && matches.length === 0) return [];
-
-    const messageItems = messages.map((msg) => ({
-      ...msg,
-      itemType: "message" as const,
-    }));
-    const matchItems = matches.map((match) => ({
-      ...match,
-      itemType: "match" as const,
-    }));
-
-    return [...messageItems, ...matchItems].sort(
-      (a, b) => a.createdAt - b.createdAt,
-    );
-  }, [messages, matches]);
+    return messages;
+  }, [messages]);
   const files = useMemo(
     () => messagesData?.$files || [],
     [messagesData?.$files],
@@ -309,10 +294,10 @@ export default function ChatScreen() {
 
   return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <ActivityBar 
-          polls={polls} 
-          matches={matches.map(match => ({ ...match }))} 
-          groupId={groupId || ""} 
+        <ActivityBar
+          polls={polls}
+          matches={matches}
+          groupId={groupId || ""}
         />
         <KeyboardAvoidingView
           style={{ flex: 1 }}
@@ -334,7 +319,11 @@ export default function ChatScreen() {
               keyExtractor={keyExtractor}
               style={styles.messageList}
               contentContainerStyle={styles.messageListContent}
-              inverted={false}
+              inverted={true}
+              maintainVisibleContentPosition={{
+                minIndexForVisible: 0,
+                autoscrollToTopThreshold: 10,
+              }}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
               automaticallyAdjustKeyboardInsets={true}
@@ -348,7 +337,7 @@ export default function ChatScreen() {
               scrollEventThrottle={16}
               onContentSizeChange={handleContentSizeChange}
               onLayout={handleLayout}
-              ListHeaderComponent={() => (
+              ListFooterComponent={() => (
                 <LoadingHeader isLoading={isLoadingOlder} />
               )}
             />

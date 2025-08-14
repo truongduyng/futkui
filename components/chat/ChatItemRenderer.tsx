@@ -66,52 +66,7 @@ export function useChatItemRenderer({
     item: any;
     index: number;
   }) => {
-    // Handle match items
-    if (item.itemType === 'match') {
-      const matchItem = item as any; // Cast to any to access match properties
-      const isOwnMatch = matchItem.creator?.id === currentProfile?.id;
-      const previousItem = index > 0 ? chatItems[index - 1] : null;
-      const showTimestamp = shouldShowTimestamp(item, previousItem);
-
-      const previousAuthorId = (previousItem as any)?.author?.id || (previousItem as any)?.creator?.id;
-      const showAuthor = !previousItem ||
-        previousAuthorId !== matchItem.creator?.id;
-      
-      const isCreator = matchItem.creator?.id === currentProfile?.id;
-      const isGroupAdmin = group?.adminId === currentProfile?.id;
-
-      return (
-        <>
-          {showTimestamp && (
-            <View style={styles.timestampHeader}>
-              <Text
-                style={[styles.timestampText, { color: colors.tabIconDefault }]}
-              >
-                {new Date(item.createdAt).toLocaleString([], {
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Text>
-            </View>
-          )}
-          <MatchCard
-            match={matchItem}
-            currentUserId={currentProfile?.id || ''}
-            onRsvp={(response) => handleRsvp(matchItem.id, response)}
-            onCheckIn={() => handleCheckIn(matchItem.id)}
-            onCloseMatch={() => handleCloseMatch(matchItem.id)}
-            isOwnMessage={isOwnMatch}
-            author={matchItem.creator}
-            createdAt={new Date(matchItem.createdAt)}
-            showAuthor={showAuthor}
-            isCreator={isCreator}
-            isGroupAdmin={isGroupAdmin}
-          />
-        </>
-      );
-    }
+    // Since matches are now linked to messages, we don't need separate match item handling
 
     // Handle message items
     const message = item;
@@ -161,6 +116,20 @@ export function useChatItemRenderer({
             author={message.author}
             createdAt={new Date(message.createdAt)}
             showAuthor={showAuthor}
+          />
+        ) : message.type === 'match' && message.match ? (
+          <MatchCard
+            match={message.match}
+            currentUserId={currentProfile?.id || ''}
+            onRsvp={(response) => handleRsvp(message.match.id, response)}
+            onCheckIn={() => handleCheckIn(message.match.id)}
+            onCloseMatch={() => handleCloseMatch(message.match.id)}
+            isOwnMessage={isOwnMessage}
+            author={message.author}
+            createdAt={new Date(message.createdAt)}
+            showAuthor={showAuthor}
+            isCreator={message.match?.creator?.id === currentProfile?.id}
+            isGroupAdmin={group?.adminId === currentProfile?.id}
           />
         ) : (
           <MessageBubble

@@ -190,6 +190,7 @@ export function useChatHandlers({
         location: matchData.location,
         matchDate: matchData.matchDate,
         creatorId: currentProfile.id,
+        authorName: currentProfile.handle,
       });
 
       // Reset scroll state - let natural message update handle scrolling

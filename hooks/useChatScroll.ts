@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FlatList } from 'react-native';
+import { FlatList, InteractionManager } from 'react-native';
 
 interface UseChatScrollProps {
   chatItems: any[];
-  isLoadingMessages: boolean;
   hasMoreMessages: boolean;
   messageLimit: number;
   setMessageLimit: (limit: number) => void;
@@ -12,7 +11,6 @@ interface UseChatScrollProps {
 
 export function useChatScroll({
   chatItems,
-  isLoadingMessages,
   hasMoreMessages,
   messageLimit,
   setMessageLimit,
@@ -26,55 +24,21 @@ export function useChatScroll({
   const lastMessageIdRef = useRef<string>('');
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const allowContentSizeScrollRef = useRef(true);
-  const initialScrollAttempts = useRef(0);
-  const maxInitialScrollAttempts = 10;
 
-  // Initial scroll to bottom on first load
+  // With inverted FlatList, we don't need complex initial scroll logic
   useEffect(() => {
-    if (!isLoadingMessages && chatItems.length > 0 && !hasInitialScrolledRef.current) {
-      const attemptScroll = () => {
-        initialScrollAttempts.current += 1;
-
-        // Try to scroll to bottom
-        flatListRef.current?.scrollToEnd({ animated: false });
-
-        // Check if we've reached the maximum attempts or if we should continue
-        if (initialScrollAttempts.current >= maxInitialScrollAttempts) {
-          // Mark as completed after max attempts
-          hasInitialScrolledRef.current = true;
-          setIsNearBottom(true);
-          setShowScrollToBottom(false);
-          allowContentSizeScrollRef.current = false;
-        } else {
-          // Continue attempting with increasing delays
-          const delay = Math.min(100 * initialScrollAttempts.current, 1000);
-          setTimeout(attemptScroll, delay);
-        }
-      };
-
-      // Start the scroll attempts
-      attemptScroll();
+    if (chatItems.length > 0 && !hasInitialScrolledRef.current) {
+      hasInitialScrolledRef.current = true;
+      setIsNearBottom(true);
+      setShowScrollToBottom(false);
+      allowContentSizeScrollRef.current = false;
     }
-  }, [isLoadingMessages, chatItems.length]);
-
-  // Additional scroll trigger when content size changes - only during initial load
-  const handleContentSizeChange = useCallback(() => {
-    // Enhanced content size change handling for initial load
-    if (allowContentSizeScrollRef.current && !hasInitialScrolledRef.current && chatItems.length > 0) {
-      // Immediate scroll when content size changes during initial load
-      requestAnimationFrame(() => {
-        flatListRef.current?.scrollToEnd({ animated: false });
-
-        // If we haven't completed initial scroll, try one more time after a short delay
-        if (!hasInitialScrolledRef.current) {
-          setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: false });
-          }, 100);
-        }
-      });
-    }
-    // Do nothing after initial load - prevents reactions from causing scroll
   }, [chatItems.length]);
+
+  // With inverted FlatList, content size changes are handled automatically
+  const handleContentSizeChange = useCallback(() => {
+    // No action needed with inverted + maintainVisibleContentPosition
+  }, []);
 
   // Load older messages function
   const loadOlderMessages = useCallback(async () => {
@@ -94,59 +58,49 @@ export function useChatScroll({
     }
   }, [isLoadingOlder, hasMoreMessages, messageLimit, setMessageLimit]);
 
-  // Track scroll position and show/hide scroll to bottom button
+  // Track scroll position - adjusted for inverted FlatList
   const handleScroll = useCallback((event: any) => {
     const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
-    const isAtBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 100;
-    const isNearTop = contentOffset.y < 200; // Within 200px of top
+    // With inverted FlatList, "bottom" is actually at top (contentOffset.y near 0)
+    const isAtBottom = contentOffset.y <= 100;
+    // "Top" for loading older messages is when we scroll down (higher contentOffset.y)
+    const isNearTop = contentOffset.y + layoutMeasurement.height >= contentSize.height - 200;
 
     setIsNearBottom(isAtBottom);
 
     if (!isAtBottom) {
-      // User scrolled up, show scroll to bottom button
       setShowScrollToBottom(true);
-    } else if (isAtBottom) {
-      // User is at bottom, hide button
+    } else {
       setShowScrollToBottom(false);
     }
 
-    // Trigger loading older messages when near top
+    // Trigger loading older messages when scrolled towards older content
     if (isNearTop && hasMoreMessages && !isLoadingOlder) {
       loadOlderMessages();
     }
   }, [hasMoreMessages, isLoadingOlder, loadOlderMessages]);
 
-  // Handle new items (messages and matches - only scroll for truly new items, not reactions)
+  // With inverted FlatList and maintainVisibleContentPosition, new messages are handled automatically
   useEffect(() => {
     const currentCount = chatItems.length;
     const lastCount = lastMessageCountRef.current;
 
-    // Only trigger scroll behavior when item count actually increases
     if (lastCount > 0 && currentCount > lastCount) {
-      const currentLastItemId = chatItems.length > 0 ? chatItems[chatItems.length - 1]?.id : '';
+      // For inverted list, new items (first in array) are automatically shown at bottom
+      const currentFirstItemId = chatItems.length > 0 ? chatItems[0]?.id : '';
       const lastItemId = lastMessageIdRef.current;
 
-      // Double check that we have a new item with a different ID
-      if (currentLastItemId && currentLastItemId !== lastItemId) {
-        // Check isNearBottom at the time of execution, not as a dependency
-        if (isNearBottom) {
-          // User is near bottom, scroll to new item without stealing focus
-          requestAnimationFrame(() => {
-            flatListRef.current?.scrollToEnd({ animated: false });
-          });
-        }
-        // Update the last item ID only when we have a genuinely new item
-        lastMessageIdRef.current = currentLastItemId;
+      if (currentFirstItemId && currentFirstItemId !== lastItemId) {
+        lastMessageIdRef.current = currentFirstItemId;
       }
     }
 
     lastMessageCountRef.current = currentCount;
-  }, [chatItems.length, isNearBottom]);
+  }, [chatItems]);
 
   // Reset state when changing groups
   useEffect(() => {
     hasInitialScrolledRef.current = false;
-    initialScrollAttempts.current = 0;
     setShowScrollToBottom(false);
     setIsNearBottom(true);
     lastMessageCountRef.current = 0;
@@ -154,9 +108,14 @@ export function useChatScroll({
     allowContentSizeScrollRef.current = true;
   }, [groupId]);
 
-  // Scroll to bottom function
+  // With inverted FlatList, no special layout handling needed
+  const handleLayout = useCallback(() => {
+    // No action needed with inverted + maintainVisibleContentPosition
+  }, []);
+
+  // Scroll to bottom function - for inverted FlatList, this scrolls to offset 0
   const scrollToBottom = useCallback(() => {
-    flatListRef.current?.scrollToEnd({ animated: true });
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
     setShowScrollToBottom(false);
   }, []);
 
@@ -167,6 +126,7 @@ export function useChatScroll({
     isLoadingOlder,
     handleScroll,
     handleContentSizeChange,
+    handleLayout,
     scrollToBottom,
     setIsNearBottom,
     setShowScrollToBottom,

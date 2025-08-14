@@ -36,7 +36,7 @@ export function useInstantDB() {
   const useLastMessages = (groupIds: string[]) => {
     // Always call the hook but with conditional query parameters
     const hasGroupIds = groupIds && groupIds.length > 0;
-    
+
     return db.useQuery(hasGroupIds ? {
       messages: {
         $: {
@@ -116,6 +116,15 @@ export function useInstantDB() {
           votes: {
             user: {},
           },
+        },
+        match: {
+          rsvps: {
+            user: {},
+          },
+          checkIns: {
+            user: {},
+          },
+          creator: {},
         },
         group: {},
       },
@@ -587,8 +596,10 @@ Feel free to message me anytime if you have questions or need help with the app!
       location: string;
       matchDate: number;
       creatorId: string;
+      authorName: string;
     }) => {
       const matchId = id();
+      const messageId = id();
 
       const result = await db.transact([
         db.tx.matches[matchId].update({
@@ -602,6 +613,17 @@ Feel free to message me anytime if you have questions or need help with the app!
         }).link({
           group: matchData.groupId,
           creator: matchData.creatorId,
+          message: messageId,
+        }),
+        db.tx.messages[messageId].update({
+          content: ``,
+          authorName: matchData.authorName,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          type: 'match',
+        }).link({
+          group: matchData.groupId,
+          author: matchData.creatorId,
         }),
       ]);
 

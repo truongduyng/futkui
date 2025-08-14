@@ -166,6 +166,14 @@ const _schema = i.schema({
     checkInUsers: {
       forward: { on: "checkIns", has: "one", label: "user" },
       reverse: { on: "profiles", has: "many", label: "checkIns" },
+    },
+    pollMatches: {
+      forward: { on: "polls", has: "one", label: "match" },
+      reverse: { on: "matches", has: "one", label: "poll" },
+    },
+    matchMessages: {
+      forward: { on: "matches", has: "one", label: "message" },
+      reverse: { on: "messages", has: "one", label: "match" },
     }
   },
   rooms: {},
