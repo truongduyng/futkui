@@ -213,7 +213,7 @@ export default function ActivityDetailsScreen() {
             const isOwnMatch = match.creator?.id === currentProfile?.id;
             const isCreator = match.creator?.id === currentProfile?.id;
             const isGroupAdmin = group?.adminId === currentProfile?.id;
-            
+
             return (
               <MatchCard
                 key={match.id}
@@ -295,6 +295,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   section: {
+    marginTop: 6,
     marginBottom: 32,
     paddingHorizontal: 16,
   },

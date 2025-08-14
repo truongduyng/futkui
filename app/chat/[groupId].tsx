@@ -2,15 +2,17 @@ import { ActivityBar } from "@/components/chat/ActivityBar";
 import { useChatItemRenderer } from "@/components/chat/ChatItemRenderer";
 import { ImageModal } from "@/components/chat/ImageModal";
 import { LoadingHeader } from "@/components/chat/LoadingHeader";
+import { LoadingStates } from "@/components/chat/LoadingStates";
 import { MessageInput } from "@/components/chat/MessageInput";
 import { Colors } from "@/constants/Colors";
+import { useChatData } from "@/hooks/useChatData";
 import { useChatHandlers } from "@/hooks/useChatHandlers";
+import { useChatHeader } from "@/hooks/useChatHeader";
 import { useChatScroll } from "@/hooks/useChatScroll";
 import { useInstantDB } from "@/hooks/useInstantDB";
 import { useLocalSearchParams, useNavigation } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -47,85 +49,33 @@ export default function ChatScreen() {
     leaveGroup,
   } = useInstantDB();
 
-  // Separate queries for group info and messages
-  const { data: groupData, isLoading: isLoadingGroup } = useGroup(
-    groupId || "",
-  );
-  const { data: messagesData, isLoading: isLoadingMessages } = useMessages(
-    groupId || "",
-    messageLimit,
-  );
-
+  // Data queries
+  const { data: groupData, isLoading: isLoadingGroup } = useGroup(groupId || "");
+  const { data: messagesData, isLoading: isLoadingMessages } = useMessages(groupId || "", messageLimit);
   const { data: profileData } = useProfile();
   const { data: membershipData } = useUserMembership(groupId || "");
+  
   const currentProfile = profileData?.profiles?.[0];
   const userMembership = membershipData?.memberships?.[0];
-
   const group = groupData?.groups?.[0];
-  const messages = useMemo(() => messagesData?.messages || [], [messagesData?.messages]);
 
-  // Extract polls from messages for ActivityBar
-  const polls = useMemo(() => {
-    return messages
-      .filter((message) => message.poll)
-      .map((message) => ({
-        ...message.poll,
-        message: {
-          group: {
-            id: groupId || "",
-          },
-        },
-      }));
-  }, [messages, groupId]);
+  // Process chat data
+  const { messages, polls, matches, hasMoreMessages, getFileUrl } = useChatData({
+    messagesData,
+    groupId: groupId || "",
+    messageLimit,
+  });
 
-  // Extract matches from messages for ActivityBar
-  const matches = useMemo(() => {
-    return messages
-      .filter((message) => message.match)
-      .map((message) => message.match!)
-      .filter((match): match is NonNullable<typeof match> => match !== null && match !== undefined);
-  }, [messages]);
+  // Extract members for mentions
+  const members = group?.memberships
+    ?.map((membership) => ({
+      id: membership.profile?.id || "",
+      handle: membership.profile?.handle || "",
+      displayName: membership.profile?.displayName,
+    }))
+    .filter((member) => member.id && member.handle) || [];
 
-  // Use messages directly as chat items since matches are now linked to messages
-  const chatItems = useMemo(() => {
-    return messages;
-  }, [messages]);
-  const files = useMemo(
-    () => messagesData?.$files || [],
-    [messagesData?.$files],
-  );
-
-  // Memoize file lookup for better performance
-  const fileUrlMap = useMemo(() => {
-    const map = new Map();
-    files.forEach((file) => {
-      map.set(file.id, file.url);
-    });
-    return map;
-  }, [files]);
-
-  // Simple check if we have more messages to load
-  const hasMoreMessages = messages.length >= messageLimit;
-
-  // Extract members from group memberships for mention functionality
-  const members =
-    group?.memberships
-      ?.map((membership) => ({
-        id: membership.profile?.id || "",
-        handle: membership.profile?.handle || "",
-        displayName: membership.profile?.displayName,
-      }))
-      .filter((member) => member.id && member.handle) || [];
-
-  // Helper function to resolve file URL from file ID
-  const getFileUrl = useCallback(
-    (fileId: string) => {
-      return fileUrlMap.get(fileId);
-    },
-    [fileUrlMap],
-  );
-
-  // Use scroll hook for managing scroll behavior
+  // Scroll management
   const {
     flatListRef,
     showScrollToBottom,
@@ -136,14 +86,14 @@ export default function ChatScreen() {
     setIsNearBottom,
     setShowScrollToBottom,
   } = useChatScroll({
-    chatItems,
+    chatItems: messages,
     hasMoreMessages,
     messageLimit,
     setMessageLimit,
     groupId: groupId || "",
   });
 
-  // Use handlers hook for managing all event handlers
+  // Event handlers
   const {
     handleShareGroup,
     handleLeaveGroup,
@@ -178,35 +128,12 @@ export default function ChatScreen() {
     setSelectedImageUrl,
   });
 
-  // Navigation header management (keeping inline for now due to JSX complexity)
-  const showOptionsMenu = useCallback(() => {
-    Alert.alert("Group Options", "", [
-      {
-        text: "Share Group",
-        onPress: handleShareGroup,
-      },
-      {
-        text: "Leave Group",
-        style: "destructive",
-        onPress: handleLeaveGroup,
-      },
-      { text: "Cancel", style: "cancel" },
-    ]);
-  }, [handleShareGroup, handleLeaveGroup]);
+  // Header management
+  const { showOptionsMenu } = useChatHeader({ group, handleShareGroup, handleLeaveGroup });
 
   useEffect(() => {
     if (group) {
       navigation.setOptions({
-        title: group.name,
-        headerBackTitle: "Back",
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: colors.background,
-        },
-        headerTintColor: colors.tint,
-        headerTitleStyle: {
-          color: colors.text,
-        },
         headerRight: () => (
           <TouchableOpacity
             onPress={showOptionsMenu}
@@ -217,11 +144,11 @@ export default function ChatScreen() {
         ),
       });
     }
-  }, [group, navigation, colors, showOptionsMenu]);
+  }, [group, showOptionsMenu, colors, navigation]);
 
-  // Use chat item renderer
+  // Chat item rendering
   const { renderChatItem, keyExtractor } = useChatItemRenderer({
-    chatItems,
+    chatItems: messages,
     currentProfile,
     group,
     getFileUrl,
@@ -243,53 +170,10 @@ export default function ChatScreen() {
     setMessageLimit(500);
   }, [groupId]);
 
-  if (!groupId) {
-    return (
-      <View
-        style={[
-          styles.container,
-          styles.centered,
-          { backgroundColor: colors.background },
-        ]}
-      >
-        <Text style={[styles.loadingText, { color: colors.text }]}>
-          Loading...
-        </Text>
-      </View>
-    );
-  }
-
-  if (isLoadingGroup) {
-    return (
-      <View
-        style={[
-          styles.container,
-          styles.centered,
-          { backgroundColor: colors.background },
-        ]}
-      >
-        <Text style={[styles.loadingText, { color: colors.text }]}>
-          Loading group...
-        </Text>
-      </View>
-    );
-  }
-
-  if (!group) {
-    return (
-      <View
-        style={[
-          styles.container,
-          styles.centered,
-          { backgroundColor: colors.background },
-        ]}
-      >
-        <Text style={[styles.errorText, { color: colors.text }]}>
-          Group not found
-        </Text>
-      </View>
-    );
-  }
+  // Loading states
+  if (!groupId) return <LoadingStates type="loading" />;
+  if (isLoadingGroup) return <LoadingStates type="loadingGroup" />;
+  if (!group) return <LoadingStates type="groupNotFound" />;
 
   return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -304,32 +188,27 @@ export default function ChatScreen() {
           keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 20 : 0}
           enabled
         >
-          {isLoadingMessages && chatItems.length === 0 ? (
-            <View style={[styles.centered, { flex: 1 }]}>
-              <Text style={[styles.loadingText, { color: colors.text }]}>
-                Loading messages...
-              </Text>
-            </View>
+          {isLoadingMessages && messages.length === 0 ? (
+            <LoadingStates type="loadingMessages" />
           ) : (
             <FlatList
               ref={flatListRef}
-              data={chatItems}
+              data={messages}
               renderItem={renderChatItem}
               keyExtractor={keyExtractor}
               style={styles.messageList}
               contentContainerStyle={styles.messageListContent}
-              inverted={true}
+              inverted
               maintainVisibleContentPosition={{
                 minIndexForVisible: 0,
                 autoscrollToTopThreshold: 10,
               }}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
-              automaticallyAdjustKeyboardInsets={true}
+              automaticallyAdjustKeyboardInsets
               keyboardDismissMode="interactive"
-              removeClippedSubviews={true}
+              removeClippedSubviews
               maxToRenderPerBatch={10}
-              updateCellsBatchingPeriod={100}
               initialNumToRender={15}
               windowSize={5}
               onScroll={handleScroll}
@@ -375,34 +254,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  centered: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    fontSize: 16,
-  },
-  errorText: {
-    fontSize: 16,
-  },
   messageList: {
     flex: 1,
   },
   messageListContent: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-  },
-  timestampHeader: {
-    alignItems: "center",
-    marginVertical: 16,
-  },
-  timestampText: {
-    fontSize: 12,
-    fontWeight: "500",
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
   },
   scrollToBottomButton: {
     position: "absolute",
@@ -423,10 +280,5 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 20,
     fontWeight: "bold",
-  },
-  loadingContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 16,
   },
 });
