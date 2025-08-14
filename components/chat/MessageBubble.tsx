@@ -13,6 +13,7 @@ import {
   View
 } from "react-native";
 import { MentionText } from "./MentionText";
+import { CachedAvatar } from "./CachedAvatar";
 
 interface Reaction {
   id: string;
@@ -31,6 +32,9 @@ interface MessageBubbleProps {
     id: string;
     handle: string;
     displayName?: string;
+    avatar?: {
+      url: string;
+    };
   };
   createdAt: Date;
   isOwnMessage: boolean;
@@ -159,9 +163,18 @@ export const MessageBubble = React.memo(function MessageBubble({
         activeOpacity={1}
       >
         {!isOwnMessage && showAuthor && (
-          <Text style={[styles.authorName, { color: colors.text }]}>
-            {author?.handle || "Unknown"}
-          </Text>
+          <View style={styles.authorSection}>
+            {author?.avatar?.url && (
+              <CachedAvatar 
+                uri={author.avatar.url} 
+                size={16}
+                style={styles.authorAvatar}
+              />
+            )}
+            <Text style={[styles.authorName, { color: colors.text }]}>
+              {author?.handle || "Unknown"}
+            </Text>
+          </View>
         )}
 
         <View style={styles.messageContainer}>
@@ -417,10 +430,17 @@ const styles = StyleSheet.create({
   groupedMessage: {
     marginTop: 2,
   },
-  authorName: {
-    fontSize: 12,
+  authorSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 2,
     marginLeft: 8,
+  },
+  authorAvatar: {
+    marginRight: 6,
+  },
+  authorName: {
+    fontSize: 12,
   },
   bubble: {
     paddingHorizontal: 12,
