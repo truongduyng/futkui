@@ -12,7 +12,8 @@ import {
 } from "react-native";
 
 export default function ActivityDetailsScreen() {
-  const { groupId } = useLocalSearchParams<{ groupId: string }>();
+  const params = useLocalSearchParams<{ groupId: string }>();
+  const groupId = params?.groupId;
   const colors = Colors["light"];
   const navigation = useNavigation();
 

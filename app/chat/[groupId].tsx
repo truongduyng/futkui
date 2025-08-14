@@ -22,7 +22,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ChatScreen() {
-  const { groupId } = useLocalSearchParams<{ groupId: string }>();
+  const params = useLocalSearchParams<{ groupId: string }>();
+  const groupId = params?.groupId;
   const colors = Colors["light"];
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
