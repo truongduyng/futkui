@@ -45,7 +45,24 @@ export default function ChatScreen() {
   const profile = groupsData?.profiles?.[0];
   const groups = (profile?.memberships || [])
     .map((membership: any) => membership.group)
-    .filter((group: any) => group && group.id);
+    .filter((group: any) => group && group.id)
+    .sort((a: any, b: any) => {
+      // Pin bot group (admin.handle === 'fk') to the top
+      const aIsBot = a.admin?.handle === 'fk';
+      const bIsBot = b.admin?.handle === 'fk';
+      
+      if (aIsBot && !bIsBot) return -1;
+      if (!aIsBot && bIsBot) return 1;
+      
+      // For non-bot groups, sort by most recent message or creation date
+      const aLastMessage = a.messages?.[a.messages.length - 1];
+      const bLastMessage = b.messages?.[b.messages.length - 1];
+      
+      const aTime = aLastMessage?.createdAt || a.createdAt || 0;
+      const bTime = bLastMessage?.createdAt || b.createdAt || 0;
+      
+      return bTime - aTime;
+    });
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>

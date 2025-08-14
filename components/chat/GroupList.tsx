@@ -90,23 +90,40 @@ export const GroupList = React.memo(function GroupList({ groups, onGroupPress, o
 
   const renderGroup = ({ item: group }: { item: Group }) => {
     const lastMessage = getLastMessage(group);
+    const isBotGroup = group.admin?.handle === 'fk';
 
     return (
       <TouchableOpacity
-        style={[styles.groupItem, { backgroundColor: colors.background }]}
+        style={[
+          styles.groupItem,
+          { backgroundColor: colors.background },
+          isBotGroup && styles.botGroupItem
+        ]}
         onPress={() => onGroupPress(group)}
       >
-        <View style={styles.avatarContainer}>
-          <Text style={styles.avatarText}>
-            {group.name.charAt(0).toUpperCase()}
+        <View style={[
+          styles.avatarContainer,
+          isBotGroup && styles.botAvatarContainer
+        ]}>
+          <Text style={[
+            styles.avatarText,
+            isBotGroup && styles.botAvatarText
+          ]}>
+            {isBotGroup ? '🤖' : group.name.charAt(0).toUpperCase()}
           </Text>
         </View>
 
         <View style={styles.groupInfo}>
           <View style={styles.groupHeader}>
-            <Text style={[styles.groupName, { color: colors.text }]}>
-              {group.name}
-            </Text>
+            <View style={styles.groupNameContainer}>
+              <Text style={[
+                styles.groupName,
+                { color: colors.text },
+                isBotGroup && styles.botGroupName
+              ]}>
+                {group.name}
+              </Text>
+            </View>
             {lastMessage && (
               <Text style={[styles.timeText, { color: colors.tabIconDefault }]}>
                 {formatTime(lastMessage.createdAt)}
@@ -115,7 +132,11 @@ export const GroupList = React.memo(function GroupList({ groups, onGroupPress, o
           </View>
 
           {lastMessage && (
-            <Text style={[styles.lastMessage, { color: colors.tabIconDefault }]}>
+            <Text style={[
+              styles.lastMessage,
+              { color: colors.tabIconDefault },
+              isBotGroup && styles.botLastMessage
+            ]}>
               {lastMessage.author?.handle || 'Unknown'}: {lastMessage.content}
             </Text>
           )}
@@ -237,6 +258,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
+  groupNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
   groupName: {
     fontSize: 16,
     fontWeight: '600',
@@ -303,5 +330,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  // Bot group specific styles
+  botGroupItem: {
+    borderLeftWidth: 4,
+    borderLeftColor: Colors['light'].tint,
+    backgroundColor: '#F0FDF4',
+  },
+  botAvatarContainer: {
+    backgroundColor: Colors['light'].tint,
+    borderWidth: 2,
+    borderColor: Colors['light'].tint,
+  },
+  botAvatarText: {
+    fontSize: 24,
+  },
+  botGroupName: {
+    fontWeight: '700',
+    color: Colors['light'].tint,
+  },
+  botLastMessage: {
+    fontStyle: 'italic',
+    color: Colors['light'].tint,
   },
 });
