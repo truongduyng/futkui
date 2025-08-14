@@ -33,17 +33,22 @@ export function useChatScroll({
       // Multiple attempts with increasing delays to ensure content is rendered
       const scrollAttempts = [50, 150, 300, 500];
 
-      scrollAttempts.forEach((delay) => {
+      scrollAttempts.forEach((delay, index) => {
         setTimeout(() => {
           flatListRef.current?.scrollToEnd({ animated: false });
+          // Mark as scrolled only after the last attempt
+          if (index === scrollAttempts.length - 1) {
+            hasInitialScrolledRef.current = true;
+            // Ensure we're marked as at bottom after initial scroll
+            setIsNearBottom(true);
+            setShowScrollToBottom(false);
+            // Disable content size scroll after initial load is complete
+            setTimeout(() => {
+              allowContentSizeScrollRef.current = false;
+            }, 500);
+          }
         }, delay);
       });
-
-      hasInitialScrolledRef.current = true;
-      // Disable content size scroll after initial load is complete
-      setTimeout(() => {
-        allowContentSizeScrollRef.current = false;
-      }, 1000);
     }
   }, [isLoadingMessages, chatItems.length]);
 
