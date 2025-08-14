@@ -12,6 +12,10 @@ interface ChatItemRendererProps {
     handle: string;
     displayName?: string;
   };
+  group?: {
+    id: string;
+    adminId: string;
+  };
   getFileUrl: (fileId: string) => string | undefined;
   stableHandleVote: (pollId: string, optionId: string, votes: any[], allowMultiple: boolean) => void;
   stableHandleClosePoll: (pollId: string) => void;
@@ -20,11 +24,13 @@ interface ChatItemRendererProps {
   handleImagePress: (imageUrl: string) => void;
   handleRsvp: (matchId: string, response: 'yes' | 'no' | 'maybe') => void;
   handleCheckIn: (matchId: string) => void;
+  handleCloseMatch: (matchId: string) => void;
 }
 
 export function useChatItemRenderer({
   chatItems,
   currentProfile,
+  group,
   getFileUrl,
   stableHandleVote,
   stableHandleClosePoll,
@@ -33,6 +39,7 @@ export function useChatItemRenderer({
   handleImagePress,
   handleRsvp,
   handleCheckIn,
+  handleCloseMatch,
 }: ChatItemRendererProps) {
   const colors = Colors["light"];
 
@@ -69,6 +76,9 @@ export function useChatItemRenderer({
       const previousAuthorId = (previousItem as any)?.author?.id || (previousItem as any)?.creator?.id;
       const showAuthor = !previousItem ||
         previousAuthorId !== matchItem.creator?.id;
+      
+      const isCreator = matchItem.creator?.id === currentProfile?.id;
+      const isGroupAdmin = group?.adminId === currentProfile?.id;
 
       return (
         <>
@@ -91,10 +101,13 @@ export function useChatItemRenderer({
             currentUserId={currentProfile?.id || ''}
             onRsvp={(response) => handleRsvp(matchItem.id, response)}
             onCheckIn={() => handleCheckIn(matchItem.id)}
+            onCloseMatch={() => handleCloseMatch(matchItem.id)}
             isOwnMessage={isOwnMatch}
             author={matchItem.creator}
             createdAt={new Date(matchItem.createdAt)}
             showAuthor={showAuthor}
+            isCreator={isCreator}
+            isGroupAdmin={isGroupAdmin}
           />
         </>
       );
@@ -169,6 +182,7 @@ export function useChatItemRenderer({
   }, [
     chatItems,
     currentProfile?.id,
+    group?.adminId,
     shouldShowTimestamp,
     getFileUrl,
     colors.tabIconDefault,
@@ -178,7 +192,8 @@ export function useChatItemRenderer({
     stableHandleAddReaction,
     handleImagePress,
     handleRsvp,
-    handleCheckIn
+    handleCheckIn,
+    handleCloseMatch
   ]);
 
   const keyExtractor = useCallback((item: any) => item.id, []);

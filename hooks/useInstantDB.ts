@@ -661,6 +661,19 @@ Feel free to message me anytime if you have questions or need help with the app!
     [db]
   );
 
+  const closeMatch = useCallback(
+    async (matchId: string) => {
+      const result = await db.transact([
+        db.tx.matches[matchId].update({
+          closedAt: Date.now(),
+          isActive: false,
+        }),
+      ]);
+      return result;
+    },
+    [db]
+  );
+
   const useMatches = (groupId: string) => {
     if (!groupId) {
       return { data: null, isLoading: false, error: null };
@@ -700,6 +713,7 @@ Feel free to message me anytime if you have questions or need help with the app!
     createMatch,
     rsvpToMatch,
     checkInToMatch,
+    closeMatch,
     addReaction: addOrUpdateReaction,
     removeReaction,
     joinGroup,

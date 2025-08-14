@@ -56,6 +56,7 @@ const _schema = i.schema({
       matchDate: i.number(), // Unix timestamp
       createdAt: i.number(),
       isActive: i.boolean(), // true until match day is over
+      closedAt: i.number().optional(), // Manual close timestamp
     }),
     rsvps: i.entity({
       response: i.string(), // 'yes', 'no', 'maybe'

@@ -33,6 +33,7 @@ interface UseChatHandlersProps {
   closePoll: (pollId: string) => Promise<any>;
   rsvpToMatch: (params: any) => Promise<any>;
   checkInToMatch: (params: any) => Promise<any>;
+  closeMatch: (matchId: string) => Promise<any>;
   leaveGroup: (membershipId: string) => Promise<any>;
   setIsNearBottom: (value: boolean) => void;
   setShowScrollToBottom: (value: boolean) => void;
@@ -52,6 +53,7 @@ export function useChatHandlers({
   closePoll,
   rsvpToMatch,
   checkInToMatch,
+  closeMatch,
   leaveGroup,
   setIsNearBottom,
   setShowScrollToBottom,
@@ -320,6 +322,33 @@ export function useChatHandlers({
     }
   }, [currentProfile, checkInToMatch]);
 
+  const handleCloseMatch = useCallback(async (matchId: string) => {
+    if (!currentProfile) {
+      Alert.alert("Error", "Please wait for your profile to load.");
+      return;
+    }
+
+    Alert.alert(
+      "Close Match",
+      "Are you sure you want to close this match? This action cannot be undone.",
+      [
+        {
+          text: "Close Match",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await closeMatch(matchId);
+            } catch (error) {
+              Alert.alert("Error", "Failed to close match. Please try again.");
+              console.error("Error closing match:", error);
+            }
+          },
+        },
+        { text: "Cancel", style: "cancel" },
+      ]
+    );
+  }, [currentProfile, closeMatch]);
+
   return {
     handleShareGroup,
     handleLeaveGroup,
@@ -333,5 +362,6 @@ export function useChatHandlers({
     handleClosePoll,
     handleRsvp,
     handleCheckIn,
+    handleCloseMatch,
   };
 }

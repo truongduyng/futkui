@@ -25,6 +25,7 @@ export default function ActivityDetailsScreen() {
     closePoll,
     rsvpToMatch,
     checkInToMatch,
+    closeMatch,
   } = useInstantDB();
 
   const { data: groupData } = useGroup(groupId || "");
@@ -129,6 +130,16 @@ export default function ActivityDetailsScreen() {
     }
   };
 
+  const handleCloseMatch = async (matchId: string) => {
+    if (!currentProfile) return;
+
+    try {
+      await closeMatch(matchId);
+    } catch (error) {
+      console.error("Error closing match:", error);
+    }
+  };
+
   if (!groupId || !group) {
     return (
       <View style={[styles.container, styles.centered, { backgroundColor: colors.background }]}>
@@ -199,6 +210,9 @@ export default function ActivityDetailsScreen() {
             </View>
           {upcomingMatches.map((match) => {
             const isOwnMatch = match.creator?.id === currentProfile?.id;
+            const isCreator = match.creator?.id === currentProfile?.id;
+            const isGroupAdmin = group?.adminId === currentProfile?.id;
+            
             return (
               <MatchCard
                 key={match.id}
@@ -211,6 +225,7 @@ export default function ActivityDetailsScreen() {
                   matchDate: match.matchDate,
                   createdAt: match.createdAt,
                   isActive: match.isActive,
+                  closedAt: match.closedAt,
                   rsvps: (match.rsvps || []).filter((rsvp): rsvp is any =>
                     rsvp.user != null &&
                     (rsvp.response === 'yes' || rsvp.response === 'no' || rsvp.response === 'maybe')
@@ -221,10 +236,13 @@ export default function ActivityDetailsScreen() {
                 currentUserId={currentProfile?.id || ''}
                 onRsvp={(response) => handleRsvp(match.id, response)}
                 onCheckIn={() => handleCheckIn(match.id)}
+                onCloseMatch={() => handleCloseMatch(match.id)}
                 isOwnMessage={isOwnMatch}
                 author={match.creator}
                 createdAt={new Date(match.createdAt)}
                 showAuthor={!isOwnMatch}
+                isCreator={isCreator}
+                isGroupAdmin={isGroupAdmin}
               />
             );
           })}

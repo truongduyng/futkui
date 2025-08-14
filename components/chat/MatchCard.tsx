@@ -32,6 +32,7 @@ interface MatchData {
   matchDate: number;
   createdAt: number;
   isActive: boolean;
+  closedAt?: number;
   rsvps: RsvpData[];
   checkIns: CheckInData[];
   creator: {
@@ -46,6 +47,7 @@ interface MatchCardProps {
   currentUserId: string;
   onRsvp: (response: 'yes' | 'no' | 'maybe') => void;
   onCheckIn: () => void;
+  onCloseMatch?: () => void;
   isOwnMessage: boolean;
   author?: {
     id: string;
@@ -54,6 +56,8 @@ interface MatchCardProps {
   };
   createdAt: Date;
   showAuthor?: boolean;
+  isCreator?: boolean;
+  isGroupAdmin?: boolean;
 }
 
 
@@ -62,17 +66,24 @@ export const MatchCard = React.memo(function MatchCard({
   currentUserId,
   onRsvp,
   onCheckIn,
+  onCloseMatch,
   isOwnMessage,
   author,
   createdAt,
   showAuthor = true,
+  isCreator = false,
+  isGroupAdmin = false,
 }: MatchCardProps) {
   const colors = Colors['light'];
 
   const matchDateTime = new Date(match.matchDate);
   const isMatchToday = new Date().toDateString() === matchDateTime.toDateString();
   const isMatchPast = match.matchDate < Date.now();
-  
+  const isMatchClosed = match.closedAt !== undefined;
+
+  // Show close button if user is creator or group admin, match is not closed, and match is not past
+  const canCloseMatch = (isCreator || isGroupAdmin) && !isMatchClosed && !isMatchPast && onCloseMatch;
+
   // Checkin window: 15 minutes before match to 2 hours after match
   const now = Date.now();
   const fifteenMinBeforeMatch = match.matchDate - (15 * 60 * 1000); // 15 minutes in milliseconds
@@ -139,8 +150,8 @@ export const MatchCard = React.memo(function MatchCard({
     return { backgroundColor, borderColor, textColor };
   };
 
-  const canCheckIn = isInCheckinWindow && match.isActive && !userCheckedIn;
-  const showCheckIn = isInCheckinWindow && match.isActive;
+  const canCheckIn = isInCheckinWindow && match.isActive && !userCheckedIn && !isMatchClosed;
+  const showCheckIn = isInCheckinWindow && match.isActive && !isMatchClosed;
 
   return (
     <View
@@ -166,15 +177,38 @@ export const MatchCard = React.memo(function MatchCard({
         {/* Header */}
         <View style={styles.matchHeader}>
           <View style={styles.titleRow}>
-            <Text style={styles.gameTypeEmoji}>⚽</Text>
-            <Text
-              style={[
-                styles.matchTitle,
-                isOwnMessage ? styles.ownText : { color: colors.text },
-              ]}
-            >
-              Match Event
-            </Text>
+            <View style={styles.titleContent}>
+              <Text style={styles.gameTypeEmoji}>⚽</Text>
+              <Text
+                style={[
+                  styles.matchTitle,
+                  isOwnMessage ? styles.ownText : { color: colors.text },
+                ]}
+              >
+                Match Event
+                {isMatchClosed && (
+                  <Text style={[styles.closedBadge, { color: isOwnMessage ? '#FFD700' : '#EF4444' }]}>
+                    {' '}• CLOSED
+                  </Text>
+                )}
+              </Text>
+            </View>
+            {canCloseMatch && (
+              <TouchableOpacity
+                onPress={onCloseMatch}
+                style={[
+                  styles.closeButton,
+                  { backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }
+                ]}
+              >
+                <Text style={[
+                  styles.closeButtonText,
+                  { color: isOwnMessage ? 'white' : colors.text }
+                ]}>
+                  Close
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -209,7 +243,7 @@ export const MatchCard = React.memo(function MatchCard({
         </Text>
 
         {/* RSVP Section */}
-        {!isMatchPast && (
+        {!isMatchPast && !isMatchClosed && (
           <View style={styles.rsvpSection}>
             <Text style={[
               styles.sectionTitle,
@@ -363,8 +397,15 @@ const styles = StyleSheet.create({
   },
   titleRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 8,
+  },
+  titleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 8,
   },
   gameTypeEmoji: {
     fontSize: 20,
@@ -373,7 +414,21 @@ const styles = StyleSheet.create({
   matchTitle: {
     fontSize: 18,
     fontWeight: '700',
+    lineHeight: 22,
     flex: 1,
+  },
+  closedBadge: {
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  closeButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  closeButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   matchInfo: {
     marginBottom: 12,

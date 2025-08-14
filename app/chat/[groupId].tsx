@@ -42,6 +42,7 @@ export default function ChatScreen() {
     createMatch,
     rsvpToMatch,
     checkInToMatch,
+    closeMatch,
     addReaction,
     leaveGroup,
   } = useInstantDB();
@@ -171,6 +172,7 @@ export default function ChatScreen() {
     handleClosePoll,
     handleRsvp,
     handleCheckIn,
+    handleCloseMatch,
   } = useChatHandlers({
     currentProfile,
     group,
@@ -184,6 +186,7 @@ export default function ChatScreen() {
     closePoll,
     rsvpToMatch,
     checkInToMatch,
+    closeMatch,
     leaveGroup,
     setIsNearBottom,
     setShowScrollToBottom,
@@ -235,6 +238,7 @@ export default function ChatScreen() {
   const { renderChatItem, keyExtractor } = useChatItemRenderer({
     chatItems,
     currentProfile,
+    group,
     getFileUrl,
     stableHandleVote: (pollId, optionId, votes, allowMultiple) =>
       handleVote(pollId, optionId, votes, allowMultiple),
@@ -246,6 +250,7 @@ export default function ChatScreen() {
     handleImagePress,
     handleRsvp,
     handleCheckIn,
+    handleCloseMatch,
   });
 
   // Reset limit when group changes
