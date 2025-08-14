@@ -19,12 +19,18 @@ interface Group {
   };
   messages: {
     id: string;
-    content: string;
+    content?: string;
     createdAt: number;
+    type?: string;
+    imageUrl?: string;
     author?: {
       id: string;
       handle: string;
       displayName?: string;
+    };
+    poll?: {
+      id: string;
+      question: string;
     };
   }[];
 }
@@ -72,6 +78,32 @@ export const GroupList = React.memo(function GroupList({ groups, onGroupPress, o
   const getLastMessage = (group: Group) => {
     if (!group.messages || group.messages.length === 0) return null;
     return group.messages[group.messages.length - 1];
+  };
+
+  const getMessagePreview = (message: Group['messages'][0]) => {
+    // Handle poll messages
+    if (message.type === 'poll' && message.poll) {
+      return `📊 ${message.poll.question}`;
+    }
+
+    // Handle image messages
+    if (message.type === 'image' || message.imageUrl) {
+      return '📷 Image';
+    }
+
+    // Handle text messages with content
+    if (message.content?.trim()) {
+      const content = message.content.trim();
+      return content.length > 50 ? `${content.substring(0, 50)}...` : content;
+    }
+
+    // Handle match messages (assuming they would be linked somehow)
+    if (message.type === 'match') {
+      return '⚽ Match created';
+    }
+
+    // Fallback for unknown message types
+    return 'Message';
   };
 
   const formatTime = (timestamp: number) => {
@@ -137,9 +169,7 @@ export const GroupList = React.memo(function GroupList({ groups, onGroupPress, o
               { color: colors.tabIconDefault },
               isBotGroup && styles.botLastMessage
             ]}>
-              {lastMessage.content.trim().length > 50
-                ? `${lastMessage.content.trim().substring(0, 50)}...`
-                : lastMessage.content.trim()}
+              {getMessagePreview(lastMessage)}
             </Text>
           )}
         </View>

@@ -27,13 +27,29 @@ export function useInstantDB() {
             admin: {
               avatar: {},
             },
-            messages: {
-              author: {
-                avatar: {},
-              },
-            },
           },
         },
+      },
+    });
+  };
+
+  const useLastMessages = (groupIds: string[]) => {
+    if (!groupIds || groupIds.length === 0) {
+      return { data: null, isLoading: false, error: null };
+    }
+
+    return db.useQuery({
+      messages: {
+        $: {
+          where: { "group.id": { in: groupIds } },
+          order: { serverCreatedAt: 'desc' },
+          limit: Math.max(100, groupIds.length * 10) // Ensure we get enough messages to cover all groups
+        },
+        author: {
+          avatar: {},
+        },
+        poll: {},
+        group: {}
       },
     });
   };
@@ -669,6 +685,7 @@ Feel free to message me anytime if you have questions or need help with the app!
   return {
     instantClient,
     useGroups,
+    useLastMessages,
     useAllGroups,
     useGroup,
     useMessages,
