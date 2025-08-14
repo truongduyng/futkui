@@ -1,4 +1,3 @@
-import { AuthGate } from '@/components/AuthGate';
 import { CreateGroupModal } from '@/components/chat/CreateGroupModal';
 import { GroupList } from '@/components/chat/GroupList';
 import { Colors } from '@/constants/Colors';
@@ -7,7 +6,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
-function ChatScreenContent() {
+export default function ChatScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const router = useRouter();
   const colors = Colors['light'];
@@ -72,14 +71,6 @@ function ChatScreenContent() {
         onCreateGroup={handleCreateGroup}
       />
     </SafeAreaView>
-  );
-}
-
-export default function ChatScreen() {
-  return (
-    <AuthGate>
-      <ChatScreenContent />
-    </AuthGate>
   );
 }
 

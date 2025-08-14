@@ -3,6 +3,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { AuthGate } from '@/components/AuthGate';
 
 
 export default function RootLayout() {
@@ -17,18 +18,20 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen 
-          name="chat/[groupId]" 
-          options={{ 
-            headerShown: true,
-            title: 'Chat',
-            presentation: 'card'
-          }} 
-        />
-        <Stack.Screen name="+not-found" />
-      </Stack>
+      <AuthGate>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen 
+            name="chat/[groupId]" 
+            options={{ 
+              headerShown: true,
+              title: 'Chat',
+              presentation: 'card'
+            }} 
+          />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+      </AuthGate>
       <StatusBar style="dark" />
     </ThemeProvider>
   );

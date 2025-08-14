@@ -139,15 +139,193 @@ export function useInstantDB() {
     return `${randomAdjective}${randomNoun}${randomSuffix}`;
   };
 
+  // Bot constants
+  const BOT_HANDLE = 'fk';
+
+  // Bot profile and group management
+  const ensureBotProfile = useCallback(async () => {
+    try {
+      console.log('Checking if bot profile exists...');
+      // Check if bot profile exists by handle
+      const botQuery = await db.queryOnce({
+        profiles: {
+          $: { where: { handle: BOT_HANDLE } }
+        }
+      });
+
+      console.log('Bot query result:', botQuery);
+
+      if (!botQuery.data.profiles || botQuery.data.profiles.length === 0) {
+        console.log('Bot profile not found, creating...');
+        // Create only bot profile (without user since $users is read-only)
+        const botProfileId = id();
+
+        const result = await db.transact([
+          db.tx.profiles[botProfileId].update({
+            handle: BOT_HANDLE,
+            displayName: 'FutKui Bot',
+            createdAt: Date.now(),
+          })
+          // Note: No user link since we can't create users in $users namespace
+        ]);
+        console.log('Bot profile created:', result);
+        return botProfileId;
+      } else {
+        console.log('Bot profile already exists');
+        return botQuery.data.profiles[0].id;
+      }
+    } catch (error) {
+      console.error('Error ensuring bot profile:', error);
+      throw error;
+    }
+  }, [db]);
+
+  const getBotProfile = useCallback(async () => {
+    const botQuery = await db.queryOnce({
+      profiles: {
+        $: { where: { handle: BOT_HANDLE } }
+      }
+    });
+    return botQuery.data.profiles?.[0] || null;
+  }, [db]);
+
+  const sendWelcomeMessage = useCallback(async (groupId: string, botProfileId: string) => {
+    const welcomeMessage = `👋 Welcome to FutKui!
+
+I'm your personal assistant here to help you with:
+• 📅 Match notifications and reminders
+• ⚽ Team updates and announcements
+• 🔔 Important app notifications
+• 💬 Quick support when you need it
+
+Feel free to message me anytime if you have questions or need help with the app!`;
+
+    await db.transact([
+      db.tx.messages[id()].update({
+        content: welcomeMessage,
+        authorName: 'FutKui Bot',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        type: 'text',
+      }).link({
+        group: groupId,
+        author: botProfileId
+      }),
+    ]);
+  }, [db]);
+
+  const createBotGroup = useCallback(async (userProfileId: string) => {
+    try {
+      console.log('Creating bot group for user:', userProfileId);
+
+      // Ensure bot profile exists first and get its ID
+      const botProfileId = await ensureBotProfile();
+      console.log('Bot profile ID:', botProfileId);
+
+      // Check if user already has a bot group
+      console.log('Checking for existing bot group...');
+      const existingBotGroup = await db.queryOnce({
+        memberships: {
+          $: {
+            where: {
+              "profile.id": userProfileId,
+              "group.admin.handle": BOT_HANDLE
+            }
+          },
+          group: {
+            admin: {}
+          }
+        }
+      });
+
+      console.log('Existing bot group query result:', existingBotGroup);
+
+      if (existingBotGroup.data.memberships && existingBotGroup.data.memberships.length > 0) {
+        console.log('User already has a bot group, returning existing ID');
+        // User already has a bot group, return the existing group ID
+        return existingBotGroup.data.memberships[0].group?.id;
+      }
+
+      console.log('Creating new bot group...');
+      const groupId = id();
+      const membershipId = id();
+      const botMembershipId = id();
+      const shareLink = `futkui-chat://group/${Math.random().toString(36).substring(2, 15)}`;
+
+      // Create group with bot as admin and add user as member
+      const groupResult = await db.transact([
+        // Create the group
+        db.tx.groups[groupId].update({
+          name: 'FutKui',
+          description: 'Your personal FutKui assistant for notifications and updates',
+          avatar: '🤖',
+          adminId: botProfileId,
+          createdAt: Date.now(),
+          shareLink,
+        }).link({ admin: botProfileId }),
+
+        // Add bot as admin member
+        db.tx.memberships[botMembershipId].update({
+          createdAt: Date.now(),
+          role: 'admin',
+          profileGroupKey: `${botProfileId}_${groupId}`,
+        }).link({
+          group: groupId,
+          profile: botProfileId
+        }),
+
+        // Add user as member
+        db.tx.memberships[membershipId].update({
+          createdAt: Date.now(),
+          role: 'member',
+          profileGroupKey: `${userProfileId}_${groupId}`,
+        }).link({
+          group: groupId,
+          profile: userProfileId
+        }),
+      ]);
+
+      console.log('Bot group created:', groupResult);
+
+      // Send welcome message from bot
+      console.log('Sending welcome message...');
+      await sendWelcomeMessage(groupId, botProfileId);
+
+      console.log('Bot group setup complete for user:', userProfileId);
+      return groupId;
+    } catch (error) {
+      console.error('Error creating bot group:', error);
+      throw error;
+    }
+  }, [db, ensureBotProfile, sendWelcomeMessage]);
+
+  const ensureUserHasBotGroup = useCallback(async (userProfileId: string) => {
+    try {
+      console.log('Ensuring user has bot group:', userProfileId);
+      const result = await createBotGroup(userProfileId);
+      console.log('ensureUserHasBotGroup result:', result);
+      return result;
+    } catch (error) {
+      console.error('Error in ensureUserHasBotGroup:', error);
+      // Don't throw the error to prevent breaking the app
+      return null;
+    }
+  }, [createBotGroup]);
+
   // Profile management
   const createProfile = useCallback(async (userId: string) => {
+    const profileId = id();
+
     await db.transact(
-      db.tx.profiles[id()].update({
+      db.tx.profiles[profileId].update({
         handle: generateHandle(),
         createdAt: Date.now(),
       }).link({ user: userId })
     );
-  }, [db]);
+
+    // Create bot group for the new user
+    await createBotGroup(profileId);
+  }, [db, createBotGroup]);
 
   // Mutation functions
   const createGroup = useCallback(
@@ -540,5 +718,7 @@ export function useInstantDB() {
     removeReaction,
     joinGroup,
     leaveGroup,
+    ensureUserHasBotGroup,
+    getBotProfile,
   };
 }

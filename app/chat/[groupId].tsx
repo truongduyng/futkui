@@ -1,4 +1,3 @@
-import { AuthGate } from "@/components/AuthGate";
 import { useChatItemRenderer } from "@/components/chat/ChatItemRenderer";
 import { ImageModal } from "@/components/chat/ImageModal";
 import { LoadingHeader } from "@/components/chat/LoadingHeader";
@@ -237,60 +236,53 @@ export default function ChatScreen() {
 
   if (!groupId) {
     return (
-      <AuthGate>
-        <View
-          style={[
-            styles.container,
-            styles.centered,
-            { backgroundColor: colors.background },
-          ]}
-        >
-          <Text style={[styles.loadingText, { color: colors.text }]}>
-            Loading...
-          </Text>
-        </View>
-      </AuthGate>
+      <View
+        style={[
+          styles.container,
+          styles.centered,
+          { backgroundColor: colors.background },
+        ]}
+      >
+        <Text style={[styles.loadingText, { color: colors.text }]}>
+          Loading...
+        </Text>
+      </View>
     );
   }
 
   if (isLoadingGroup) {
     return (
-      <AuthGate>
-        <View
-          style={[
-            styles.container,
-            styles.centered,
-            { backgroundColor: colors.background },
-          ]}
-        >
-          <Text style={[styles.loadingText, { color: colors.text }]}>
-            Loading group...
-          </Text>
-        </View>
-      </AuthGate>
+      <View
+        style={[
+          styles.container,
+          styles.centered,
+          { backgroundColor: colors.background },
+        ]}
+      >
+        <Text style={[styles.loadingText, { color: colors.text }]}>
+          Loading group...
+        </Text>
+      </View>
     );
   }
 
   if (!group) {
     return (
-      <AuthGate>
-        <View
-          style={[
-            styles.container,
-            styles.centered,
-            { backgroundColor: colors.background },
-          ]}
-        >
-          <Text style={[styles.errorText, { color: colors.text }]}>
-            Group not found
-          </Text>
-        </View>
-      </AuthGate>
+      <View
+        style={[
+          styles.container,
+          styles.centered,
+          { backgroundColor: colors.background },
+        ]}
+      >
+        <Text style={[styles.errorText, { color: colors.text }]}>
+          Group not found
+        </Text>
+      </View>
     );
   }
 
   return (
-    <AuthGate>
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
@@ -361,7 +353,6 @@ export default function ChatScreen() {
           onClose={() => setSelectedImageUrl(null)}
         />
       </View>
-    </AuthGate>
   );
 }
 

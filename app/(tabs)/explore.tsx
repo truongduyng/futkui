@@ -1,4 +1,3 @@
-import { AuthGate } from "@/components/AuthGate";
 import { Colors } from "@/constants/Colors";
 import { useInstantDB } from "@/hooks/useInstantDB";
 import React, { useState } from "react";
@@ -83,10 +82,9 @@ export default function ExploreScreen() {
   };
 
   return (
-    <AuthGate>
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: colors.background }]}
-      >
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             Join a Group
@@ -172,7 +170,6 @@ export default function ExploreScreen() {
           </View>
         </View>
       </SafeAreaView>
-    </AuthGate>
   );
 }
 
