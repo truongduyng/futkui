@@ -26,7 +26,7 @@ export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
-  const [messageLimit, setMessageLimit] = useState(500);
+  const [messageLimit, setMessageLimit] = useState(200);
 
   const {
     useGroup,

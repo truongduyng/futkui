@@ -145,7 +145,6 @@ export function useInstantDB() {
   // Bot profile and group management
   const ensureBotProfile = useCallback(async () => {
     try {
-      console.log('Checking if bot profile exists...');
       // Check if bot profile exists by handle
       const botQuery = await db.queryOnce({
         profiles: {
@@ -153,10 +152,7 @@ export function useInstantDB() {
         }
       });
 
-      console.log('Bot query result:', botQuery);
-
       if (!botQuery.data.profiles || botQuery.data.profiles.length === 0) {
-        console.log('Bot profile not found, creating...');
         // Create only bot profile (without user since $users is read-only)
         const botProfileId = id();
 
@@ -168,10 +164,8 @@ export function useInstantDB() {
           })
           // Note: No user link since we can't create users in $users namespace
         ]);
-        console.log('Bot profile created:', result);
         return botProfileId;
       } else {
-        console.log('Bot profile already exists');
         return botQuery.data.profiles[0].id;
       }
     } catch (error) {
@@ -216,14 +210,10 @@ Feel free to message me anytime if you have questions or need help with the app!
 
   const createBotGroup = useCallback(async (userProfileId: string) => {
     try {
-      console.log('Creating bot group for user:', userProfileId);
-
       // Ensure bot profile exists first and get its ID
       const botProfileId = await ensureBotProfile();
-      console.log('Bot profile ID:', botProfileId);
 
       // Check if user already has a bot group
-      console.log('Checking for existing bot group...');
       const existingBotGroup = await db.queryOnce({
         memberships: {
           $: {
@@ -238,15 +228,11 @@ Feel free to message me anytime if you have questions or need help with the app!
         }
       });
 
-      console.log('Existing bot group query result:', existingBotGroup);
-
       if (existingBotGroup.data.memberships && existingBotGroup.data.memberships.length > 0) {
-        console.log('User already has a bot group, returning existing ID');
         // User already has a bot group, return the existing group ID
         return existingBotGroup.data.memberships[0].group?.id;
       }
 
-      console.log('Creating new bot group...');
       const groupId = id();
       const membershipId = id();
       const botMembershipId = id();
@@ -285,13 +271,9 @@ Feel free to message me anytime if you have questions or need help with the app!
         }),
       ]);
 
-      console.log('Bot group created:', groupResult);
-
       // Send welcome message from bot
-      console.log('Sending welcome message...');
       await sendWelcomeMessage(groupId, botProfileId);
 
-      console.log('Bot group setup complete for user:', userProfileId);
       return groupId;
     } catch (error) {
       console.error('Error creating bot group:', error);
@@ -301,9 +283,7 @@ Feel free to message me anytime if you have questions or need help with the app!
 
   const ensureUserHasBotGroup = useCallback(async (userProfileId: string) => {
     try {
-      console.log('Ensuring user has bot group:', userProfileId);
       const result = await createBotGroup(userProfileId);
-      console.log('ensureUserHasBotGroup result:', result);
       return result;
     } catch (error) {
       console.error('Error in ensureUserHasBotGroup:', error);

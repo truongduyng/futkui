@@ -34,10 +34,10 @@ export function useChatScroll({
     if (!isLoadingMessages && chatItems.length > 0 && !hasInitialScrolledRef.current) {
       const attemptScroll = () => {
         initialScrollAttempts.current += 1;
-        
+
         // Try to scroll to bottom
         flatListRef.current?.scrollToEnd({ animated: false });
-        
+
         // Check if we've reached the maximum attempts or if we should continue
         if (initialScrollAttempts.current >= maxInitialScrollAttempts) {
           // Mark as completed after max attempts
@@ -51,7 +51,7 @@ export function useChatScroll({
           setTimeout(attemptScroll, delay);
         }
       };
-      
+
       // Start the scroll attempts
       attemptScroll();
     }
@@ -64,7 +64,7 @@ export function useChatScroll({
       // Immediate scroll when content size changes during initial load
       requestAnimationFrame(() => {
         flatListRef.current?.scrollToEnd({ animated: false });
-        
+
         // If we haven't completed initial scroll, try one more time after a short delay
         if (!hasInitialScrolledRef.current) {
           setTimeout(() => {
@@ -86,7 +86,7 @@ export function useChatScroll({
 
     try {
       // Increase limit to load more messages
-      setMessageLimit(messageLimit + 500);
+      setMessageLimit(messageLimit + 100);
     } catch (error) {
       console.error('Error loading older messages:', error);
     } finally {
