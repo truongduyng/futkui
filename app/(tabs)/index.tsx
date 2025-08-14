@@ -50,23 +50,21 @@ function ChatScreenContent() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {isLoading && (
+      {isLoading ? (
         <View style={styles.loadingContainer}>
           <Text style={[styles.loadingText, { color: colors.text }]}>Loading groups...</Text>
         </View>
-      )}
-
-      {error && (
+      ) : error ? (
         <View style={styles.errorContainer}>
           <Text style={[styles.errorText, { color: 'red' }]}>Error loading groups: {error.message}</Text>
         </View>
+      ) : (
+        <GroupList
+          groups={groups}
+          onGroupPress={handleGroupPress}
+          onCreateGroup={() => setShowCreateModal(true)}
+        />
       )}
-
-      <GroupList
-        groups={groups}
-        onGroupPress={handleGroupPress}
-        onCreateGroup={() => setShowCreateModal(true)}
-      />
 
       <CreateGroupModal
         visible={showCreateModal}
