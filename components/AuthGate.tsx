@@ -59,6 +59,13 @@ export function AuthGate({ children }: AuthGateProps) {
   const { instantClient } = useInstantDB();
   const { user, isLoading: authLoading } = instantClient.useAuth();
 
+  // Reset sentEmail when user logs out
+  useEffect(() => {
+    if (!user) {
+      setSentEmail('');
+    }
+  }, [user]);
+
   if (authLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
