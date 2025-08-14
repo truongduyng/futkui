@@ -137,7 +137,9 @@ export const GroupList = React.memo(function GroupList({ groups, onGroupPress, o
               { color: colors.tabIconDefault },
               isBotGroup && styles.botLastMessage
             ]}>
-              {lastMessage.author?.handle || 'Unknown'}: {lastMessage.content}
+              {lastMessage.content.trim().length > 50
+                ? `${lastMessage.content.trim().substring(0, 50)}...`
+                : lastMessage.content.trim()}
             </Text>
           )}
         </View>
