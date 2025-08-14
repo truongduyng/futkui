@@ -131,7 +131,6 @@ export default function ChatScreen() {
     showScrollToBottom,
     isLoadingOlder,
     handleScroll,
-    handleContentSizeChange,
     handleLayout,
     scrollToBottom,
     setIsNearBottom,
@@ -335,7 +334,6 @@ export default function ChatScreen() {
               windowSize={5}
               onScroll={handleScroll}
               scrollEventThrottle={16}
-              onContentSizeChange={handleContentSizeChange}
               onLayout={handleLayout}
               ListFooterComponent={() => (
                 <LoadingHeader isLoading={isLoadingOlder} />
