@@ -3,7 +3,7 @@ import { GroupList } from '@/components/chat/GroupList';
 import { Colors } from '@/constants/Colors';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Alert, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 export default function ChatScreen() {
@@ -18,11 +18,19 @@ export default function ChatScreen() {
 
   // Extract groups first to get group IDs
   const profile = groupsData?.profiles?.[0];
-  const baseGroups = (profile?.memberships || [])
-    .map((membership: any) => membership.group)
-    .filter((group: any) => group && group.id);
+  const baseGroups = useMemo(() => 
+    (profile?.memberships || [])
+      .map((membership: any) => membership.group)
+      .filter((group: any) => group && group.id),
+    [profile?.memberships]
+  );
 
-  const groupIds = baseGroups.map((group: any) => group.id);
+  const groupIds = useMemo(() => 
+    baseGroups.map((group: any) => group.id), 
+    [baseGroups]
+  );
+  
+  // Always call the hook with an array, even if empty
   const { data: lastMessagesData } = useLastMessages(groupIds);
 
   const handleGroupPress = (group: any) => {
@@ -51,33 +59,35 @@ export default function ChatScreen() {
   };
 
   // Combine groups with their last messages
-  const getLastMessageForGroup = (groupId: string) => {
-    if (!lastMessagesData?.messages) return null;
-    return lastMessagesData.messages.find((message: any) => message.group?.id === groupId);
-  };
+  const groups = useMemo(() => {
+    const getLastMessageForGroup = (groupId: string) => {
+      if (!lastMessagesData?.messages) return null;
+      return lastMessagesData.messages.find((message: any) => message.group?.id === groupId);
+    };
 
-  const groups = baseGroups
-    .map((group: any) => ({
-      ...group,
-      messages: [getLastMessageForGroup(group.id)].filter(Boolean) // Add last message as array for compatibility
-    }))
-    .sort((a: any, b: any) => {
-      // Pin bot group (admin.handle === 'fk') to the top
-      const aIsBot = a.admin?.handle === 'fk';
-      const bIsBot = b.admin?.handle === 'fk';
-      
-      if (aIsBot && !bIsBot) return -1;
-      if (!aIsBot && bIsBot) return 1;
-      
-      // For non-bot groups, sort by most recent message or creation date
-      const aLastMessage = a.messages?.[0];
-      const bLastMessage = b.messages?.[0];
-      
-      const aTime = aLastMessage?.createdAt || a.createdAt || 0;
-      const bTime = bLastMessage?.createdAt || b.createdAt || 0;
-      
-      return bTime - aTime;
-    });
+    return baseGroups
+      .map((group: any) => ({
+        ...group,
+        messages: [getLastMessageForGroup(group.id)].filter(Boolean) // Add last message as array for compatibility
+      }))
+      .sort((a: any, b: any) => {
+        // Pin bot group (admin.handle === 'fk') to the top
+        const aIsBot = a.admin?.handle === 'fk';
+        const bIsBot = b.admin?.handle === 'fk';
+        
+        if (aIsBot && !bIsBot) return -1;
+        if (!aIsBot && bIsBot) return 1;
+        
+        // For non-bot groups, sort by most recent message or creation date
+        const aLastMessage = a.messages?.[0];
+        const bLastMessage = b.messages?.[0];
+        
+        const aTime = aLastMessage?.createdAt || a.createdAt || 0;
+        const bTime = bLastMessage?.createdAt || b.createdAt || 0;
+        
+        return bTime - aTime;
+      });
+  }, [baseGroups, lastMessagesData?.messages]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
