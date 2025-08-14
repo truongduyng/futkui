@@ -186,11 +186,6 @@ export const MatchCard = React.memo(function MatchCard({
                 ]}
               >
                 Match Event
-                {isMatchClosed && (
-                  <Text style={[styles.closedBadge, { color: isOwnMessage ? '#FFD700' : '#EF4444' }]}>
-                    {' '}• CLOSED
-                  </Text>
-                )}
               </Text>
             </View>
             {canCloseMatch && (
@@ -311,12 +306,22 @@ export const MatchCard = React.memo(function MatchCard({
 
         {/* RSVP Summary */}
         <View style={styles.rsvpSummary}>
-          <Text style={[
-            styles.summaryTitle,
-            isOwnMessage ? styles.ownText : { color: colors.text }
-          ]}>
-            Responses ({match.rsvps.length} total)
-          </Text>
+          <View style={styles.summaryHeader}>
+            <Text style={[
+              styles.summaryTitle,
+              isOwnMessage ? styles.ownText : { color: colors.text }
+            ]}>
+              Responses ({match.rsvps.length} total)
+            </Text>
+            {isMatchClosed && (
+              <Text style={[
+                styles.closedText,
+                isOwnMessage ? styles.ownText : { color: colors.tabIconDefault }
+              ]}>
+                Match closed
+              </Text>
+            )}
+          </View>
           <View style={styles.rsvpCounts}>
             {Object.entries(rsvpCounts).map(([response, count]) => (
               <View key={response} style={styles.rsvpCount}>
@@ -417,10 +422,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     flex: 1,
   },
-  closedBadge: {
-    fontWeight: '700',
-    fontSize: 12,
-  },
   closeButton: {
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -518,10 +519,19 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.2)',
     paddingTop: 12,
   },
+  summaryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   summaryTitle: {
     fontSize: 12,
     fontWeight: '600',
-    marginBottom: 8,
+  },
+  closedText: {
+    fontSize: 11,
+    fontStyle: 'italic',
   },
   rsvpCounts: {
     flexDirection: 'row',
