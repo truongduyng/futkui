@@ -24,9 +24,11 @@ export default function ExploreScreen() {
   const allGroups = allGroupsData?.groups?.filter((g: any) => g && g.id) || [];
   const currentProfile = profileData?.profiles?.[0];
 
-  // Filter out groups the user is already a member of
+  // Filter out groups the user is already a member of and bot groups
   const availableGroups = allGroups.filter((group: any) =>
-    group && group.id && !myGroups.some((myGroup: any) => myGroup && myGroup.id === group.id)
+    group && group.id && 
+    !myGroups.some((myGroup: any) => myGroup && myGroup.id === group.id) &&
+    group.admin?.handle !== 'fk' // Filter out bot groups
   );
 
   const handleJoinViaLink = async () => {
