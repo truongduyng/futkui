@@ -16,7 +16,7 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const colors = Colors['light'];
-  const { instantClient, ensureUserHasBotGroup } = useInstantDB();
+  const { instantClient } = useInstantDB();
 
   const isValidHandle = (handle: string) => {
     return /^[a-zA-Z0-9_]{3,20}$/.test(handle);
@@ -108,14 +108,6 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
       profileTransaction = profileTransaction.link({ avatar: avatarFileId });
 
       await instantClient.transact([profileTransaction]);
-
-      // Create bot group for the new user
-      try {
-        await ensureUserHasBotGroup(profileId);
-      } catch (error) {
-        console.error('Error creating bot group:', error);
-        // Don't fail profile creation if bot group creation fails
-      }
 
       onProfileCreated();
     } catch (error) {
