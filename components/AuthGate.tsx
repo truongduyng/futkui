@@ -25,7 +25,6 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
   // Ensure bot group is created for the user after profile is created
   useEffect(() => {
     if (profile?.id && !botGroupInitiatedRef.current.has(profile.id)) {
-      console.log('Profile found, ensuring user has bot group:', profile.id);
       botGroupInitiatedRef.current.add(profile.id);
       ensureUserHasBotGroup(profile.id).catch(error => {
         console.error('Error ensuring bot group in AuthenticatedContent:', error);
