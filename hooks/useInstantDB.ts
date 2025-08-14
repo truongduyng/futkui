@@ -129,16 +129,6 @@ export function useInstantDB() {
     });
   };
 
-  // Utility function to generate random handle
-  const generateHandle = () => {
-    const adjectives = ['Quick', 'Lazy', 'Happy', 'Sad', 'Bright', 'Dark', 'Swift', 'Calm'];
-    const nouns = ['Fox', 'Dog', 'Cat', 'Bird', 'Fish', 'Mouse', 'Wolf', 'Bear'];
-    const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-    const randomSuffix = Math.floor(Math.random() * 9000) + 1000;
-    return `${randomAdjective}${randomNoun}${randomSuffix}`;
-  };
-
   // Bot constants
   const BOT_HANDLE = 'fk';
 
@@ -156,7 +146,7 @@ export function useInstantDB() {
         // Create only bot profile (without user since $users is read-only)
         const botProfileId = id();
 
-        const result = await db.transact([
+        await db.transact([
           db.tx.profiles[botProfileId].update({
             handle: BOT_HANDLE,
             displayName: 'FutKui Bot',
@@ -239,7 +229,7 @@ Feel free to message me anytime if you have questions or need help with the app!
       const shareLink = `futkui-chat://group/${Math.random().toString(36).substring(2, 15)}`;
 
       // Create group with bot as admin and add user as member
-      const groupResult = await db.transact([
+      await db.transact([
         // Create the group
         db.tx.groups[groupId].update({
           name: 'FutKui',
@@ -292,20 +282,7 @@ Feel free to message me anytime if you have questions or need help with the app!
     }
   }, [createBotGroup]);
 
-  // Profile management
-  const createProfile = useCallback(async (userId: string) => {
-    const profileId = id();
-
-    await db.transact(
-      db.tx.profiles[profileId].update({
-        handle: generateHandle(),
-        createdAt: Date.now(),
-      }).link({ user: userId })
-    );
-
-    // Create bot group for the new user
-    await createBotGroup(profileId);
-  }, [db, createBotGroup]);
+  // Profile management functions are now handled in ProfileSetup component
 
   // Mutation functions
   const createGroup = useCallback(
@@ -686,7 +663,6 @@ Feel free to message me anytime if you have questions or need help with the app!
     useMatches,
     useProfile,
     useUserMembership,
-    createProfile,
     createGroup,
     sendMessage,
     sendPoll,

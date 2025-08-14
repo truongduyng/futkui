@@ -2,6 +2,7 @@ import { Colors } from '@/constants/Colors';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ProfileSetup } from './ProfileSetup';
 
 interface AuthGateProps {
   children: React.ReactNode;
@@ -9,18 +10,20 @@ interface AuthGateProps {
 
 function AuthenticatedContent({ children }: { children: React.ReactNode }) {
   const colors = Colors['light'];
-  const { instantClient, useProfile, createProfile, ensureUserHasBotGroup } = useInstantDB();
+  const { instantClient, useProfile, ensureUserHasBotGroup } = useInstantDB();
   const { user } = instantClient.useAuth();
   const botGroupInitiatedRef = useRef(new Set<string>());
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
 
   const { data: profileData, isLoading: profileLoading } = useProfile();
   const profile = profileData?.profiles?.[0];
 
+  // Check if user needs to set up profile
   useEffect(() => {
     if (user && !profileLoading && !profile) {
-      createProfile(user.id);
+      setShowProfileSetup(true);
     }
-  }, [user, profileLoading, profile, createProfile]);
+  }, [user, profileLoading, profile]);
 
   // Ensure bot group is created for the user after profile is created
   useEffect(() => {
@@ -33,11 +36,25 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
     }
   }, [profile?.id, ensureUserHasBotGroup]);
 
+  const handleProfileCreated = () => {
+    setShowProfileSetup(false);
+    // The profile query will automatically refetch and show the main content
+  };
+
   if (profileLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Text style={[styles.text, { color: colors.text }]}>Loading...</Text>
       </View>
+    );
+  }
+
+  if (showProfileSetup && user) {
+    return (
+      <ProfileSetup 
+        userId={user.id} 
+        onProfileCreated={handleProfileCreated}
+      />
     );
   }
 
