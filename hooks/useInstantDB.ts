@@ -34,11 +34,10 @@ export function useInstantDB() {
   };
 
   const useLastMessages = (groupIds: string[]) => {
-    if (!groupIds || groupIds.length === 0) {
-      return { data: null, isLoading: false, error: null };
-    }
-
-    return db.useQuery({
+    // Always call the hook but with conditional query parameters
+    const hasGroupIds = groupIds && groupIds.length > 0;
+    
+    return db.useQuery(hasGroupIds ? {
       messages: {
         $: {
           where: { "group.id": { in: groupIds } },
@@ -51,6 +50,14 @@ export function useInstantDB() {
         poll: {},
         group: {}
       },
+    } : {
+      // Empty query that returns no results but still calls the hook
+      messages: {
+        $: {
+          where: { id: "__nonexistent__" },
+          limit: 0
+        }
+      }
     });
   };
 

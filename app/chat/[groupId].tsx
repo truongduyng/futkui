@@ -147,12 +147,12 @@ export default function ChatScreen() {
     isLoadingOlder,
     handleScroll,
     handleContentSizeChange,
+    handleLayout,
     scrollToBottom,
     setIsNearBottom,
     setShowScrollToBottom,
   } = useChatScroll({
     chatItems,
-    isLoadingMessages,
     hasMoreMessages,
     messageLimit,
     setMessageLimit,
@@ -347,9 +347,7 @@ export default function ChatScreen() {
               onScroll={handleScroll}
               scrollEventThrottle={16}
               onContentSizeChange={handleContentSizeChange}
-              onLayout={() => {
-                // Layout handled by scroll hook
-              }}
+              onLayout={handleLayout}
               ListHeaderComponent={() => (
                 <LoadingHeader isLoading={isLoadingOlder} />
               )}
