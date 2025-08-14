@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { useInstantDB } from '@/hooks/useInstantDB';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface AuthGateProps {
@@ -9,8 +9,9 @@ interface AuthGateProps {
 
 function AuthenticatedContent({ children }: { children: React.ReactNode }) {
   const colors = Colors['light'];
-  const { instantClient, useProfile, createProfile } = useInstantDB();
+  const { instantClient, useProfile, createProfile, ensureUserHasBotGroup } = useInstantDB();
   const { user } = instantClient.useAuth();
+  const botGroupInitiatedRef = useRef(new Set<string>());
 
   const { data: profileData, isLoading: profileLoading } = useProfile();
   const profile = profileData?.profiles?.[0];
@@ -20,6 +21,18 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
       createProfile(user.id);
     }
   }, [user, profileLoading, profile, createProfile]);
+
+  // Ensure bot group is created for the user after profile is created
+  useEffect(() => {
+    if (profile?.id && !botGroupInitiatedRef.current.has(profile.id)) {
+      console.log('Profile found, ensuring user has bot group:', profile.id);
+      botGroupInitiatedRef.current.add(profile.id);
+      ensureUserHasBotGroup(profile.id).catch(error => {
+        console.error('Error ensuring bot group in AuthenticatedContent:', error);
+        botGroupInitiatedRef.current.delete(profile.id); // Reset on error to allow retry
+      });
+    }
+  }, [profile?.id, ensureUserHasBotGroup]);
 
   if (profileLoading) {
     return (
@@ -132,7 +145,6 @@ function CodeStep({ sentEmail, onBack, colors, instantClient }: {
 }) {
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { ensureUserHasBotGroup } = useInstantDB();
 
   const handleSubmit = async () => {
     if (!code.trim()) return;
@@ -141,30 +153,7 @@ function CodeStep({ sentEmail, onBack, colors, instantClient }: {
     try {
       console.log('Attempting to sign in with magic code...');
       await instantClient.auth.signInWithMagicCode({ email: sentEmail, code });
-      console.log('Sign-in successful! Now ensuring user has bot group...');
-
-      // Wait a moment for the auth state to update
-      setTimeout(async () => {
-        try {
-          const { user } = instantClient.useAuth();
-          if (user) {
-            // Get user profile and ensure bot group
-            const profileQuery = await instantClient.queryOnce({
-              profiles: {
-                $: { where: { "user.id": user.id } }
-              }
-            });
-
-            const profile = profileQuery.data.profiles?.[0];
-            if (profile) {
-              console.log('Creating bot group for newly signed in user:', profile.id);
-              await ensureUserHasBotGroup(profile.id);
-            }
-          }
-        } catch (botError) {
-          console.error('Error ensuring bot group after sign-in:', botError);
-        }
-      }, 1000);
+      console.log('Sign-in successful!');
 
     } catch (error) {
       Alert.alert('Error', 'Invalid code. Please try again.');
