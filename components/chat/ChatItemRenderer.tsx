@@ -46,18 +46,23 @@ export function useChatItemRenderer({
   const shouldShowTimestamp = useCallback((
     currentMessage: any,
     previousMessage: any,
+    isFirstMessage: boolean,
   ): boolean => {
+    // Don't show timestamp for the first message (newest) unless there are no other messages
+    if (isFirstMessage && chatItems.length > 1) return false;
+    
     if (!previousMessage) return true;
 
     const currentTime = new Date(currentMessage.createdAt);
     const previousTime = new Date(previousMessage.createdAt);
 
-    // Show timestamp if messages are more than 15 minutes apart
+    // Show timestamp if messages are more than 15 minutes apart  
+    // Note: In inverted list, previousMessage (index+1) is actually older than currentMessage
     const timeDifference = currentTime.getTime() - previousTime.getTime();
     const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
 
     return timeDifference >= fifteenMinutes;
-  }, []);
+  }, [chatItems.length]);
 
   const renderChatItem = useCallback(({
     item,
@@ -71,8 +76,8 @@ export function useChatItemRenderer({
     // Handle message items
     const message = item;
     const isOwnMessage = message.author?.id === currentProfile?.id;
-    const previousItem = index > 0 ? chatItems[index - 1] : null;
-    const showTimestamp = shouldShowTimestamp(message, previousItem);
+    const previousItem = index > 0 ? chatItems[index + 1] : null;
+    const showTimestamp = shouldShowTimestamp(message, previousItem, index === 0);
 
     // Check if this message is from the same author as the previous message
     const previousAuthorId = (previousItem as any)?.author?.id || (previousItem as any)?.creator?.id;
@@ -84,20 +89,6 @@ export function useChatItemRenderer({
 
     return (
       <>
-        {showTimestamp && (
-          <View style={styles.timestampHeader}>
-            <Text
-              style={[styles.timestampText, { color: colors.tabIconDefault }]}
-            >
-              {new Date(message.createdAt).toLocaleString([], {
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </Text>
-          </View>
-        )}
         {message.type === 'poll' && message.poll ? (
           <PollBubble
             poll={{
@@ -145,6 +136,20 @@ export function useChatItemRenderer({
             imageUrl={resolvedImageUrl}
             onImagePress={handleImagePress}
           />
+        )}
+        {showTimestamp && (
+          <View style={styles.timestampHeader}>
+            <Text
+              style={[styles.timestampText, { color: colors.tabIconDefault }]}
+            >
+              {new Date(message.createdAt).toLocaleString([], {
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </Text>
+          </View>
         )}
       </>
     );
