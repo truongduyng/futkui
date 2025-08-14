@@ -55,7 +55,11 @@ export function CreatePollModal({ visible, onClose, onCreatePoll }: CreatePollMo
       return;
     }
 
-    onCreatePoll(question.trim(), validOptions, allowMultiple);
+    // Set expiration to 3 days from now
+    const threeDaysInMs = 3 * 24 * 60 * 60 * 1000;
+    const expiresAt = Date.now() + threeDaysInMs;
+
+    onCreatePoll(question.trim(), validOptions, allowMultiple, expiresAt);
     
     // Reset form
     setQuestion('');

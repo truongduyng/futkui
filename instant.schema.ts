@@ -41,6 +41,7 @@ const _schema = i.schema({
       options: i.json(), // Array of option objects: [{id: string, text: string}]
       createdAt: i.number(),
       expiresAt: i.number().optional(),
+      closedAt: i.number().optional(), // Manual close timestamp
       allowMultiple: i.boolean().optional(),
     }),
     votes: i.entity({

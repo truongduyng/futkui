@@ -37,6 +37,7 @@ export default function ChatScreen() {
     sendMessage,
     sendPoll,
     vote,
+    closePoll,
     createMatch,
     rsvpToMatch,
     checkInToMatch,
@@ -152,6 +153,7 @@ export default function ChatScreen() {
     handleReactionPress,
     handleImagePress,
     handleVote,
+    handleClosePoll,
     handleRsvp,
     handleCheckIn,
   } = useChatHandlers({
@@ -164,6 +166,7 @@ export default function ChatScreen() {
     createMatch,
     addReaction,
     vote,
+    closePoll,
     rsvpToMatch,
     checkInToMatch,
     leaveGroup,
@@ -220,6 +223,7 @@ export default function ChatScreen() {
     getFileUrl,
     stableHandleVote: (pollId, optionId, votes, allowMultiple) =>
       handleVote(pollId, optionId, votes, allowMultiple),
+    stableHandleClosePoll: (pollId) => handleClosePoll(pollId),
     stableHandleReaction: (messageId, emoji, reactions) =>
       handleReactionPress(messageId, emoji, reactions),
     stableHandleAddReaction: (messageId, emoji, reactions) =>

@@ -542,6 +542,18 @@ Feel free to message me anytime if you have questions or need help with the app!
     [db]
   );
 
+  const closePoll = useCallback(
+    async (pollId: string) => {
+      const result = await db.transact([
+        db.tx.polls[pollId].update({
+          closedAt: Date.now(),
+        }),
+      ]);
+      return result;
+    },
+    [db]
+  );
+
   // Match operations
   const createMatch = useCallback(
     async (matchData: {
@@ -667,6 +679,7 @@ Feel free to message me anytime if you have questions or need help with the app!
     sendMessage,
     sendPoll,
     vote,
+    closePoll,
     createMatch,
     rsvpToMatch,
     checkInToMatch,

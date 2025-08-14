@@ -30,6 +30,7 @@ interface UseChatHandlersProps {
   createMatch: (params: any) => Promise<any>;
   addReaction: (params: any) => Promise<any>;
   vote: (params: any) => Promise<any>;
+  closePoll: (pollId: string) => Promise<any>;
   rsvpToMatch: (params: any) => Promise<any>;
   checkInToMatch: (params: any) => Promise<any>;
   leaveGroup: (membershipId: string) => Promise<any>;
@@ -48,6 +49,7 @@ export function useChatHandlers({
   createMatch,
   addReaction,
   vote,
+  closePoll,
   rsvpToMatch,
   checkInToMatch,
   leaveGroup,
@@ -253,6 +255,33 @@ export function useChatHandlers({
     }
   }, [currentProfile, vote]);
 
+  const handleClosePoll = useCallback(async (pollId: string) => {
+    if (!currentProfile) {
+      Alert.alert("Error", "Please wait for your profile to load.");
+      return;
+    }
+
+    Alert.alert(
+      "Close Poll",
+      "Are you sure you want to close this poll? This action cannot be undone.",
+      [
+        {
+          text: "Close Poll",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await closePoll(pollId);
+            } catch (error) {
+              Alert.alert("Error", "Failed to close poll. Please try again.");
+              console.error("Error closing poll:", error);
+            }
+          },
+        },
+        { text: "Cancel", style: "cancel" },
+      ]
+    );
+  }, [currentProfile, closePoll]);
+
   const handleRsvp = useCallback(async (matchId: string, response: 'yes' | 'no' | 'maybe') => {
     if (!currentProfile) {
       Alert.alert("Error", "Please wait for your profile to load.");
@@ -301,6 +330,7 @@ export function useChatHandlers({
     handleReactionPress,
     handleImagePress,
     handleVote,
+    handleClosePoll,
     handleRsvp,
     handleCheckIn,
   };

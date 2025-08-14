@@ -23,6 +23,7 @@ interface PollData {
   options: PollOption[];
   allowMultiple: boolean;
   expiresAt?: number;
+  closedAt?: number;
   votes: Vote[];
 }
 
@@ -30,6 +31,7 @@ interface PollBubbleProps {
   poll: PollData;
   currentUserId: string;
   onVote: (optionId: string) => void;
+  onClosePoll?: (pollId: string) => void;
   isOwnMessage: boolean;
   author?: {
     id: string;
@@ -44,6 +46,7 @@ export const PollBubble = React.memo(function PollBubble({
   poll,
   currentUserId,
   onVote,
+  onClosePoll,
   isOwnMessage,
   author,
   createdAt,
@@ -76,7 +79,30 @@ export const PollBubble = React.memo(function PollBubble({
     onVote(optionId);
   };
 
-  const isExpired = poll.expiresAt && poll.expiresAt < Date.now();
+  const handleClosePoll = () => {
+    if (onClosePoll) {
+      onClosePoll(poll.id);
+    }
+  };
+
+  const isExpired = (poll.expiresAt && poll.expiresAt < Date.now()) || !!poll.closedAt;
+  const wasClosedManually = !!poll.closedAt;
+  const isCreator = isOwnMessage && author?.id === currentUserId;
+
+  const formatTimeRemaining = (expiresAt: number) => {
+    const now = Date.now();
+    const timeLeft = expiresAt - now;
+    
+    if (timeLeft <= 0) return 'Expired';
+    
+    const days = Math.floor(timeLeft / (24 * 60 * 60 * 1000));
+    const hours = Math.floor((timeLeft % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+    const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+    
+    if (days > 0) return `${days}d ${hours}h left`;
+    if (hours > 0) return `${hours}h ${minutes}m left`;
+    return `${minutes}m left`;
+  };
 
   return (
     <View
@@ -100,27 +126,55 @@ export const PollBubble = React.memo(function PollBubble({
         ]}
       >
         <View style={styles.pollHeader}>
-          <Text
-            style={[
-              styles.pollQuestion,
-              isOwnMessage ? styles.ownText : { color: colors.text },
-            ]}
-          >
-            {poll.question}
-          </Text>
-          {poll.allowMultiple && (
-            <View style={[
-              styles.multipleTag,
-              { backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }
-            ]}>
-              <Text style={[
-                styles.multipleTagText,
-                { color: isOwnMessage ? 'white' : colors.text }
+          <View style={styles.pollTitleRow}>
+            <Text
+              style={[
+                styles.pollQuestion,
+                isOwnMessage ? styles.ownText : { color: colors.text },
+              ]}
+            >
+              {poll.question}
+            </Text>
+            {isCreator && !isExpired && onClosePoll && (
+              <TouchableOpacity
+                onPress={handleClosePoll}
+                style={[
+                  styles.closeButton,
+                  { backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }
+                ]}
+              >
+                <Text style={[
+                  styles.closeButtonText,
+                  { color: isOwnMessage ? 'white' : colors.text }
+                ]}>
+                  Close Poll
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          <View style={styles.pollMetaRow}>
+            {poll.allowMultiple && (
+              <View style={[
+                styles.multipleTag,
+                { backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }
               ]}>
-                Multiple choice
+                <Text style={[
+                  styles.multipleTagText,
+                  { color: isOwnMessage ? 'white' : colors.text }
+                ]}>
+                  Multiple choice
+                </Text>
+              </View>
+            )}
+            {poll.expiresAt && !wasClosedManually && (
+              <Text style={[
+                styles.expirationText,
+                { color: isOwnMessage ? 'rgba(255,255,255,0.8)' : colors.tabIconDefault }
+              ]}>
+                {isExpired ? 'Expired' : formatTimeRemaining(poll.expiresAt)}
               </Text>
-            </View>
-          )}
+            )}
+          </View>
         </View>
 
         <View style={styles.optionsContainer}>
@@ -234,7 +288,7 @@ export const PollBubble = React.memo(function PollBubble({
                 isOwnMessage ? styles.ownText : { color: colors.tabIconDefault },
               ]}
             >
-              Poll ended
+              {wasClosedManually ? 'Poll closed' : 'Poll ended'}
             </Text>
           )}
         </View>
@@ -282,11 +336,36 @@ const styles = StyleSheet.create({
   pollHeader: {
     marginBottom: 16,
   },
+  pollTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  pollMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   pollQuestion: {
     fontSize: 16,
     fontWeight: "600",
-    marginBottom: 8,
     lineHeight: 20,
+    flex: 1,
+    marginRight: 8,
+  },
+  closeButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  closeButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  expirationText: {
+    fontSize: 11,
+    fontStyle: 'italic',
   },
   multipleTag: {
     alignSelf: 'flex-start',
