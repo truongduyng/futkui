@@ -30,7 +30,7 @@ const _schema = i.schema({
     messages: i.entity({
       content: i.string().optional(),
       authorName: i.string(),
-      createdAt: i.number(),
+      createdAt: i.number().indexed(),
       updatedAt: i.number(),
       imageUrl: i.string().optional(),
       type: i.string().optional(), // 'text', 'image', 'poll'
@@ -76,6 +76,7 @@ const _schema = i.schema({
       createdAt: i.number(),
       role: i.string().optional(), // 'member', 'admin', etc.
       profileGroupKey: i.string().unique(), // composite key for profile + group uniqueness
+      lastReadMessageAt: i.number().optional(), // timestamp of last read message
     }),
   },
   links: {

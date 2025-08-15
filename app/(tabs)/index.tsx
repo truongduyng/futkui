@@ -102,6 +102,7 @@ export default function ChatScreen() {
       ) : (
         <GroupList
           groups={groups}
+          memberships={profile?.memberships || []}
           onGroupPress={handleGroupPress}
           onCreateGroup={() => setShowCreateModal(true)}
         />

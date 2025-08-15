@@ -1,5 +1,5 @@
 import { Colors } from '@/constants/Colors';
-import { instantClient } from '@/hooks/useInstantDB';
+import { instantClient, useInstantDB } from '@/hooks/useInstantDB';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -41,13 +41,15 @@ interface Group {
 
 interface GroupListProps {
   groups: Group[];
+  memberships: any[];
   onGroupPress: (group: Group) => void;
   onCreateGroup: () => void;
 }
 
-export const GroupList = React.memo(function GroupList({ groups, onGroupPress, onCreateGroup }: GroupListProps) {
+export const GroupList = React.memo(function GroupList({ groups, memberships, onGroupPress, onCreateGroup }: GroupListProps) {
   const colors = Colors['light'];
   const router = useRouter();
+  const { useUnreadCount } = useInstantDB();
 
   const renderEmptyState = () => (
     <View style={styles.emptyStateContainer}>
@@ -124,9 +126,13 @@ export const GroupList = React.memo(function GroupList({ groups, onGroupPress, o
     }
   };
 
-  const renderGroup = ({ item: group }: { item: Group }) => {
+  const GroupItem = React.memo(function GroupItem({ group, onPress }: { group: Group; onPress: (group: Group) => void }) {
     const lastMessage = getLastMessage(group);
     const isBotGroup = group.admin?.handle === 'fk';
+    
+    const membership = memberships?.find(m => m.group?.id === group.id);
+    const { data: unreadData } = useUnreadCount(group.id, membership?.lastReadMessageAt);
+    const unreadCount = unreadData?.messages?.length || 0;
 
     return (
       <TouchableOpacity
@@ -135,15 +141,15 @@ export const GroupList = React.memo(function GroupList({ groups, onGroupPress, o
           { backgroundColor: colors.background },
           isBotGroup && styles.botGroupItem
         ]}
-        onPress={() => onGroupPress(group)}
+        onPress={() => onPress(group)}
       >
         <View style={[
           styles.avatarContainer,
           isBotGroup && styles.botAvatarContainer
         ]}>
           {group.avatarFile?.url && !isBotGroup ? (
-            <Image 
-              source={{ uri: group.avatarFile.url }} 
+            <Image
+              source={{ uri: group.avatarFile.url }}
               style={styles.avatarImage}
             />
           ) : (
@@ -167,25 +173,41 @@ export const GroupList = React.memo(function GroupList({ groups, onGroupPress, o
                 {group.name}
               </Text>
             </View>
-            {lastMessage && (
-              <Text style={[styles.timeText, { color: colors.tabIconDefault }]}>
-                {formatTime(lastMessage.createdAt)}
-              </Text>
-            )}
+            <View style={styles.headerRight}>
+              {lastMessage && (
+                <Text style={[styles.timeText, { color: colors.tabIconDefault }]}>
+                  {formatTime(lastMessage.createdAt)}
+                </Text>
+              )}
+            </View>
           </View>
 
-          {lastMessage && (
-            <Text style={[
-              styles.lastMessage,
-              { color: colors.tabIconDefault },
-              isBotGroup && styles.botLastMessage
-            ]}>
-              {getMessagePreview(lastMessage)}
-            </Text>
-          )}
+          <View style={styles.bottomRow}>
+            {lastMessage && (
+              <Text style={[
+                styles.lastMessage,
+                { color: colors.tabIconDefault },
+                isBotGroup && styles.botLastMessage,
+                unreadCount > 0 && styles.unreadMessageText
+              ]}>
+                {getMessagePreview(lastMessage)}
+              </Text>
+            )}
+            {unreadCount > 0 && (
+              <View style={styles.unreadBadge}>
+                <Text style={styles.unreadBadgeText}>
+                  {unreadCount > 99 ? '99+' : unreadCount.toString()}
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
       </TouchableOpacity>
     );
+  });
+
+  const renderGroup = ({ item: group }: { item: Group }) => {
+    return <GroupItem group={group} onPress={onGroupPress} />;
   };
 
   return (
@@ -326,7 +348,7 @@ const styles = StyleSheet.create({
   },
   lastMessage: {
     fontSize: 14,
-    marginBottom: 4,
+    flex: 1,
   },
   memberCount: {
     fontSize: 12,
@@ -401,5 +423,36 @@ const styles = StyleSheet.create({
   botLastMessage: {
     fontStyle: 'italic',
     color: Colors['light'].tint,
+  },
+  // Header right styles
+  headerRight: {
+    alignItems: 'flex-end',
+  },
+  // Bottom row with message and badge
+  bottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  // Unread badge styles
+  unreadBadge: {
+    backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  unreadBadgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+    paddingHorizontal: 2,
+  },
+  unreadMessageText: {
+    fontWeight: '600',
+    color: Colors['light'].text,
   },
 });

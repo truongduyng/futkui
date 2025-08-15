@@ -47,6 +47,7 @@ export default function ChatScreen() {
     closeMatch,
     addReaction,
     leaveGroup,
+    markMessagesAsRead,
   } = useInstantDB();
 
   // Data queries
@@ -169,6 +170,21 @@ export default function ChatScreen() {
   useEffect(() => {
     setMessageLimit(500);
   }, [groupId]);
+
+  // Mark messages as read when user views the chat
+  useEffect(() => {
+    if (userMembership?.id && messages.length > 0) {
+      const markAsRead = async () => {
+        try {
+          await markMessagesAsRead(userMembership.id);
+        } catch (error) {
+          console.error('Error marking messages as read:', error);
+        }
+      };
+
+      markAsRead();
+    }
+  }, [userMembership?.id, messages.length, markMessagesAsRead]);
 
   // Loading states
   if (!groupId) return <LoadingStates type="loading" />;

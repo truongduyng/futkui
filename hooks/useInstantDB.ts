@@ -28,6 +28,7 @@ export function useInstantDB() {
               avatar: {},
             },
             avatarFile: {},
+            messages: {},
           },
         },
       },
@@ -268,7 +269,6 @@ Feel free to message me anytime if you have questions or need help with the app!
         db.tx.groups[groupId].update({
           name: 'FutKui',
           description: 'Your personal FutKui assistant for notifications and updates',
-          avatar: '🤖',
           adminId: botProfileId,
           createdAt: Date.now(),
           shareLink,
@@ -338,7 +338,7 @@ Feel free to message me anytime if you have questions or need help with the app!
           adminId: groupData.adminId,
           createdAt: Date.now(),
           shareLink,
-        }).link({ 
+        }).link({
           admin: groupData.adminId
         }),
         db.tx.memberships[membershipId].update({
@@ -353,7 +353,7 @@ Feel free to message me anytime if you have questions or need help with the app!
 
       // Update sports and avatar in separate transactions
       const updates = [];
-      
+
       if (groupData.sports && groupData.sports.length > 0) {
         updates.push(
           db.tx.groups[groupId].update({
@@ -361,14 +361,14 @@ Feel free to message me anytime if you have questions or need help with the app!
           })
         );
       }
-      
+
       // Link avatar file
       updates.push(
         db.tx.groups[groupId].link({
           avatarFile: groupData.avatarFileId
         })
       );
-      
+
       if (updates.length > 0) {
         await db.transact(updates);
       }
@@ -729,6 +729,38 @@ Feel free to message me anytime if you have questions or need help with the app!
     [db]
   );
 
+  const markMessagesAsRead = useCallback(
+    async (membershipId: string) => {
+      const result = await db.transact([
+        db.tx.memberships[membershipId].update({
+          lastReadMessageAt: Date.now(),
+        }),
+      ]);
+      return result;
+    },
+    [db]
+  );
+
+  const useUnreadCount = (groupId: string, lastReadMessageAt: number | undefined) => {
+    if (!groupId) {
+      return { data: { messages: [] }, isLoading: false, error: null };
+    }
+
+    return db.useQuery({
+      messages: {
+        $: {
+          where: lastReadMessageAt ? {
+            "group.id": groupId,
+            createdAt: { $gt: lastReadMessageAt }
+          } : {
+            "group.id": groupId
+          }
+        }
+      }
+    });
+  };
+
+
   const useMatches = (groupId: string) => {
     if (!groupId) {
       return { data: null, isLoading: false, error: null };
@@ -760,6 +792,7 @@ Feel free to message me anytime if you have questions or need help with the app!
     useMatches,
     useProfile,
     useUserMembership,
+    useUnreadCount,
     createGroup,
     sendMessage,
     sendPoll,
@@ -775,5 +808,6 @@ Feel free to message me anytime if you have questions or need help with the app!
     leaveGroup,
     ensureUserHasBotGroup,
     getBotProfile,
+    markMessagesAsRead,
   };
 }
