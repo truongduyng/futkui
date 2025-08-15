@@ -126,13 +126,13 @@ export const GroupList = React.memo(function GroupList({ groups, memberships, on
     }
   };
 
-  const GroupItem = React.memo(function GroupItem({ group, onPress }: { group: Group; onPress: (group: Group) => void }) {
+  const GroupItem = React.memo(function GroupItem({ group, membership, onPress }: { group: Group; membership?: any; onPress: (group: Group) => void }) {
     const lastMessage = getLastMessage(group);
     const isBotGroup = group.admin?.handle === 'fk';
-    
-    const membership = memberships?.find(m => m.group?.id === group.id);
+
     const { data: unreadData } = useUnreadCount(group.id, membership?.lastReadMessageAt);
     const unreadCount = unreadData?.messages?.length || 0;
+
 
     return (
       <TouchableOpacity
@@ -204,11 +204,18 @@ export const GroupList = React.memo(function GroupList({ groups, memberships, on
         </View>
       </TouchableOpacity>
     );
+  }, (prevProps, nextProps) => {
+    return (
+      prevProps.group.id === nextProps.group.id &&
+      prevProps.membership?.lastReadMessageAt === nextProps.membership?.lastReadMessageAt &&
+      prevProps.group.messages?.length === nextProps.group.messages?.length
+    );
   });
 
-  const renderGroup = ({ item: group }: { item: Group }) => {
-    return <GroupItem group={group} onPress={onGroupPress} />;
-  };
+  const renderGroup = React.useCallback(({ item: group }: { item: Group }) => {
+    const membership = memberships?.find(m => m.group?.id === group.id);
+    return <GroupItem group={group} membership={membership} onPress={onGroupPress} />;
+  }, [memberships, onGroupPress, GroupItem]);
 
   return (
     <View style={styles.container}>
