@@ -13,23 +13,32 @@ import {
 
 export default function ExploreScreen() {
   const [shareLink, setShareLink] = useState("");
-  const colors = Colors['light'];
+  const colors = Colors["light"];
 
   const { useGroups, useAllGroups, useProfile, joinGroup } = useInstantDB();
   const { data: myGroupsData } = useGroups();
   const { data: allGroupsData } = useAllGroups();
   const { data: profileData } = useProfile();
 
-  const myGroups = myGroupsData?.profiles?.[0]?.memberships?.map((m: any) => m.group).filter((g: any) => g && g.id) || [];
+  const myGroups =
+    myGroupsData?.profiles?.[0]?.memberships
+      ?.map((m: any) => m.group)
+      .filter((g: any) => g && g.id) || [];
   const allGroups = allGroupsData?.groups?.filter((g: any) => g && g.id) || [];
   const currentProfile = profileData?.profiles?.[0];
 
-  // Filter out groups the user is already a member of and bot groups
-  const availableGroups = allGroups.filter((group: any) =>
-    group && group.id && 
-    !myGroups.some((myGroup: any) => myGroup && myGroup.id === group.id) &&
-    group.admin?.handle !== 'fk' // Filter out bot groups
-  );
+  // Show popular/featured groups for showcase (including user's own groups)
+  const showcaseGroups = allGroups
+    .filter(
+      (group: any) => group && group.id && group.admin?.handle !== "fk", // Filter out bot groups
+    )
+    .sort((a: any, b: any) => {
+      // Sort by member count (descending) to show most popular first
+      const aMemberCount = a.memberships?.length || 0;
+      const bMemberCount = b.memberships?.length || 0;
+      return bMemberCount - aMemberCount;
+    })
+    .slice(0, 10); // Show top 10 groups
 
   const handleJoinViaLink = async () => {
     if (!shareLink.trim()) {
@@ -38,13 +47,20 @@ export default function ExploreScreen() {
     }
 
     // Find group by share link
-    const group = allGroups.find((g: any) => g && g.shareLink === shareLink.trim());
+    const group = allGroups.find(
+      (g: any) => g && g.shareLink === shareLink.trim(),
+    );
     if (group && group.id && currentProfile) {
       // Check if user is already a member
-      const isAlreadyMember = myGroups.some((myGroup: any) => myGroup && myGroup.id === group.id);
+      const isAlreadyMember = myGroups.some(
+        (myGroup: any) => myGroup && myGroup.id === group.id,
+      );
 
       if (isAlreadyMember) {
-        Alert.alert("Already a Member", `You are already a member of "${group.name}".`);
+        Alert.alert(
+          "Already a Member",
+          `You are already a member of "${group.name}".`,
+        );
         setShareLink("");
         return;
       }
@@ -53,7 +69,7 @@ export default function ExploreScreen() {
         await joinGroup(group.id, currentProfile.id);
         Alert.alert("Success", `Joined group: ${group.name}`);
         setShareLink("");
-      } catch (error) {
+      } catch {
         Alert.alert("Error", "Failed to join group. Please try again.");
       }
     } else {
@@ -61,87 +77,70 @@ export default function ExploreScreen() {
     }
   };
 
-  const handleJoinGroup = async (groupId: string, groupName: string) => {
-    if (!currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
-      return;
-    }
-
-    // Check if user is already a member (extra safety check)
-    const isAlreadyMember = myGroups.some((myGroup: any) => myGroup && myGroup.id === groupId);
-
-    if (isAlreadyMember) {
-      Alert.alert("Already a Member", `You are already a member of "${groupName}".`);
-      return;
-    }
-
-    try {
-      await joinGroup(groupId, currentProfile.id);
-      Alert.alert("Success", `Joined group: ${groupName}`);
-    } catch (error) {
-      Alert.alert("Error", "Failed to join group. Please try again.");
-    }
-  };
-
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Join a Group
-          </Text>
-          <View style={styles.joinContainer}>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  color: colors.text,
-                  backgroundColor: colors.background,
-                  borderColor: colors.tabIconDefault,
-                },
-              ]}
-              value={shareLink}
-              onChangeText={setShareLink}
-              placeholder="Enter group link..."
-              placeholderTextColor={colors.tabIconDefault}
-            />
-            <TouchableOpacity
-              style={[styles.joinButton, { backgroundColor: colors.tint }]}
-              onPress={handleJoinViaLink}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.joinButtonText}>Join</Text>
-            </TouchableOpacity>
-          </View>
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          Join a Group
+        </Text>
+        <View style={styles.joinContainer}>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                color: colors.text,
+                backgroundColor: colors.background,
+                borderColor: colors.tabIconDefault,
+              },
+            ]}
+            value={shareLink}
+            onChangeText={setShareLink}
+            placeholder="Enter group link..."
+            placeholderTextColor={colors.tabIconDefault}
+          />
+          <TouchableOpacity
+            style={[styles.joinButton, { backgroundColor: colors.tint }]}
+            onPress={handleJoinViaLink}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.joinButtonText}>Join</Text>
+          </TouchableOpacity>
         </View>
+      </View>
 
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Community
-          </Text>
-          <View style={styles.groupList}>
-            {availableGroups.length === 0 ? (
-              <Text
-                style={[styles.emptyText, { color: colors.tabIconDefault }]}
-              >
-                No groups available to join at the moment.
-              </Text>
-            ) : (
-              availableGroups.map((group: any) => (
-                <TouchableOpacity
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          Communities
+        </Text>
+        <Text
+          style={[styles.sectionDescription, { color: colors.tabIconDefault }]}
+        >
+          Discover what others are talking about • {allGroups.length}+ clubs
+        </Text>
+        <View style={styles.groupList}>
+          {showcaseGroups.length === 0 ? (
+            <Text style={[styles.emptyText, { color: colors.tabIconDefault }]}>
+              No communities to showcase at the moment.
+            </Text>
+          ) : (
+            showcaseGroups.map((group: any) => {
+              return (
+                <View
                   key={group.id}
                   style={[
                     styles.groupItem,
                     { backgroundColor: colors.background },
                   ]}
-                  onPress={() => handleJoinGroup(group.id, group.name)}
                 >
                   <Text style={styles.groupEmoji}>{group.avatar}</Text>
                   <View style={styles.groupInfo}>
-                    <Text style={[styles.groupName, { color: colors.text }]}>
-                      {group.name}
-                    </Text>
+                    <View style={styles.groupHeader}>
+                      <Text style={[styles.groupName, { color: colors.text }]}>
+                        {group.name}
+                      </Text>
+                    </View>
                     <Text
                       style={[
                         styles.groupDescription,
@@ -159,19 +158,13 @@ export default function ExploreScreen() {
                       {group.memberships?.length || 0} members
                     </Text>
                   </View>
-                  <TouchableOpacity
-                    style={[styles.joinGroupButton, { backgroundColor: colors.tint }]}
-                    onPress={() => handleJoinGroup(group.id, group.name)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.joinGroupButtonText}>Join</Text>
-                  </TouchableOpacity>
-                </TouchableOpacity>
-              ))
-            )}
-          </View>
+                </View>
+              );
+            })
+          )}
         </View>
-      </SafeAreaView>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -181,13 +174,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   section: {
-    marginBottom: 24,
+    marginTop: 16,
+    marginBottom: 12,
     paddingHorizontal: 4,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 8,
+  },
+  sectionDescription: {
+    fontSize: 14,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+    fontStyle: "italic",
   },
   joinContainer: {
     flexDirection: "row",
@@ -208,8 +208,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     minWidth: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -244,16 +244,32 @@ const styles = StyleSheet.create({
   groupEmoji: {
     fontSize: 32,
     marginRight: 16,
-    textAlign: 'center',
+    textAlign: "center",
     width: 48,
     height: 48,
     lineHeight: 48,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 24,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   groupInfo: {
     flex: 1,
+  },
+  groupHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  memberBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  memberBadgeText: {
+    color: "white",
+    fontSize: 10,
+    fontWeight: "600",
   },
   groupName: {
     fontSize: 18,
@@ -270,29 +286,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500",
     opacity: 0.8,
-  },
-  shareText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  joinGroupButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    minWidth: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  joinGroupButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: "700",
-    letterSpacing: 0.5,
   },
   groupList: {
     paddingHorizontal: 16,
