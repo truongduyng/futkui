@@ -68,6 +68,7 @@ export function useInstantDB() {
         admin: {
           avatar: {},
         },
+        avatarFile: {},
         memberships: {
           profile: {
             user: {},

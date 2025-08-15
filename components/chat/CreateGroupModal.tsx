@@ -141,7 +141,7 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
 
         <ScrollView style={styles.content}>
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Group Image</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Club Image</Text>
             <View style={styles.imagePickerSection}>
               <TouchableOpacity onPress={pickImage} activeOpacity={0.7}>
                 {selectedImage ? (
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   section: {
-    marginVertical: 16,
+    marginVertical: 8,
   },
   sectionTitle: {
     fontSize: 16,
@@ -268,17 +268,15 @@ const styles = StyleSheet.create({
   },
   imagePickerSection: {
     alignItems: 'center',
-    marginBottom: 16,
   },
   selectedImage: {
-    width: 120,
-    height: 120,
+    width: 80,
+    height: 80,
     borderRadius: 60,
-    marginBottom: 12,
   },
   imagePlaceholder: {
-    width: 120,
-    height: 120,
+    width: 80,
+    height: 80,
     borderRadius: 60,
     borderWidth: 2,
     borderStyle: 'dashed',

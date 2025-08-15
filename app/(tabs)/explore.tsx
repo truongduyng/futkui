@@ -1,9 +1,12 @@
 import { Colors } from "@/constants/Colors";
 import { useInstantDB } from "@/hooks/useInstantDB";
+import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from "react";
 import {
   Alert,
+  Image,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -81,89 +84,112 @@ export default function ExploreScreen() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Join a Group
-        </Text>
-        <View style={styles.joinContainer}>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                color: colors.text,
-                backgroundColor: colors.background,
-                borderColor: colors.tabIconDefault,
-              },
-            ]}
-            value={shareLink}
-            onChangeText={setShareLink}
-            placeholder="Enter group link..."
-            placeholderTextColor={colors.tabIconDefault}
-          />
-          <TouchableOpacity
-            style={[styles.joinButton, { backgroundColor: colors.tint }]}
-            onPress={handleJoinViaLink}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.joinButtonText}>Join</Text>
-          </TouchableOpacity>
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Join a Group
+          </Text>
+          <View style={styles.joinContainer}>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  color: colors.text,
+                  backgroundColor: colors.background,
+                  borderColor: colors.tabIconDefault,
+                },
+              ]}
+              value={shareLink}
+              onChangeText={setShareLink}
+              placeholder="Enter group link..."
+              placeholderTextColor={colors.tabIconDefault}
+            />
+            <TouchableOpacity
+              style={[styles.joinButton, { backgroundColor: colors.tint }]}
+              onPress={handleJoinViaLink}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.joinButtonText}>Join</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Communities
-        </Text>
-        <Text
-          style={[styles.sectionDescription, { color: colors.tabIconDefault }]}
-        >
-          Discover what others are talking about • {allGroups.length}+ clubs
-        </Text>
-        <View style={styles.groupList}>
-          {showcaseGroups.length === 0 ? (
-            <Text style={[styles.emptyText, { color: colors.tabIconDefault }]}>
-              No communities to showcase at the moment.
-            </Text>
-          ) : (
-            showcaseGroups.map((group: any) => {
-              return (
-                <View
-                  key={group.id}
-                  style={[
-                    styles.groupItem,
-                    { backgroundColor: colors.background },
-                  ]}
-                >
-                  <Text style={styles.groupEmoji}>{group.avatar}</Text>
-                  <View style={styles.groupInfo}>
-                    <View style={styles.groupHeader}>
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Communities
+          </Text>
+          <Text
+            style={[styles.sectionDescription, { color: colors.tabIconDefault }]}
+          >
+            Discover what others are talking about • {allGroups.length}+ clubs
+          </Text>
+          <View style={styles.groupList}>
+            {showcaseGroups.length === 0 ? (
+              <Text style={[styles.emptyText, { color: colors.tabIconDefault }]}>
+                No communities to showcase at the moment.
+              </Text>
+            ) : (
+              showcaseGroups.map((group: any) => {
+                return (
+                  <View
+                    key={group.id}
+                    style={[
+                      styles.groupItem,
+                      { backgroundColor: colors.background },
+                    ]}
+                  >
+                    <View style={styles.avatarContainer}>
+                      {group.avatarFile?.url ? (
+                        <Image
+                          source={{ uri: group.avatarFile.url }}
+                          style={styles.avatarImage}
+                        />
+                      ) : (
+                        <Text style={styles.groupEmoji}>
+                          {group.name.charAt(0).toUpperCase()}
+                        </Text>
+                      )}
+                    </View>
+                    <View style={styles.groupInfo}>
                       <Text style={[styles.groupName, { color: colors.text }]}>
                         {group.name}
                       </Text>
+                      <Text
+                        style={[
+                          styles.groupDescription,
+                          { color: colors.tabIconDefault },
+                        ]}
+                      >
+                        {group.description}
+                      </Text>
                     </View>
-                    <Text
-                      style={[
-                        styles.groupDescription,
-                        { color: colors.tabIconDefault },
-                      ]}
-                    >
-                      {group.description}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.memberCount,
-                        { color: colors.tabIconDefault },
-                      ]}
-                    >
-                      {group.memberships?.length || 0} members
-                    </Text>
+                    <View style={styles.memberCountContainer}>
+                      <Text
+                        style={[
+                          styles.memberCount,
+                          { color: colors.tabIconDefault },
+                        ]}
+                      >
+                        {group.memberships?.length || 0}
+                      </Text>
+                      <Ionicons
+                        name="person-outline"
+                        size={24}
+                        color={colors.tabIconDefault}
+                        style={styles.memberIcon}
+                      />
+                    </View>
                   </View>
-                </View>
-              );
-            })
-          )}
+                );
+              })
+            )}
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -171,7 +197,14 @@ export default function ExploreScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
+    backgroundColor: 'transparent',
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 4,
+    paddingBottom: 20,
   },
   section: {
     marginTop: 16,
@@ -231,26 +264,39 @@ const styles = StyleSheet.create({
   groupItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    marginVertical: 6,
-    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginVertical: 4,
+    borderRadius: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
   },
-  groupEmoji: {
-    fontSize: 32,
-    marginRight: 16,
-    textAlign: "center",
-    width: 48,
-    height: 48,
-    lineHeight: 48,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    borderRadius: 24,
+  avatarContainer: {
+    width: 40,
+    height: 40,
+    marginRight: 12,
+    borderRadius: 20,
     overflow: "hidden",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  groupEmoji: {
+    fontSize: 20,
+    textAlign: "center",
+    width: "100%",
+    height: "100%",
+    lineHeight: 40,
+    backgroundColor: Colors.light.tint,
+    color: "white",
   },
   groupInfo: {
     flex: 1,
@@ -282,9 +328,20 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     lineHeight: 20,
   },
+  memberCountContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 50,
+    paddingHorizontal: 8,
+  },
+  memberIcon: {
+    marginLeft: 4,
+    opacity: 0.7,
+  },
   memberCount: {
-    fontSize: 12,
-    fontWeight: "500",
+    fontSize: 20,
+    fontWeight: "600",
     opacity: 0.8,
   },
   groupList: {
