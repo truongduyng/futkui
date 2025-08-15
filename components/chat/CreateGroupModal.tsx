@@ -1,7 +1,11 @@
 import { Colors } from '@/constants/Colors';
+import { useInstantDB } from '@/hooks/useInstantDB';
+import { id } from '@instantdb/react-native';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import {
   Alert,
+  Image,
   Modal,
   ScrollView,
   StyleSheet,
@@ -14,18 +18,45 @@ import {
 interface CreateGroupModalProps {
   visible: boolean;
   onClose: () => void;
-  onCreateGroup: (groupData: { name: string; description: string; avatar: string }) => void;
+  onCreateGroup: (groupData: { name: string; description: string; avatarFileId: string; sports: string[] }) => void;
 }
 
-const AVATAR_OPTIONS = ['⚽', '🏓', '🏸'];
+
+const SPORTS_OPTIONS = [
+  { emoji: '⚽', name: 'Football' },
+  { emoji: '🏓', name: 'Pickleball' },
+  { emoji: '🏸', name: 'Badminton' },
+];
 
 export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGroupModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedAvatar, setSelectedAvatar] = useState('⚽');
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedSports, setSelectedSports] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const colors = Colors['light'];
+  const { instantClient } = useInstantDB();
 
-  const handleCreate = () => {
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission required', 'Sorry, we need camera roll permissions to upload group images.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setSelectedImage(result.assets[0].uri);
+    }
+  };
+
+  const handleCreate = async () => {
     if (!name.trim()) {
       Alert.alert('Error', 'Please enter a club name');
       return;
@@ -36,24 +67,57 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
       return;
     }
 
-    onCreateGroup({
-      name: name.trim(),
-      description: description.trim(),
-      avatar: selectedAvatar,
-    });
+    if (!selectedImage) {
+      Alert.alert('Error', 'Please select a group image');
+      return;
+    }
 
-    // Reset form
-    setName('');
-    setDescription('');
-    setSelectedAvatar('⚽');
-    onClose();
+    setIsSubmitting(true);
+
+    try {
+      // Upload image
+      const response = await fetch(selectedImage);
+      const blob = await response.blob();
+      const fileName = `group-avatar-${id()}-${Date.now()}.jpg`;
+
+      const uploadResult = await instantClient.storage.uploadFile(fileName, blob);
+      const avatarFileId = uploadResult.data.id;
+
+      onCreateGroup({
+        name: name.trim(),
+        description: description.trim(),
+        avatarFileId,
+        sports: selectedSports,
+      });
+
+      // Reset form
+      setName('');
+      setDescription('');
+      setSelectedImage(null);
+      setSelectedSports([]);
+      onClose();
+    } catch (error) {
+      console.error('Error uploading group image:', error);
+      Alert.alert('Error', 'Failed to upload group image. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
     setName('');
     setDescription('');
-    setSelectedAvatar('⚽');
+    setSelectedImage(null);
+    setSelectedSports([]);
     onClose();
+  };
+
+  const toggleSport = (sportName: string) => {
+    setSelectedSports(prev =>
+      prev.includes(sportName)
+        ? prev.filter(s => s !== sportName)
+        : [...prev, sportName]
+    );
   };
 
   return (
@@ -68,25 +132,56 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
             <Text style={[styles.cancelButton, { color: colors.tint }]}>Cancel</Text>
           </TouchableOpacity>
           <Text style={[styles.title, { color: colors.text }]}>Create Sports Club</Text>
-          <TouchableOpacity onPress={handleCreate}>
-            <Text style={[styles.createButton, { color: colors.tint }]}>Create</Text>
+          <TouchableOpacity onPress={handleCreate} disabled={isSubmitting}>
+            <Text style={[styles.createButton, { color: colors.tint }]}>
+              {isSubmitting ? 'Creating...' : 'Create'}
+            </Text>
           </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.content}>
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Sport</Text>
-            <View style={styles.avatarGrid}>
-              {AVATAR_OPTIONS.map((avatar) => (
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Group Image</Text>
+            <View style={styles.imagePickerSection}>
+              <TouchableOpacity onPress={pickImage} activeOpacity={0.7}>
+                {selectedImage ? (
+                  <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
+                ) : (
+                  <View style={[styles.imagePlaceholder, { borderColor: colors.tabIconDefault }]}>
+                    <Text style={[styles.placeholderText, { color: colors.tabIconDefault }]}>
+                      Tap to select image
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Sports (Optional)</Text>
+            <Text style={[styles.sectionSubtitle, { color: colors.tabIconDefault }]}>
+              Select the sports your club plays
+            </Text>
+            <View style={styles.sportsGrid}>
+              {SPORTS_OPTIONS.map((sport) => (
                 <TouchableOpacity
-                  key={avatar}
+                  key={sport.name}
                   style={[
-                    styles.avatarOption,
-                    selectedAvatar === avatar && { backgroundColor: colors.tint }
+                    styles.sportOption,
+                    selectedSports.includes(sport.name) && {
+                      backgroundColor: colors.tint,
+                      borderColor: colors.tint
+                    }
                   ]}
-                  onPress={() => setSelectedAvatar(avatar)}
+                  onPress={() => toggleSport(sport.name)}
                 >
-                  <Text style={styles.avatarText}>{avatar}</Text>
+                  <Text style={styles.sportEmoji}>{sport.emoji}</Text>
+                  <Text style={[
+                    styles.sportName,
+                    { color: selectedSports.includes(sport.name) ? 'white' : colors.text }
+                  ]}>
+                    {sport.name}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -167,22 +262,58 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 12,
   },
-  avatarGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    justifyContent: 'flex-start',},
-  avatarOption: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  sectionSubtitle: {
+    fontSize: 14,
+    marginBottom: 12,
+  },
+  imagePickerSection: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  selectedImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: 12,
+  },
+  imagePlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
-  avatarText: {
-    fontSize: 24,
+  placeholderText: {
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  sportsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  sportOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    marginBottom: 8,
+  },
+  sportEmoji: {
+    fontSize: 16,
+    marginRight: 6,
+  },
+  sportName: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   input: {
     borderWidth: 1,

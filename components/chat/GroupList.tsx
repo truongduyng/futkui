@@ -2,7 +2,7 @@ import { Colors } from '@/constants/Colors';
 import { instantClient } from '@/hooks/useInstantDB';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface Group {
   id: string;
@@ -12,6 +12,10 @@ interface Group {
   createdAt: number;
   shareLink: string;
   adminId: string;
+  avatarFile?: {
+    id: string;
+    url: string;
+  };
   admin?: {
     id: string;
     handle: string;
@@ -137,12 +141,19 @@ export const GroupList = React.memo(function GroupList({ groups, onGroupPress, o
           styles.avatarContainer,
           isBotGroup && styles.botAvatarContainer
         ]}>
-          <Text style={[
-            styles.avatarText,
-            isBotGroup && styles.botAvatarText
-          ]}>
-            {isBotGroup ? '🤖' : group.name.charAt(0).toUpperCase()}
-          </Text>
+          {group.avatarFile?.url && !isBotGroup ? (
+            <Image 
+              source={{ uri: group.avatarFile.url }} 
+              style={styles.avatarImage}
+            />
+          ) : (
+            <Text style={[
+              styles.avatarText,
+              isBotGroup && styles.botAvatarText
+            ]}>
+              {isBotGroup ? '🤖' : (group.avatar || group.name.charAt(0).toUpperCase())}
+            </Text>
+          )}
         </View>
 
         <View style={styles.groupInfo}>
@@ -275,6 +286,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
   },
   avatarText: {
     color: 'white',

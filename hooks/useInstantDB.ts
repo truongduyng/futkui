@@ -27,6 +27,7 @@ export function useInstantDB() {
             admin: {
               avatar: {},
             },
+            avatarFile: {},
           },
         },
       },
@@ -321,7 +322,8 @@ Feel free to message me anytime if you have questions or need help with the app!
     async (groupData: {
       name: string;
       description: string;
-      avatar: string;
+      avatarFileId: string;
+      sports: string[];
       adminId: string;
     }) => {
       const shareLink = `futkui-chat://group/${Math.random().toString(36).substring(2, 15)}`;
@@ -332,11 +334,12 @@ Feel free to message me anytime if you have questions or need help with the app!
         db.tx.groups[groupId].update({
           name: groupData.name,
           description: groupData.description,
-          avatar: groupData.avatar,
           adminId: groupData.adminId,
           createdAt: Date.now(),
           shareLink,
-        }).link({ admin: groupData.adminId }),
+        }).link({ 
+          admin: groupData.adminId
+        }),
         db.tx.memberships[membershipId].update({
           createdAt: Date.now(),
           role: 'admin',
@@ -346,6 +349,28 @@ Feel free to message me anytime if you have questions or need help with the app!
           profile: groupData.adminId
         }),
       ]);
+
+      // Update sports and avatar in separate transactions
+      const updates = [];
+      
+      if (groupData.sports && groupData.sports.length > 0) {
+        updates.push(
+          db.tx.groups[groupId].update({
+            sports: groupData.sports,
+          })
+        );
+      }
+      
+      // Link avatar file
+      updates.push(
+        db.tx.groups[groupId].link({
+          avatarFile: groupData.avatarFileId
+        })
+      );
+      
+      if (updates.length > 0) {
+        await db.transact(updates);
+      }
 
       return result;
     },

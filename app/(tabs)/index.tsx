@@ -40,7 +40,7 @@ export default function ChatScreen() {
     });
   };
 
-  const handleCreateGroup = async (groupData: { name: string; description: string; avatar: string }) => {
+  const handleCreateGroup = async (groupData: { name: string; description: string; avatarFileId: string; sports: string[] }) => {
     if (!currentProfile) {
       Alert.alert('Error', 'Please wait for your profile to load.');
       return;

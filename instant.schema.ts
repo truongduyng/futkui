@@ -21,11 +21,11 @@ const _schema = i.schema({
     }),
     groups: i.entity({
       adminId: i.string(),
-      avatar: i.string(),
       createdAt: i.number(),
       description: i.string(),
       name: i.string(),
       shareLink: i.string().unique(),
+      sports: i.json().optional(), // Array of sport names: ['football', 'basketball', 'tennis']
     }),
     messages: i.entity({
       content: i.string().optional(),
@@ -122,6 +122,10 @@ const _schema = i.schema({
     profileAvatars: {
       forward: { on: "profiles", has: "one", label: "avatar" },
       reverse: { on: "$files", has: "one", label: "profile" },
+    },
+    groupAvatars: {
+      forward: { on: "groups", has: "one", label: "avatarFile" },
+      reverse: { on: "$files", has: "one", label: "group" },
     },
     groupMemberships: {
       forward: { on: "groups", has: "many", label: "memberships" },
