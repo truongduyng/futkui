@@ -760,6 +760,130 @@ Feel free to message me anytime if you have questions or need help with the app!
     });
   };
 
+  // QueryOnce versions for non-real-time scenarios (like explore screen)
+  const queryAllGroupsOnce = useCallback(async () => {
+    return await db.queryOnce({
+      groups: {
+        admin: {
+          avatar: {},
+        },
+        avatarFile: {},
+        memberships: {
+          profile: {
+            user: {},
+          },
+        },
+      },
+    });
+  }, [db]);
+
+  const queryGroupsOnce = useCallback(async (userId: string) => {
+    if (!userId) {
+      return { data: null };
+    }
+
+    return await db.queryOnce({
+      profiles: {
+        $: { where: { "user.id": userId } },
+        memberships: {
+          group: {
+            admin: {
+              avatar: {},
+            },
+            avatarFile: {},
+            messages: {},
+          },
+        },
+      },
+    });
+  }, [db]);
+
+  const queryProfileOnce = useCallback(async (userId: string) => {
+    if (!userId) {
+      throw new Error("queryProfileOnce must be used after auth");
+    }
+
+    return await db.queryOnce({
+      profiles: {
+        $: { where: { "user.id": userId } },
+        avatar: {},
+      }
+    });
+  }, [db]);
+
+  const queryLastMessagesOnce = useCallback(async (groupIds: string[]) => {
+    const hasGroupIds = groupIds && groupIds.length > 0;
+
+    return await db.queryOnce(hasGroupIds ? {
+      messages: {
+        $: {
+          where: { "group.id": { in: groupIds } },
+          order: { serverCreatedAt: 'desc' },
+          limit: Math.max(100, groupIds.length * 10) // Ensure we get enough messages to cover all groups
+        },
+        author: {
+          avatar: {},
+        },
+        poll: {},
+        group: {}
+      },
+    } : {
+      // Empty query that returns no results
+      messages: {
+        $: {
+          where: { id: "__nonexistent__" },
+          limit: 0
+        }
+      }
+    });
+  }, [db]);
+
+  const queryUnreadCountsOnce = useCallback(async (memberships: any[]) => {
+    if (!memberships || memberships.length === 0) {
+      return { data: { messages: [] } };
+    }
+
+    // Get group IDs that have last read timestamps
+    const groupsWithReads = memberships.filter(m => m.group?.id && m.lastReadMessageAt);
+    
+    if (groupsWithReads.length === 0) {
+      return { data: { messages: [] } };
+    }
+
+    // Get all group IDs
+    const groupIds = groupsWithReads.map(m => m.group.id);
+
+    // Query all messages for these groups
+    const result = await db.queryOnce({
+      messages: {
+        $: {
+          where: { "group.id": { in: groupIds } }
+        },
+        group: {}
+      }
+    });
+
+    // Filter messages on the client side based on lastReadMessageAt
+    if (result?.data?.messages) {
+      const membershipsMap = new Map(
+        groupsWithReads.map(m => [m.group.id, m.lastReadMessageAt])
+      );
+
+      const unreadMessages = result.data.messages.filter((msg: any) => {
+        const lastReadAt = membershipsMap.get(msg.group?.id);
+        return lastReadAt && msg.createdAt > lastReadAt;
+      });
+
+      return {
+        data: {
+          messages: unreadMessages
+        }
+      };
+    }
+
+    return { data: { messages: [] } };
+  }, [db]);
+
 
   const useMatches = (groupId: string) => {
     if (!groupId) {
@@ -793,6 +917,11 @@ Feel free to message me anytime if you have questions or need help with the app!
     useProfile,
     useUserMembership,
     useUnreadCount,
+    queryAllGroupsOnce,
+    queryGroupsOnce,
+    queryProfileOnce,
+    queryLastMessagesOnce,
+    queryUnreadCountsOnce,
     createGroup,
     sendMessage,
     sendPoll,

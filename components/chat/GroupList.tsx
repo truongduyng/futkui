@@ -1,8 +1,8 @@
 import { Colors } from '@/constants/Colors';
-import { instantClient, useInstantDB } from '@/hooks/useInstantDB';
+import { instantClient } from '@/hooks/useInstantDB';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Image, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface Group {
   id: string;
@@ -42,14 +42,21 @@ interface Group {
 interface GroupListProps {
   groups: Group[];
   memberships: any[];
+  unreadData?: any;
   onGroupPress: (group: Group) => void;
   onCreateGroup: () => void;
+  onRefresh?: () => Promise<void>;
+  isRefreshing?: boolean;
 }
 
-export const GroupList = React.memo(function GroupList({ groups, memberships, onGroupPress, onCreateGroup }: GroupListProps) {
+export const GroupList = React.memo(function GroupList({ groups, memberships, unreadData, onGroupPress, onCreateGroup, onRefresh, isRefreshing = false }: GroupListProps) {
   const colors = Colors['light'];
   const router = useRouter();
-  const { useUnreadCount } = useInstantDB();
+  // Helper function to get unread count for a group from the provided data
+  const getUnreadCount = (groupId: string, membership?: any) => {
+    if (!unreadData?.messages) return 0;
+    return unreadData.messages.filter((msg: any) => msg.group?.id === groupId).length;
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyStateContainer}>
@@ -129,9 +136,7 @@ export const GroupList = React.memo(function GroupList({ groups, memberships, on
   const GroupItem = React.memo(function GroupItem({ group, membership, onPress }: { group: Group; membership?: any; onPress: (group: Group) => void }) {
     const lastMessage = getLastMessage(group);
     const isBotGroup = group.admin?.handle === 'fk';
-
-    const { data: unreadData } = useUnreadCount(group.id, membership?.lastReadMessageAt);
-    const unreadCount = unreadData?.messages?.length || 0;
+    const unreadCount = getUnreadCount(group.id, membership);
 
     return (
       <TouchableOpacity
@@ -203,12 +208,6 @@ export const GroupList = React.memo(function GroupList({ groups, memberships, on
         </View>
       </TouchableOpacity>
     );
-  }, (prevProps, nextProps) => {
-    return (
-      prevProps.group.id === nextProps.group.id &&
-      prevProps.membership?.lastReadMessageAt === nextProps.membership?.lastReadMessageAt &&
-      prevProps.group.messages?.length === nextProps.group.messages?.length
-    );
   });
 
   const renderGroup = React.useCallback(({ item: group }: { item: Group }) => {
@@ -243,6 +242,16 @@ export const GroupList = React.memo(function GroupList({ groups, memberships, on
         showsVerticalScrollIndicator={false}
         contentContainerStyle={safeGroups.length === 0 ? styles.emptyListContainer : styles.listContainer}
         ListEmptyComponent={renderEmptyState}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.tint}
+              colors={[colors.tint]}
+            />
+          ) : undefined
+        }
       />
     </View>
   );

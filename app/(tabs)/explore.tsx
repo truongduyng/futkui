@@ -1,7 +1,7 @@
 import { Colors } from "@/constants/Colors";
 import { useInstantDB } from "@/hooks/useInstantDB";
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Alert,
   Image,
@@ -18,16 +18,24 @@ export default function ExploreScreen() {
   const [shareLink, setShareLink] = useState("");
   const colors = Colors["light"];
 
-  const { useGroups, useAllGroups, useProfile, joinGroup } = useInstantDB();
-  const { data: myGroupsData } = useGroups();
-  const { data: allGroupsData } = useAllGroups();
+  const { queryAllGroupsOnce, useProfile, joinGroup } = useInstantDB();
   const { data: profileData } = useProfile();
+  
+  const [allGroups, setAllGroups] = useState<any[]>([]);
 
-  const myGroups =
-    myGroupsData?.profiles?.[0]?.memberships
-      ?.map((m: any) => m.group)
-      .filter((g: any) => g && g.id) || [];
-  const allGroups = allGroupsData?.groups?.filter((g: any) => g && g.id) || [];
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const result = await queryAllGroupsOnce();
+        const groups = result?.data?.groups?.filter((g: any) => g && g.id) || [];
+        setAllGroups(groups);
+      } catch (error) {
+        console.error('Error fetching groups:', error);
+      }
+    };
+
+    fetchGroups();
+  }, [queryAllGroupsOnce]);
   const currentProfile = profileData?.profiles?.[0];
 
   // Show popular/featured groups for showcase (including user's own groups)
@@ -54,9 +62,9 @@ export default function ExploreScreen() {
       (g: any) => g && g.shareLink === shareLink.trim(),
     );
     if (group && group.id && currentProfile) {
-      // Check if user is already a member
-      const isAlreadyMember = myGroups.some(
-        (myGroup: any) => myGroup && myGroup.id === group.id,
+      // Check if user is already a member  
+      const isAlreadyMember = group.memberships?.some(
+        (membership: any) => membership?.profile?.id === currentProfile.id,
       );
 
       if (isAlreadyMember) {
