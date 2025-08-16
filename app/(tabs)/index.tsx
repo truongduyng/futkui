@@ -3,6 +3,7 @@ import { GroupList } from '@/components/chat/GroupList';
 import { Colors } from '@/constants/Colors';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { useRouter } from 'expo-router';
+import { useUnreadCount } from '@/contexts/UnreadCountContext';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Animated, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
@@ -20,6 +21,7 @@ export default function ChatScreen() {
 
   const { queryGroupsOnce, queryLastMessagesOnce, queryProfileOnce, queryUnreadCountsOnce, createGroup, instantClient } = useInstantDB();
   const { user } = instantClient.useAuth();
+  const { setTotalUnreadCount } = useUnreadCount();
   const currentProfile = profileData?.profiles?.[0];
 
   // Animated value for skeleton loading
@@ -211,6 +213,17 @@ export default function ChatScreen() {
         return bTime - aTime;
       });
   }, [baseGroups, lastMessagesData?.messages]);
+
+  // Calculate total unread count and update context
+  const totalUnreadCount = useMemo(() => {
+    if (!unreadData?.messages) return 0;
+    return unreadData.messages.length;
+  }, [unreadData?.messages]);
+
+  // Update unread count in context
+  useEffect(() => {
+    setTotalUnreadCount(totalUnreadCount);
+  }, [totalUnreadCount, setTotalUnreadCount]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>

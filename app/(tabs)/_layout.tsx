@@ -4,10 +4,14 @@ import { Platform } from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { TabIconWithBadge } from '@/components/ui/TabIconWithBadge';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
+import { useUnreadCount } from '@/contexts/UnreadCountContext';
 
 export default function TabLayout() {
+  const { totalUnreadCount } = useUnreadCount();
+
   return (
     <Tabs
       screenOptions={{
@@ -27,7 +31,14 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Chat',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="message.fill" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <TabIconWithBadge
+              name="message.fill"
+              color={color}
+              size={28}
+              badgeCount={totalUnreadCount}
+            />
+          ),
         }}
       />
       <Tabs.Screen

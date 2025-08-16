@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { AuthGate } from '@/components/AuthGate';
+import { UnreadCountProvider } from '@/contexts/UnreadCountContext';
 
 
 export default function RootLayout() {
@@ -18,20 +19,22 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={DefaultTheme}>
-      <AuthGate>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen 
-            name="chat/[groupId]" 
-            options={{ 
-              headerShown: true,
-              title: 'Chat',
-              presentation: 'card'
-            }} 
-          />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-      </AuthGate>
+      <UnreadCountProvider>
+        <AuthGate>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen 
+              name="chat/[groupId]" 
+              options={{ 
+                headerShown: true,
+                title: 'Chat',
+                presentation: 'card'
+              }} 
+            />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+        </AuthGate>
+      </UnreadCountProvider>
       <StatusBar style="dark" />
     </ThemeProvider>
   );
