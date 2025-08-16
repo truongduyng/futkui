@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { useInstantDB } from '@/hooks/useInstantDB';
+import { registerForPushNotificationsAsync } from '@/utils/notifications';
 import { id } from '@instantdb/react-native';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
@@ -97,11 +98,15 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
         return;
       }
 
+      // Get push notification token
+      const pushToken = await registerForPushNotificationsAsync();
+
       // Create profile
       let profileTransaction = instantClient.tx.profiles[profileId].update({
         handle: handle.toLowerCase(),
         displayName: displayName.trim(),
         createdAt: Date.now(),
+        pushToken: pushToken || undefined,
       }).link({ user: userId });
 
       // Link avatar (always required now)

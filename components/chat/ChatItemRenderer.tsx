@@ -51,10 +51,10 @@ export function useChatItemRenderer({
   ): boolean => {
     // Don't show timestamp for the first message (newest) unless there are no other messages
     if (isFirstMessage && totalMessages > 1) return false;
-    
+
     if (!previousMessage) return true;
 
-    // Show timestamp if messages are more than 15 minutes apart  
+    // Show timestamp if messages are more than 15 minutes apart
     // Note: In inverted list, previousMessage (index+1) is actually older than currentMessage
     const timeDifference = currentMessage.createdAt - previousMessage.createdAt;
     const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds

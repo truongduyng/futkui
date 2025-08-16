@@ -15,6 +15,7 @@ const _schema = i.schema({
       handle: i.string().unique().indexed(),
       displayName: i.string().optional(),
       createdAt: i.number(),
+      pushToken: i.string().optional(),
     }),
     colors: i.entity({
       value: i.string().optional(),
