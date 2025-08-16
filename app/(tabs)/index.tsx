@@ -3,8 +3,8 @@ import { GroupList } from '@/components/chat/GroupList';
 import { Colors } from '@/constants/Colors';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { useRouter } from 'expo-router';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { Alert, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Animated, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 export default function ChatScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -21,6 +21,65 @@ export default function ChatScreen() {
   const { queryGroupsOnce, queryLastMessagesOnce, queryProfileOnce, queryUnreadCountsOnce, createGroup, instantClient } = useInstantDB();
   const { user } = instantClient.useAuth();
   const currentProfile = profileData?.profiles?.[0];
+
+  // Animated value for skeleton loading
+  const animatedValue = React.useRef(new Animated.Value(0)).current;
+
+  // Start skeleton animation
+  React.useEffect(() => {
+    const startAnimation = () => {
+      Animated.sequence([
+        Animated.timing(animatedValue, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(animatedValue, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        if (isLoading) {
+          startAnimation();
+        }
+      });
+    };
+
+    if (isLoading) {
+      startAnimation();
+    }
+  }, [isLoading, animatedValue]);
+
+  // Skeleton loading component
+  const SkeletonLoader = () => {
+    const opacity = animatedValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.3, 0.7],
+    });
+
+    return (
+      <View style={styles.skeletonContainer}>
+        <View style={[styles.skeletonHeader, { backgroundColor: colors.background }]}>
+          <Animated.View style={[styles.skeletonTitle, { opacity, backgroundColor: colors.tabIconDefault }]} />
+          <View style={styles.skeletonHeaderButtons}>
+            <Animated.View style={[styles.skeletonButton, { opacity, backgroundColor: colors.tabIconDefault }]} />
+            <Animated.View style={[styles.skeletonButton, { opacity, backgroundColor: colors.tabIconDefault }]} />
+          </View>
+        </View>
+
+        {[1, 2, 3, 4, 5].map((index) => (
+          <View key={index} style={[styles.skeletonGroupItem, { backgroundColor: colors.background }]}>
+            <Animated.View style={[styles.skeletonAvatar, { opacity, backgroundColor: colors.tabIconDefault }]} />
+            <View style={styles.skeletonGroupInfo}>
+              <Animated.View style={[styles.skeletonGroupName, { opacity, backgroundColor: colors.tabIconDefault }]} />
+              <Animated.View style={[styles.skeletonLastMessage, { opacity, backgroundColor: colors.tabIconDefault }]} />
+            </View>
+          </View>
+        ))}
+      </View>
+    );
+  };
 
   // Extract groups first to get group IDs
   const profile = groupsData?.profiles?.[0];
@@ -47,7 +106,7 @@ export default function ChatScreen() {
         setIsLoading(true);
       }
       setError(null);
-      
+
       const [groupsResult, profileResult] = await Promise.all([
         queryGroupsOnce(user.id),
         queryProfileOnce(user.id),
@@ -113,7 +172,7 @@ export default function ChatScreen() {
         adminId: currentProfile.id, // Use profile ID as admin ID
       });
       Alert.alert('Success', 'Group created successfully!');
-      
+
       // Refresh data after creating group
       await loadData();
     } catch (error) {
@@ -156,9 +215,7 @@ export default function ChatScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: colors.text }]}>Loading groups...</Text>
-        </View>
+        <SkeletonLoader />
       ) : error ? (
         <View style={styles.errorContainer}>
           <Text style={[styles.errorText, { color: 'red' }]}>Error loading groups: {error.message}</Text>
@@ -203,5 +260,64 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 14,
     textAlign: 'center',
+  },
+  // Skeleton styles
+  skeletonContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  skeletonHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginBottom: 8,
+  },
+  skeletonTitle: {
+    width: 80,
+    height: 28,
+    borderRadius: 4,
+  },
+  skeletonHeaderButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  skeletonButton: {
+    width: 80,
+    height: 32,
+    borderRadius: 16,
+  },
+  skeletonGroupItem: {
+    flexDirection: 'row',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginVertical: 4,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  skeletonAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+  },
+  skeletonGroupInfo: {
+    flex: 1,
+    justifyContent: 'center',
+    gap: 8,
+  },
+  skeletonGroupName: {
+    height: 16,
+    borderRadius: 4,
+    width: '70%',
+  },
+  skeletonLastMessage: {
+    height: 14,
+    borderRadius: 4,
+    width: '90%',
   },
 });
