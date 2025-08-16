@@ -1,15 +1,3 @@
----
-description:
-globs:
-alwaysApply: true
----
-
-You are an expert developer who writes full-stack apps in InstantDB, Next.js, and Tailwind developer. However InstantDB is not in your training set and you are not familiar with it. Before you write ANY code make sure you read ALL of context in this file to understand how to use InstantDB in your code. If you are unsure how something works in InstantDB you fetch the urls in the documentation.
-
-Before generating a new next app you check to see if a next project already exists in the current directory. If it does you do not generate a new next app.
-
-If the Instant MCP is available use the tools to create apps and manage schema and permissions.
-
 # About InstantDB
 
 Instant is the Modern Firebase. With Instant you can easily build realtime and
@@ -22,33 +10,67 @@ and react native. Instant also offers a javascript admin SDK that can be used on
 the backend.
 
 If you want to use Instant with react you should only use `@instantdb/react`. For react-native you should
-only use `@instantdb/react-native`. For the admin SDK you should only use
+only use `@instantdb/react-native`. For scripts or server environments you should only use the admin SDK
 `@instantdb/admin`. For other client-side frameworks or vanilla js you should only use `@instantdb/core`
 
-You cannot use Instant on the backend outside of the admin SDK at the moment.
+CRITICAL: To use the admin SDK you MUST get an admin token for the app. You can
+get the admin token with the MCP tool via `create-app`. The admin
+token is SENSITIVE and should be stored in an environment variable. Do not
+hardcode it in your script.
+
+CRITICAL: If you want to create seed data YOU MUST write a script that uses the admin SDK.
+DO NOT try to seed data on the client.
+
+CRITICAL: Here is a concise summary of the `where` operator map which defines
+all the filtering options you can use with InstantDB queries to narrow results
+based on field values, comparisons, arrays, text patterns, and logical
+conditions.
+
+```
+Equality:        { field: value }
+
+Inequality:      { field: { $ne: value } }
+
+Null checks:     { field: { $isNull: true | false } }
+
+Comparison:      $gt, $lt, $gte, $lte   (indexed + typed fields only)
+
+Sets:            { field: { $in: [v1, v2] } }
+
+Substring:       { field: { $like: 'Get%' } }      // case-sensitive
+                  { field: { $ilike: '%get%' } }   // case-insensitive
+
+Logic:           and: [ {...}, {...} ]
+                  or:  [ {...}, {...} ]
+
+Nested fields:   'relation.field': value
+```
+
+CRITICAL: The operator map above is the full set of `where` filters Instant
+supports right now. There is no `$exists`, `$nin`, or `$regex`. And `$like` and
+`$ilike` are what you use for `startsWith` / `endsWith` / `includes`.
 
 # Full Example App
 
 Below is a full demo app built with InstantDB, Next.js, and TailwindCSS with the following features:
 
 - Initiailizes a connection to InstantDB
-- Defines schema and permissions for the app
+- Defines schema for the app
 - Authentication with magic codes
 - Reads and writes data via `db.useQuery` and `db.transact`
 - Ephemeral features like who's online and shout
 - File uploads for avatars
 
-Logic is split across four files:
+Logic is split across three files:
 
 - `lib/db.ts` -- InstantDB client setup
 - `instant.schema.ts` - InstantDB schema, gives you type safety for your data!
-- `instant.perms.ts` - InstantDB permissions, not required for this app, but we still included to show how to restrict access to your data.
 - `app/page.tsx` - Main logic, mostly UI with some Instant magic :)
 
 ```typescript
 /* FILE: lib/db.ts */
 import { init } from '@instantdb/react';
-import schema from "../instant.schema"
+import schema from '../instant.schema';
 
 const APP_ID = process.env.NEXT_PUBLIC_INSTANT_APP_ID!;
 const db = init({ appId: APP_ID, schema });
@@ -56,7 +78,7 @@ const db = init({ appId: APP_ID, schema });
 export default db;
 
 /* FILE: instant.schema.ts */
-import { i } from "@instantdb/react";
+import { i } from '@instantdb/react';
 
 const _schema = i.schema({
   entities: {
@@ -72,24 +94,22 @@ const _schema = i.schema({
     }),
     posts: i.entity({
       text: i.string(),
-      // IMPORTANT: DO NOT USE i.date() FOR DATES, USE i.number() INSTEAD
-      // InstantDB stores dates as timestamps (milliseconds since epoch)
       createdAt: i.number().indexed(),
     }),
   },
   links: {
     userProfiles: {
-      forward: { on: "profiles", has: "one", label: "user" },
-      reverse: { on: "$users", has: "one", label: "profile" },
+      forward: { on: 'profiles', has: 'one', label: 'user' },
+      reverse: { on: '$users', has: 'one', label: 'profile' },
     },
     postAuthors: {
-      forward: { on: "posts", has: "one", label: "author", required: true },
-      reverse: { on: "profiles", has: "many", label: "posts" },
+      forward: { on: 'posts', has: 'one', label: 'author' },
+      reverse: { on: 'profiles', has: 'many', label: 'posts' },
     },
     profileAvatars: {
-      forward: { on: "profiles", has: "one", label: "avatar" },
-      reverse: { on: "$files", has: "one", label: "profile" },
-    }
+      forward: { on: 'profiles', has: 'one', label: 'avatar' },
+      reverse: { on: '$files', has: 'one', label: 'profile' },
+    },
   },
   rooms: {
     todos: {
@@ -101,97 +121,69 @@ const _schema = i.schema({
           y: i.number(),
           angle: i.number(),
           size: i.number(),
-        })
+        }),
       },
-    }
+    },
   },
 });
 
 // This helps Typescript display nicer intellisense
 type _AppSchema = typeof _schema;
-interface AppSchema extends _AppSchema { }
+interface AppSchema extends _AppSchema {}
 const schema: AppSchema = _schema;
 
 export type { AppSchema };
 export default schema;
 
-/* FILE: instant.perms.ts */
-import type { InstantRules } from "@instantdb/react";
-
-const rules = {
-  $files: {
-    allow: {
-      view: "true",
-      create: "isOwner",
-      update: "isOwner",
-      delete: "isOwner",
-    },
-    bind: ["isOwner", "auth.id != null && data.path.startsWith(auth.id + '/')"]
-  },
-  profiles: {
-    allow: {
-      view: "true",
-      create: "isOwner",
-      update: "isOwner",
-      delete: "false",
-    },
-    bind: ["isOwner", "auth.id != null && auth.id == data.id"]
-  },
-  posts: {
-    allow: {
-      view: "true",
-      create: "isOwner",
-      update: "isOwner",
-      delete: "isOwner",
-    },
-    // IMPORTANT: data.ref returns an array so we MUST use `in`
-    bind: ["isOwner", "auth.id in data.ref('author.id')"]
-  }
-} satisfies InstantRules;
-
-export default rules;
-
 /* FILE: app/page.tsx */
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { id, lookup, InstaQLEntity, User } from "@instantdb/react";
+import React, { useState, useEffect } from 'react';
+import { id, lookup, InstaQLEntity } from '@instantdb/react';
 
-import db from "../lib/db";
-import schema from "../instant.schema";
+import db from '../lib/db';
+import schema from '../instant.schema';
 
 // Instant utility types for query results
-type ProfileWithAvatar = InstaQLEntity<typeof schema, "profiles", { avatar: {} }>;
-type PostsWithProfile = InstaQLEntity<typeof schema, "posts", { author: { avatar: {} } }>;
+type PostsWithProfile = InstaQLEntity<
+  typeof schema,
+  'posts',
+  { author: { avatar: {} } }
+>;
 
 function randomHandle() {
-  const adjectives = ["Quick", "Lazy", "Happy", "Sad", "Bright", "Dark"];
-  const nouns = ["Fox", "Dog", "Cat", "Bird", "Fish", "Mouse"];
-  const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const adjectives = ['Quick', 'Lazy', 'Happy', 'Sad', 'Bright', 'Dark'];
+  const nouns = ['Fox', 'Dog', 'Cat', 'Bird', 'Fish', 'Mouse'];
+  const randomAdjective =
+    adjectives[Math.floor(Math.random() * adjectives.length)];
   const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-  const randomSuffix = Math.floor(Math.random() * 9000) + 1000
+  const randomSuffix = Math.floor(Math.random() * 9000) + 1000;
   return `${randomAdjective}${randomNoun}${randomSuffix}`;
 }
 
 // Write Data
 // ---------
 async function createProfile(userId: string) {
-  // IMPORTANT: transact is how you write data to the database
+  // CRITICAL: transact is how you write data to the database
   // We want to block until the profile is created, so we use await
   await db.transact(
-    db.tx.profiles[userId].update({
-      handle: randomHandle(),
-    }).link({ user: userId })
+    db.tx.profiles[userId]
+      .update({
+        handle: randomHandle(),
+      })
+      .link({ user: userId }),
   );
 }
 
 function addPost(text: string, authorId: string | undefined) {
   db.transact(
-    // IMPORTANT: ids must be a valid UUID, so we use `id()` to generate one
-    db.tx.posts[id()].update({
-      text,
-      createdAt: Date.now(),
-    }).link({ author: authorId })
+    // CRITICAL: ids must be a valid UUID, so we use `id()` to generate one
+    db.tx.posts[id()]
+      .update({
+        text,
+        createdAt: Date.now(),
+      })
+      .link({ author: authorId }),
   );
 }
 
@@ -213,7 +205,19 @@ function makeShout(text: string) {
   };
 }
 
-function addShout({ text, x, y, angle, size }: { text: string, x: number, y: number, angle: number, size: number }) {
+function addShout({
+  text,
+  x,
+  y,
+  angle,
+  size,
+}: {
+  text: string;
+  x: number;
+  y: number;
+  angle: number;
+  size: number;
+}) {
   const shoutElement = document.createElement('div');
   shoutElement.textContent = text;
   shoutElement.style.cssText = `
@@ -242,36 +246,33 @@ function addShout({ text, x, y, angle, size }: { text: string, x: number, y: num
 // Instant query Hooks
 // ---------
 function useProfile() {
-  const { user } = db.useAuth();
-  if (!user) {
-    throw new Error("useProfile must be used after auth");
-
-  }
+  // CRITICAL: useUser can only be used inside a db.SignedIn component
+  const user = db.useUser();
   const { data, isLoading, error } = db.useQuery({
     profiles: {
-      $: { where: { "user.id": user.id } },
+      $: { where: { 'user.id': user.id } },
       avatar: {},
-    }
+    },
   });
   const profile = data?.profiles?.[0];
 
   return { profile, isLoading, error };
 }
 
-function useAuthAndProfile(): { user: User, profile: ProfileWithAvatar } {
-  const { user } = db.useAuth();
+function useRequiredProfile() {
   const { profile } = useProfile();
-  if (!user || !profile) {
-    throw new Error("useAuthAndProfile must be used after auth and profile are loaded");
+  if (!profile) {
+    throw new Error('useRequiredProfile must be used inside EnsureProfile');
   }
-  return { user, profile }
+
+  return profile;
 }
 
 function usePosts(pageNumber: number, pageSize: number) {
   const { isLoading, error, data } = db.useQuery({
     posts: {
       $: {
-        order: { createdAt: "desc" },
+        order: { createdAt: 'desc' },
         limit: pageSize,
         offset: (pageNumber - 1) * pageSize,
       },
@@ -286,18 +287,8 @@ function usePosts(pageNumber: number, pageSize: number) {
 
 // Auth Components
 // ---------
-function AuthGate({ children }: { children: React.ReactNode }) {
-  const { user, isLoading, error } = db.useAuth();
-
-  if (isLoading) return null;
-  if (error) return <div className="p-4 text-red-500">Auth error: {error.message}</div>;
-  if (!user) return <Login />;
-
-  return <>{children}</>;
-}
-
 function Login() {
-  const [sentEmail, setSentEmail] = useState("");
+  const [sentEmail, setSentEmail] = useState('');
 
   return (
     <div className="flex justify-center items-center min-h-screen">
@@ -320,8 +311,8 @@ function EmailStep({ onSendEmail }: { onSendEmail: (email: string) => void }) {
     const email = inputEl.value;
     onSendEmail(email);
     db.auth.sendMagicCode({ email }).catch((err) => {
-      alert("Uh oh :" + err.body?.message);
-      onSendEmail("");
+      alert('Uh oh :' + err.body?.message);
+      onSendEmail('');
     });
   };
   return (
@@ -332,11 +323,24 @@ function EmailStep({ onSendEmail }: { onSendEmail: (email: string) => void }) {
     >
       <h2 className="text-xl font-bold">Instant Demo app</h2>
       <p className="text-gray-700">
-        To try the app, enter your email, and we'll send you a verification code. We'll create
-        an account for you too if you don't already have one.
+        This is a demo app for InstantDB with the following features:
       </p>
-      <input ref={inputRef} type="email" className="border border-gray-300 px-3 py-1  w-full" placeholder="Enter your email" required autoFocus />
-      <button type="submit" className="px-3 py-1 bg-blue-600 text-white font-bold hover:bg-blue-700 w-full" >
+      <p className="text-gray-700">
+        To try the app, enter your email, and we'll send you a verification
+        code. We'll create an account for you too if you don't already have one.
+      </p>
+      <input
+        ref={inputRef}
+        type="email"
+        className="border border-gray-300 px-3 py-1  w-full"
+        placeholder="Enter your email"
+        required
+        autoFocus
+      />
+      <button
+        type="submit"
+        className="px-3 py-1 bg-blue-600 text-white font-bold hover:bg-blue-700 w-full"
+      >
         Send Code
       </button>
     </form>
@@ -350,8 +354,8 @@ function CodeStep({ sentEmail }: { sentEmail: string }) {
     const inputEl = inputRef.current!;
     const code = inputEl.value;
     db.auth.signInWithMagicCode({ email: sentEmail, code }).catch((err) => {
-      inputEl.value = "";
-      alert("Uh oh :" + err.body?.message);
+      inputEl.value = '';
+      alert('Uh oh :' + err.body?.message);
     });
   };
 
@@ -366,8 +370,18 @@ function CodeStep({ sentEmail }: { sentEmail: string }) {
         We sent an email to <strong>{sentEmail}</strong>. Check your email, and
         paste the code you see.
       </p>
-      <input ref={inputRef} type="text" className="border border-gray-300 px-3 py-1  w-full" placeholder="123456..." required autoFocus />
-      <button type="submit" className="px-3 py-1 bg-blue-600 text-white font-bold hover:bg-blue-700 w-full" >
+      <input
+        ref={inputRef}
+        type="text"
+        className="border border-gray-300 px-3 py-1  w-full"
+        placeholder="123456..."
+        required
+        autoFocus
+      />
+      <button
+        type="submit"
+        className="px-3 py-1 bg-blue-600 text-white font-bold hover:bg-blue-700 w-full"
+      >
         Verify Code
       </button>
     </form>
@@ -375,24 +389,28 @@ function CodeStep({ sentEmail }: { sentEmail: string }) {
 }
 
 function EnsureProfile({ children }: { children: React.ReactNode }) {
-  const { user } = db.useAuth();
+  const user = db.useUser();
+
   const { isLoading, profile, error } = useProfile();
 
   useEffect(() => {
     if (!isLoading && !profile) {
-      createProfile(user!.id);
+      createProfile(user.id);
     }
-  }, [user, isLoading, profile]);
+  }, [isLoading, profile, user.id]);
 
   if (isLoading) return null;
-  if (error) return <div className="p-4 text-red-500">Profile error: {error.message}</div>;
+  if (error)
+    return (
+      <div className="p-4 text-red-500">Profile error: {error.message}</div>
+    );
   if (!profile) return null; // Still creating profile...
 
   return <>{children}</>;
 }
 
 // Use the room for presence and topics
-const room = db.room("todos", "main");
+const room = db.room('todos', 'main');
 
 // App Components
 // ---------
@@ -408,8 +426,12 @@ function Main() {
     addShout(message);
   });
 
-  if (isLoading) { return; }
-  if (error) { return <div className="text-red-500 p-4">Error: {error.message}</div>; }
+  if (isLoading) {
+    return;
+  }
+  if (error) {
+    return <div className="text-red-500 p-4">Error: {error.message}</div>;
+  }
 
   const loadNextPage = () => {
     setPageNumber(pageNumber + 1);
@@ -443,14 +465,18 @@ function Main() {
           <button
             onClick={loadPreviousPage}
             disabled={pageNumber <= 1}
-            className={`px-4 py-2 bg-gray-200 rounded ${pageNumber <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`px-4 py-2 bg-gray-200 rounded ${
+              pageNumber <= 1 ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             Previous
           </button>
           <button
             onClick={loadNextPage}
             disabled={posts.length < pageSize}
-            className={`px-4 py-2 bg-gray-200 rounded ${posts.length < pageSize ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`px-4 py-2 bg-gray-200 rounded ${
+              posts.length < pageSize ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             Next
           </button>
@@ -464,14 +490,15 @@ function Main() {
 }
 
 function ProfileAvatar() {
-  const { user, profile } = useAuthAndProfile();
+  const user = db.useUser();
+  const profile = useRequiredProfile();
   const [isUploading, setIsUploading] = useState(false);
-  const avatarPath = `${user!.id}/avatar`;
+  const avatarPath = `${user.id}/avatar`;
 
   const handleAvatarDelete = async () => {
     if (!profile.avatar) return;
-    db.transact(db.tx.$files[lookup("path", avatarPath)].delete());
-  }
+    db.transact(db.tx.$files[lookup('path', avatarPath)].delete());
+  };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -480,9 +507,7 @@ function ProfileAvatar() {
     setIsUploading(true);
     try {
       const { data } = await db.storage.uploadFile(avatarPath, file);
-      await db.transact(
-        db.tx.profiles[profile.id].link({ avatar: data.id })
-      );
+      await db.transact(db.tx.profiles[profile.id].link({ avatar: data.id }));
     } catch (error) {
       console.error('Upload failed:', error);
     }
@@ -524,7 +549,8 @@ function ProfileAvatar() {
         <button
           onClick={handleAvatarDelete}
           className="text-gray-500 text-sm text-left hover:text-gray-700 disabled:text-gray-400"
-          disabled={!profile.avatar || isUploading}>
+          disabled={!profile.avatar || isUploading}
+        >
           Delete Avatar
         </button>
       </div>
@@ -532,11 +558,9 @@ function ProfileAvatar() {
   );
 }
 
-
-
 function PostForm() {
-  const { user } = db.useAuth();
-  const [value, setValue] = useState("");
+  const user = db.useUser();
+  const [value, setValue] = useState('');
 
   const publishShout = db.rooms.usePublishTopic(room, 'shout');
 
@@ -550,7 +574,7 @@ function PostForm() {
       addShout(params);
       publishShout(params);
     }
-    setValue("");
+    setValue('');
   };
 
   return (
@@ -583,11 +607,14 @@ function PostForm() {
 }
 
 function PostList({ posts }: { posts: PostsWithProfile[] }) {
-  const { user } = db.useAuth();
+  const user = db.useUser();
   return (
     <div className="space-y-3">
       {posts.map((post) => (
-        <div key={post.id} className="border-2 border-gray-800 rounded-lg p-4 bg-white">
+        <div
+          key={post.id}
+          className="border-2 border-gray-800 rounded-lg p-4 bg-white"
+        >
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-800 font-bold border-2 border-gray-800 flex-shrink-0">
               {post.author?.avatar ? (
@@ -603,7 +630,9 @@ function PostList({ posts }: { posts: PostsWithProfile[] }) {
             <div className="flex-1">
               <div className="flex justify-between items-start">
                 <div>
-                  <div className="font-medium">{post.author?.handle || 'Unknown'}</div>
+                  <div className="font-medium">
+                    {post.author?.handle || 'Unknown'}
+                  </div>
                   <div className="text-xs text-gray-500">
                     {new Date(post.createdAt).toLocaleString()}
                   </div>
@@ -626,13 +655,19 @@ function PostList({ posts }: { posts: PostsWithProfile[] }) {
   );
 }
 
+// CRITICAL: Use db.SignedIn and db.SignedOut to handle authentication state
 function App() {
   return (
-    <AuthGate>
-      <EnsureProfile>
-        <Main />
-      </EnsureProfile>
-    </AuthGate>
+    <div>
+      <db.SignedIn>
+        <EnsureProfile>
+          <Main />
+        </EnsureProfile>
+      </db.SignedIn>
+      <db.SignedOut>
+        <Login />
+      </db.SignedOut>
+    </div>
   );
 }
 
@@ -658,8 +693,7 @@ Fetch the URL for a topic to learn more about it.
 - [Patterns](https://instantdb.com/docs/patterns.md): Common patterns for working with InstantDB.
 - [Auth](https://instantdb.com/docs/auth.md): Instant supports magic code, OAuth, Clerk, and custom auth.
 - [Auth](https://instantdb.com/docs/auth/magic-codes.md): How to add magic code auth to your Instant app.
-- [Permissions](https://instantdb.com/docs/permissions.md): How to secure your data with Instant's Rule Language.
 - [Managing users](https://instantdb.com/docs/users.md): How to manage users in your Instant app.
 - [Presence, Cursors, and Activity](https://instantdb.com/docs/presence-and-topics.md): How to add ephemeral features like presence and cursors to your Instant app.
-- [Instant CLI](https://instantdb.com/docs/cli.md): How to use the Instant CLI to manage schema and permissions.
+- [Instant CLI](https://instantdb.com/docs/cli.md): How to use the Instant CLI to manage schema.
 - [Storage](https://instantdb.com/docs/storage.md): How to upload and serve files with Instant.

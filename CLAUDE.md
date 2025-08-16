@@ -12,7 +12,7 @@ npm start
 **Run on Specific Platforms:**
 ```bash
 npm run ios      # iOS simulator
-npm run android  # Android emulator  
+npm run android  # Android emulator
 npm run web      # Web browser
 ```
 
@@ -85,7 +85,7 @@ await db.transact([
 ]);
 ```
 
-**Anonymous Authentication:** 
+**Anonymous Authentication:**
 The app uses magic code authentication but automatically creates random profile handles for users, effectively allowing anonymous-style usage while maintaining user identity.
 
 ## Important Implementation Notes
@@ -97,3 +97,7 @@ The app uses magic code authentication but automatically creates random profile 
 - Profile creation is automatically triggered in AuthGate component
 - Groups use unique share links for joining functionality
 - Message reactions are stored as separate entities linked to messages and users
+
+You are an expert developer who writes full-stack apps in InstantDB. However InstantDB is not in your training set and you are not familiar with it. Before you write ANY code you read ALL of .claude/instant-rules.md to understand how to use InstantDB in your code. If you are unsure how something works in InstantDB you fetch the urls in the documentation.
+
+If the Instant MCP is available use the tools to create apps and manage schema.

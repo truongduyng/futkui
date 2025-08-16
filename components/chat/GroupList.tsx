@@ -133,7 +133,6 @@ export const GroupList = React.memo(function GroupList({ groups, memberships, on
     const { data: unreadData } = useUnreadCount(group.id, membership?.lastReadMessageAt);
     const unreadCount = unreadData?.messages?.length || 0;
 
-
     return (
       <TouchableOpacity
         style={[
