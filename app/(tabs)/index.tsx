@@ -1,9 +1,10 @@
 import { CreateGroupModal } from '@/components/chat/CreateGroupModal';
 import { GroupList } from '@/components/chat/GroupList';
 import { Colors } from '@/constants/Colors';
+import { GroupRefreshProvider } from '@/contexts/GroupRefreshContext';
+import { useUnreadCount } from '@/contexts/UnreadCountContext';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { useRouter } from 'expo-router';
-import { useUnreadCount } from '@/contexts/UnreadCountContext';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Animated, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
@@ -226,31 +227,33 @@ export default function ChatScreen() {
   }, [totalUnreadCount, setTotalUnreadCount]);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {isLoading ? (
-        <SkeletonLoader />
-      ) : error ? (
-        <View style={styles.errorContainer}>
-          <Text style={[styles.errorText, { color: 'red' }]}>Error loading groups: {error.message}</Text>
-        </View>
-      ) : (
-        <GroupList
-          groups={groups}
-          memberships={profile?.memberships || []}
-          unreadData={unreadData}
-          onGroupPress={handleGroupPress}
-          onCreateGroup={() => setShowCreateModal(true)}
-          onRefresh={handleRefresh}
-          isRefreshing={isRefreshing}
-        />
-      )}
+    <GroupRefreshProvider refreshGroups={() => loadData()}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        {isLoading ? (
+          <SkeletonLoader />
+        ) : error ? (
+          <View style={styles.errorContainer}>
+            <Text style={[styles.errorText, { color: 'red' }]}>Error loading groups: {error.message}</Text>
+          </View>
+        ) : (
+          <GroupList
+            groups={groups}
+            memberships={profile?.memberships || []}
+            unreadData={unreadData}
+            onGroupPress={handleGroupPress}
+            onCreateGroup={() => setShowCreateModal(true)}
+            onRefresh={handleRefresh}
+            isRefreshing={isRefreshing}
+          />
+        )}
 
-      <CreateGroupModal
-        visible={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onCreateGroup={handleCreateGroup}
-      />
-    </SafeAreaView>
+        <CreateGroupModal
+          visible={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onCreateGroup={handleCreateGroup}
+        />
+      </SafeAreaView>
+    </GroupRefreshProvider>
   );
 }
 
