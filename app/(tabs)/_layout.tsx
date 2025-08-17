@@ -10,7 +10,13 @@ import { Colors } from '@/constants/Colors';
 import { useUnreadCount } from '@/contexts/UnreadCountContext';
 
 export default function TabLayout() {
-  const { totalUnreadCount } = useUnreadCount();
+  let totalUnreadCount = 0;
+  try {
+    const context = useUnreadCount();
+    totalUnreadCount = context.totalUnreadCount;
+  } catch (error) {
+    console.warn('UnreadCountProvider not available, using default value');
+  }
 
   return (
     <Tabs

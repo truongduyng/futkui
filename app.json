@@ -10,14 +10,15 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "bundleIdentifier": "com.anonymous.futkui"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "package": "com.anonymous.futkui"
     },
     "web": {
       "bundler": "metro",
@@ -27,6 +28,12 @@
     "plugins": [
       "expo-router",
       "expo-apple-authentication",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.47888129307-u4k28pevnbqrtbit67ce0lhgm497s2vu"
+        }
+      ],
       [
         "expo-splash-screen",
         {

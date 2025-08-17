@@ -1,10 +1,11 @@
 import { Colors } from '@/constants/Colors';
 import { useInstantDB } from '@/hooks/useInstantDB';
-import React, { useEffect, useRef, useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View, Platform } from 'react-native';
-import { ProfileSetup } from './ProfileSetup';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ProfileSetup } from './ProfileSetup';
 
 interface AuthGateProps {
   children: React.ReactNode;
@@ -123,6 +124,11 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
       }
     };
     checkAppleSignInAvailability();
+
+    // Configure Google Sign-In
+    GoogleSignin.configure({
+      iosClientId: '47888129307-u4k28pevnbqrtbit67ce0lhgm497s2vu.apps.googleusercontent.com', // Replace with your actual iOS client ID
+    });
   }, []);
 
   const handleSubmit = async () => {
@@ -173,13 +179,45 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      const idToken = userInfo.data?.idToken;
+
+      if (!idToken) {
+        console.error('No ID token present!');
+        return;
+      }
+
+      await instantClient.auth.signInWithIdToken({
+        clientName: 'google-ios', // Replace with your InstantDB OAuth client name
+        idToken,
+      });
+    } catch (error: any) {
+      if (error.code === 'SIGN_IN_CANCELLED') {
+        // User canceled the sign-in flow
+        return;
+      }
+      Alert.alert('Error', 'Failed to sign in with Google. Please try again.');
+      console.error('Google Sign In error:', error);
+    }
+  };
+
   return (
     <>
       <Text style={[styles.title, { color: colors.text }]}>Welcome to FutKui</Text>
       <Text style={[styles.subtitle, { color: colors.text }]}>
         Choose how to get started
       </Text>
-      
+
+      <TouchableOpacity
+        style={styles.googleButton}
+        onPress={handleGoogleSignIn}
+      >
+        <Text style={styles.googleButtonText}>Sign in with Google</Text>
+      </TouchableOpacity>
+
       {isAppleSignInAvailable && (
         <AppleAuthentication.AppleAuthenticationButton
           buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
@@ -189,11 +227,9 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
           onPress={handleAppleSignIn}
         />
       )}
-      
-      {isAppleSignInAvailable && (
-        <Text style={[styles.orText, { color: colors.text }]}>or</Text>
-      )}
-      
+
+      <Text style={[styles.orText, { color: colors.text }]}>or</Text>
+
       <TextInput
         style={[styles.input, {
           borderColor: colors.icon,
@@ -343,6 +379,20 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 48,
     marginBottom: 16,
+  },
+  googleButton: {
+    width: '100%',
+    height: 48,
+    backgroundColor: '#000000',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  googleButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
   orText: {
     fontSize: 16,
