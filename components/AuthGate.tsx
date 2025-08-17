@@ -1,8 +1,10 @@
 import { Colors } from '@/constants/Colors';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View, Platform } from 'react-native';
 import { ProfileSetup } from './ProfileSetup';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Crypto from 'expo-crypto';
 
 interface AuthGateProps {
   children: React.ReactNode;
@@ -51,8 +53,8 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
 
   if (showProfileSetup && user) {
     return (
-      <ProfileSetup 
-        userId={user.id} 
+      <ProfileSetup
+        userId={user.id}
         onProfileCreated={handleProfileCreated}
       />
     );
@@ -111,6 +113,17 @@ export function AuthGate({ children }: AuthGateProps) {
 function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email: string) => void; colors: any; instantClient: any }) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isAppleSignInAvailable, setIsAppleSignInAvailable] = useState(false);
+
+  useEffect(() => {
+    const checkAppleSignInAvailability = async () => {
+      if (Platform.OS === 'ios') {
+        const isAvailable = await AppleAuthentication.isAvailableAsync();
+        setIsAppleSignInAvailable(isAvailable);
+      }
+    };
+    checkAppleSignInAvailability();
+  }, []);
 
   const handleSubmit = async () => {
     if (!email.trim()) return;
@@ -127,12 +140,60 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
     }
   };
 
+  const handleAppleSignIn = async () => {
+    try {
+      const nonce = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        Math.random().toString(),
+        { encoding: Crypto.CryptoEncoding.HEX }
+      );
+
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+        nonce,
+      });
+
+      if (credential.identityToken) {
+        await instantClient.auth.signInWithIdToken({
+          clientName: 'apple',
+          idToken: credential.identityToken,
+          nonce,
+        });
+      }
+    } catch (error: any) {
+      if (error.code === 'ERR_CANCELED') {
+        // User canceled the sign-in flow
+        return;
+      }
+      Alert.alert('Error', 'Failed to sign in with Apple. Please try again.');
+      console.error('Apple Sign In error:', error);
+    }
+  };
+
   return (
     <>
       <Text style={[styles.title, { color: colors.text }]}>Welcome to FutKui</Text>
       <Text style={[styles.subtitle, { color: colors.text }]}>
-        Enter your email to get started
+        Choose how to get started
       </Text>
+      
+      {isAppleSignInAvailable && (
+        <AppleAuthentication.AppleAuthenticationButton
+          buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+          buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+          cornerRadius={8}
+          style={styles.appleButton}
+          onPress={handleAppleSignIn}
+        />
+      )}
+      
+      {isAppleSignInAvailable && (
+        <Text style={[styles.orText, { color: colors.text }]}>or</Text>
+      )}
+      
       <TextInput
         style={[styles.input, {
           borderColor: colors.icon,
@@ -277,5 +338,16 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 16,
+  },
+  appleButton: {
+    width: '100%',
+    height: 48,
+    marginBottom: 16,
+  },
+  orText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 16,
+    opacity: 0.7,
   },
 });
