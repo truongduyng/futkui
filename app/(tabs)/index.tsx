@@ -10,20 +10,36 @@ import { Alert, Animated, SafeAreaView, StyleSheet, Text, View } from 'react-nat
 
 export default function ChatScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [groupsData, setGroupsData] = useState<any>(null);
-  const [profileData, setProfileData] = useState<any>(null);
-  const [lastMessagesData, setLastMessagesData] = useState<any>(null);
-  const [unreadData, setUnreadData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<any>(null);
   const router = useRouter();
   const colors = Colors['light'];
 
-  const { queryGroupsOnce, queryLastMessagesOnce, queryProfileOnce, queryUnreadCountsOnce, createGroup, instantClient } = useInstantDB();
-  const { user } = instantClient.useAuth();
+  const { useGroups, useLastMessages, useProfile, createGroup } = useInstantDB();
   const { setTotalUnreadCount } = useUnreadCount();
+  
+  // Use real-time hooks
+  const { data: groupsData, isLoading: groupsLoading, error: groupsError } = useGroups();
+  const { data: profileData, isLoading: profileLoading, error: profileError } = useProfile();
+  
   const currentProfile = profileData?.profiles?.[0];
+  
+  // Extract groups first to get group IDs
+  const profile = groupsData?.profiles?.[0];
+  const baseGroups = useMemo(() =>
+    (profile?.memberships || [])
+      .map((membership: any) => membership.group)
+      .filter((group: any) => group && group.id),
+    [profile?.memberships]
+  );
+  
+  // Get group IDs for useLastMessages
+  const groupIds = useMemo(() => baseGroups.map((group: any) => group.id), [baseGroups]);
+  
+  // Use real-time last messages
+  const { data: lastMessagesData, isLoading: lastMessagesLoading, error: lastMessagesError } = useLastMessages(groupIds);
+
+  // Calculate combined loading state and error state  
+  const isLoading = groupsLoading || profileLoading || lastMessagesLoading;
+  const error = groupsError || profileError || lastMessagesError;
 
   // Animated value for skeleton loading
   const animatedValue = React.useRef(new Animated.Value(0)).current;
@@ -84,77 +100,33 @@ export default function ChatScreen() {
     );
   };
 
-  // Extract groups first to get group IDs
-  const profile = groupsData?.profiles?.[0];
-  const baseGroups = useMemo(() =>
-    (profile?.memberships || [])
-      .map((membership: any) => membership.group)
-      .filter((group: any) => group && group.id),
-    [profile?.memberships]
-  );
-
-
-  // Load data function
-  const loadData = useCallback(async (isRefresh = false) => {
-    if (!user?.id) {
-      setError(new Error('User not authenticated'));
-      setIsLoading(false);
-      return;
+  // Calculate unread counts for each group - first create memberships map
+  const membershipsMap = useMemo(() => {
+    return new Map((profile?.memberships || []).map((m: any) => [m.group?.id, m]));
+  }, [profile?.memberships]);
+  
+  // Calculate total unread messages directly from membership data
+  const unreadData = useMemo(() => {
+    if (!lastMessagesData?.messages || !membershipsMap.size) {
+      return { messages: [] };
     }
-
-    try {
-      if (isRefresh) {
-        setIsRefreshing(true);
-      } else {
-        setIsLoading(true);
-      }
-      setError(null);
-
-      const [groupsResult, profileResult] = await Promise.all([
-        queryGroupsOnce(user.id),
-        queryProfileOnce(user.id),
-      ]);
-
-      setGroupsData(groupsResult?.data);
-      setProfileData(profileResult?.data);
-
-      // Get group IDs for loading last messages
-      const profile = groupsResult?.data?.profiles?.[0];
-      const groups = (profile?.memberships || [])
-        .map((membership: any) => membership.group)
-        .filter((group: any) => group && group.id);
-      const groupIds = groups.map((group: any) => group.id);
-
-      // Load last messages and unread counts if we have groups
-      if (groupIds.length > 0) {
-        const [lastMessagesResult, unreadResult] = await Promise.all([
-          queryLastMessagesOnce(groupIds),
-          queryUnreadCountsOnce(profile?.memberships || [])
-        ]);
-        setLastMessagesData(lastMessagesResult?.data);
-        setUnreadData(unreadResult?.data);
-      }
-    } catch (err) {
-      setError(err);
-      console.error('Error loading chat data:', err);
-    } finally {
-      if (isRefresh) {
-        setIsRefreshing(false);
-      } else {
-        setIsLoading(false);
-      }
-    }
-  }, [queryGroupsOnce, queryProfileOnce, queryLastMessagesOnce, queryUnreadCountsOnce, user?.id]);
-
-  // Refresh function for pull-to-refresh
+    
+    const unreadMessages = lastMessagesData.messages.filter((msg: any) => {
+      const membership = membershipsMap.get(msg.group?.id);
+      return membership?.lastReadMessageAt && msg.createdAt > membership.lastReadMessageAt;
+    });
+    
+    return { messages: unreadMessages };
+  }, [lastMessagesData?.messages, membershipsMap]);
+  
+  
+  // Simple refresh function for pull-to-refresh (real-time queries auto-update)
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const handleRefresh = useCallback(async () => {
-    await loadData(true);
-  }, [loadData]);
-
-  // Load data on mount
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+    setIsRefreshing(true);
+    // Simulate a brief refresh delay since real-time queries auto-update
+    setTimeout(() => setIsRefreshing(false), 500);
+  }, []);
 
   const handleGroupPress = (group: any) => {
     router.push({
@@ -175,9 +147,6 @@ export default function ChatScreen() {
         adminId: currentProfile.id, // Use profile ID as admin ID
       });
       Alert.alert('Success', 'Group created successfully!');
-
-      // Refresh data after creating group
-      await loadData();
     } catch (error) {
       Alert.alert('Error', 'Failed to create group. Please try again.');
       console.error('Error creating group:', error);
@@ -191,7 +160,9 @@ export default function ChatScreen() {
       return lastMessagesData.messages.find((message: any) => message.group?.id === groupId);
     };
 
-    return baseGroups
+    return (profile?.memberships || [])
+      .map((membership: any) => membership.group)
+      .filter((group: any) => group && group.id)
       .map((group: any) => ({
         ...group,
         messages: [getLastMessageForGroup(group.id)].filter(Boolean) // Add last message as array for compatibility
@@ -213,7 +184,7 @@ export default function ChatScreen() {
 
         return bTime - aTime;
       });
-  }, [baseGroups, lastMessagesData?.messages]);
+  }, [profile?.memberships, lastMessagesData?.messages]);
 
   // Calculate total unread count and update context
   const totalUnreadCount = useMemo(() => {
@@ -227,7 +198,7 @@ export default function ChatScreen() {
   }, [totalUnreadCount, setTotalUnreadCount]);
 
   return (
-    <GroupRefreshProvider refreshGroups={() => loadData()}>
+    <GroupRefreshProvider refreshGroups={async () => {}}>
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         {isLoading ? (
           <SkeletonLoader />
