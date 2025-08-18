@@ -4,7 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState, useEffect } from "react";
 import {
   Alert,
-  Image,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -13,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { CachedAvatar } from "@/components/chat/CachedAvatar";
 
 export default function ExploreScreen() {
   const [shareLink, setShareLink] = useState("");
@@ -150,11 +150,19 @@ export default function ExploreScreen() {
                       { backgroundColor: colors.background },
                     ]}
                   >
-                    <View style={styles.avatarContainer}>
+                    <View style={[
+                      styles.avatarContainer,
+                      group.avatarFile?.url && styles.avatarContainerWithImage
+                    ]}>
                       {group.avatarFile?.url ? (
-                        <Image
-                          source={{ uri: group.avatarFile.url }}
-                          style={styles.avatarImage}
+                        <CachedAvatar
+                          uri={group.avatarFile.url}
+                          size={40}
+                          fallbackComponent={
+                            <Text style={styles.groupEmoji}>
+                              {group.name.charAt(0).toUpperCase()}
+                            </Text>
+                          }
                         />
                       ) : (
                         <Text style={styles.groupEmoji}>
@@ -292,10 +300,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  avatarContainerWithImage: {
+    backgroundColor: "transparent",
   },
   groupEmoji: {
     fontSize: 20,

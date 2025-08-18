@@ -2,7 +2,8 @@ import { Colors } from '@/constants/Colors';
 import { instantClient } from '@/hooks/useInstantDB';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { FlatList, Image, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { CachedAvatar } from './CachedAvatar';
 
 interface Group {
   id: string;
@@ -149,12 +150,21 @@ export const GroupList = React.memo(function GroupList({ groups, memberships, un
       >
         <View style={[
           styles.avatarContainer,
-          isBotGroup && styles.botAvatarContainer
+          isBotGroup && styles.botAvatarContainer,
+          group.avatarFile?.url && !isBotGroup && styles.avatarContainerWithImage
         ]}>
           {group.avatarFile?.url && !isBotGroup ? (
-            <Image
-              source={{ uri: group.avatarFile.url }}
-              style={styles.avatarImage}
+            <CachedAvatar
+              uri={group.avatarFile.url}
+              size={50}
+              fallbackComponent={
+                <Text style={[
+                  styles.avatarText,
+                  isBotGroup && styles.botAvatarText
+                ]}>
+                  {group.avatar || group.name.charAt(0).toUpperCase()}
+                </Text>
+              }
             />
           ) : (
             <Text style={[
@@ -325,10 +335,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
     overflow: 'hidden',
   },
-  avatarImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+  avatarContainerWithImage: {
+    backgroundColor: 'transparent',
   },
   avatarText: {
     color: 'white',
