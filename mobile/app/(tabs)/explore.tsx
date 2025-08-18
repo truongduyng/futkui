@@ -1,4 +1,5 @@
 import { CachedAvatar } from "@/components/chat/CachedAvatar";
+import { ProfileEditModal } from "@/components/ProfileEditModal";
 import { Colors } from "@/constants/Colors";
 import { useInstantDB } from "@/hooks/useInstantDB";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,6 +22,7 @@ export default function ExploreScreen() {
   const { data: profileData } = useProfile();
 
   const [allGroups, setAllGroups] = useState<any[]>([]);
+  const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchGroups = async () => {
@@ -56,7 +58,7 @@ export default function ExploreScreen() {
   };
 
   const handleProfile = () => {
-    Alert.alert("Profile", "Profile settings coming soon!");
+    setIsProfileModalVisible(true);
   };
 
   const handlePrivacy = () => {
@@ -151,7 +153,7 @@ export default function ExploreScreen() {
                   <Text
                     style={[styles.menuButtonTitle, { color: colors.text }]}
                   >
-                    Profile
+                    {currentProfile?.displayName}
                   </Text>
                   <Text
                     style={[
@@ -159,9 +161,7 @@ export default function ExploreScreen() {
                       { color: colors.tabIconDefault },
                     ]}
                   >
-                    {currentProfile?.displayName ||
-                      currentProfile?.handle ||
-                      "User"}
+                    @{currentProfile?.handle}
                   </Text>
                 </View>
               </View>
@@ -378,6 +378,18 @@ export default function ExploreScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {currentProfile && (
+        <ProfileEditModal
+          visible={isProfileModalVisible}
+          onClose={() => setIsProfileModalVisible(false)}
+          profile={currentProfile}
+          onProfileUpdated={() => {
+            // The profile will automatically update via InstantDB's real-time updates
+            setIsProfileModalVisible(false);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -451,7 +463,7 @@ const styles = StyleSheet.create({
   },
   menuButtonTitle: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: "500",
     marginBottom: 1,
   },
   menuButtonSubtitle: {
