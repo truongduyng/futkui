@@ -57,7 +57,6 @@ export function useInstantDB() {
       messages: {
         $: {
           where: { id: "__nonexistent__" },
-          limit: 0
         }
       }
     });
@@ -845,7 +844,7 @@ Feel free to message me anytime if you have questions or need help with the app!
 
     // Get group IDs that have last read timestamps
     const groupsWithReads = memberships.filter(m => m.group?.id && m.lastReadMessageAt);
-    
+
     if (groupsWithReads.length === 0) {
       return { data: { messages: [] } };
     }

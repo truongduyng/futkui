@@ -50,14 +50,14 @@ interface GroupListProps {
   isRefreshing?: boolean;
 }
 
-export const GroupList = React.memo(function GroupList({ groups, memberships, unreadData, onGroupPress, onCreateGroup, onRefresh, isRefreshing = false }: GroupListProps) {
+export function GroupList({ groups, memberships, unreadData, onGroupPress, onCreateGroup, onRefresh, isRefreshing = false }: GroupListProps) {
   const colors = Colors['light'];
   const router = useRouter();
   // Helper function to get unread count for a group from the provided data
-  const getUnreadCount = (groupId: string, membership?: any) => {
+  const getUnreadCount = React.useCallback((groupId: string, membership?: any) => {
     if (!unreadData?.messages) return 0;
     return unreadData.messages.filter((msg: any) => msg.group?.id === groupId).length;
-  };
+  }, [unreadData]);
 
   const renderEmptyState = () => (
     <View style={styles.emptyStateContainer}>
@@ -89,12 +89,12 @@ export const GroupList = React.memo(function GroupList({ groups, memberships, un
     instantClient.auth.signOut();
   };
 
-  const getLastMessage = (group: Group) => {
+  const getLastMessage = React.useCallback((group: Group) => {
     if (!group.messages || group.messages.length === 0) return null;
     return group.messages[group.messages.length - 1];
-  };
+  }, []);
 
-  const getMessagePreview = (message: Group['messages'][0]) => {
+  const getMessagePreview = React.useCallback((message: Group['messages'][0]) => {
     // Handle poll messages
     if (message.type === 'poll' && message.poll) {
       return `📊 ${message.poll.question}`;
@@ -118,9 +118,9 @@ export const GroupList = React.memo(function GroupList({ groups, memberships, un
 
     // Fallback for unknown message types
     return 'Message';
-  };
+  }, []);
 
-  const formatTime = (timestamp: number) => {
+  const formatTime = React.useCallback((timestamp: number) => {
     const now = new Date();
     const messageDate = new Date(timestamp);
     const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
@@ -132,9 +132,9 @@ export const GroupList = React.memo(function GroupList({ groups, memberships, un
     } else {
       return messageDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
     }
-  };
+  }, []);
 
-  const GroupItem = React.memo(function GroupItem({ group, membership, onPress }: { group: Group; membership?: any; onPress: (group: Group) => void }) {
+  const GroupItem = React.useCallback(function GroupItem({ group, membership, onPress }: { group: Group; membership?: any; onPress: (group: Group) => void }) {
     const lastMessage = getLastMessage(group);
     const isBotGroup = group.admin?.handle === 'fk';
     const unreadCount = getUnreadCount(group.id, membership);
@@ -162,7 +162,7 @@ export const GroupList = React.memo(function GroupList({ groups, memberships, un
                   styles.avatarText,
                   isBotGroup && styles.botAvatarText
                 ]}>
-                  {group.avatar || group.name.charAt(0).toUpperCase()}
+                  {group.name.charAt(0).toUpperCase()}
                 </Text>
               }
             />
@@ -218,7 +218,7 @@ export const GroupList = React.memo(function GroupList({ groups, memberships, un
         </View>
       </TouchableOpacity>
     );
-  });
+  }, [getLastMessage, getUnreadCount, getMessagePreview, formatTime, colors]);
 
   const renderGroup = React.useCallback(({ item: group }: { item: Group }) => {
     const membership = memberships?.find(m => m.group?.id === group.id);
@@ -265,7 +265,7 @@ export const GroupList = React.memo(function GroupList({ groups, memberships, un
       />
     </View>
   );
-});
+}
 
 const styles = StyleSheet.create({
   container: {

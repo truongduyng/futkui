@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useRef, useEffect } from 'react';
 import { ActivityIndicator, Image, View } from 'react-native';
 
 interface CachedAvatarProps {
@@ -8,9 +8,28 @@ interface CachedAvatarProps {
   fallbackComponent?: React.ReactNode;
 }
 
+// Global cache to track loaded images
+const imageCache = new Set<string>();
+
 export const CachedAvatar = memo(function CachedAvatar({ uri, size, style, fallbackComponent }: CachedAvatarProps) {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!imageCache.has(uri));
   const [hasError, setHasError] = useState(false);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    // If image is already cached, don't show loading
+    if (imageCache.has(uri)) {
+      setIsLoading(false);
+      setHasError(false);
+    }
+  }, [uri]);
 
   const avatarStyle = {
     width: size,
@@ -19,16 +38,22 @@ export const CachedAvatar = memo(function CachedAvatar({ uri, size, style, fallb
   };
 
   const handleLoadStart = () => {
-    setIsLoading(true);
+    if (!isMountedRef.current) return;
+    if (!imageCache.has(uri)) {
+      setIsLoading(true);
+    }
     setHasError(false);
   };
 
   const handleLoad = () => {
+    if (!isMountedRef.current) return;
+    imageCache.add(uri);
     setIsLoading(false);
     setHasError(false);
   };
 
   const handleError = () => {
+    if (!isMountedRef.current) return;
     setIsLoading(false);
     setHasError(true);
   };
