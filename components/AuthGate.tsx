@@ -1,12 +1,18 @@
 import { Colors } from '@/constants/Colors';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+// Conditional import for Google Sign-In to avoid module errors in Expo Go
 import * as AppleAuthentication from 'expo-apple-authentication';
+import Constants from 'expo-constants';
 import * as Crypto from 'expo-crypto';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { ProfileSetup } from './ProfileSetup';
+
+// Helper function to detect if running in Expo Go
+const isRunningInExpoGo = () => {
+  return Constants.appOwnership === 'expo' || Constants.executionEnvironment === 'storeClient';
+};
 
 interface AuthGateProps {
   children: React.ReactNode;
@@ -116,6 +122,7 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isAppleSignInAvailable, setIsAppleSignInAvailable] = useState(false);
+  const [showGoogleSignIn, setShowGoogleSignIn] = useState(false);
 
   useEffect(() => {
     const checkAppleSignInAvailability = async () => {
@@ -126,10 +133,24 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
     };
     checkAppleSignInAvailability();
 
-    // Configure Google Sign-In
-    GoogleSignin.configure({
-      iosClientId: '47888129307-u4k28pevnbqrtbit67ce0lhgm497s2vu.apps.googleusercontent.com', // Replace with your actual iOS client ID
-    });
+    // Check if we should show Google Sign-In (skip in Expo Go)
+    const shouldShowGoogle = !isRunningInExpoGo();
+    setShowGoogleSignIn(shouldShowGoogle);
+
+    // Configure Google Sign-In only if not in Expo Go
+    if (shouldShowGoogle) {
+      try {
+        // Dynamically import Google Sign-In to avoid module errors in Expo Go
+        import('@react-native-google-signin/google-signin').then(({ GoogleSignin }) => {
+          GoogleSignin.configure({
+            iosClientId: '47888129307-u4k28pevnbqrtbit67ce0lhgm497s2vu.apps.googleusercontent.com', // Replace with your actual iOS client ID
+          });
+        });
+      } catch (error) {
+        console.warn('Google Sign-In not available:', error);
+        setShowGoogleSignIn(false);
+      }
+    }
   }, []);
 
   const handleSubmit = async () => {
@@ -182,6 +203,9 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
 
   const handleGoogleSignIn = async () => {
     try {
+      // Dynamically import Google Sign-In
+      const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
+      
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
       const idToken = userInfo.data?.idToken;
@@ -212,15 +236,17 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
         Choose how to get started
       </Text>
 
-      <TouchableOpacity
-        style={styles.googleButton}
-        onPress={handleGoogleSignIn}
-      >
-        <View style={styles.googleButtonContent}>
-          <AntDesign name="google" size={14} style={styles.googleIcon} />
-          <Text style={styles.googleButtonText}>Sign in with Google</Text>
-        </View>
-      </TouchableOpacity>
+      {showGoogleSignIn && (
+        <TouchableOpacity
+          style={styles.googleButton}
+          onPress={handleGoogleSignIn}
+        >
+          <View style={styles.googleButtonContent}>
+            <AntDesign name="google" size={14} style={styles.googleIcon} />
+            <Text style={styles.googleButtonText}>Sign in with Google</Text>
+          </View>
+        </TouchableOpacity>
+      )}
 
       {isAppleSignInAvailable && (
         <AppleAuthentication.AppleAuthenticationButton
@@ -232,7 +258,9 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
         />
       )}
 
-      <Text style={[styles.orText, { color: colors.text }]}>or</Text>
+      {(showGoogleSignIn || isAppleSignInAvailable) && (
+        <Text style={[styles.orText, { color: colors.text }]}>or</Text>
+      )}
 
       <TextInput
         style={[styles.input, {
