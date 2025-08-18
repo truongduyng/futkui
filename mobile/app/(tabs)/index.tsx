@@ -10,18 +10,20 @@ import { Alert, Animated, SafeAreaView, StyleSheet, Text, View } from 'react-nat
 
 export default function ChatScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [shareLink, setShareLink] = useState("");
+  const [isJoining, setIsJoining] = useState(false);
   const router = useRouter();
   const colors = Colors['light'];
 
-  const { useGroups, useLastMessages, useProfile, createGroup } = useInstantDB();
+  const { useGroups, useLastMessages, useProfile, createGroup, queryGroupByShareLink, joinGroup } = useInstantDB();
   const { setTotalUnreadCount } = useUnreadCount();
-  
+
   // Use real-time hooks
   const { data: groupsData, isLoading: groupsLoading, error: groupsError } = useGroups();
   const { data: profileData, isLoading: profileLoading, error: profileError } = useProfile();
-  
+
   const currentProfile = profileData?.profiles?.[0];
-  
+
   // Extract groups first to get group IDs
   const profile = groupsData?.profiles?.[0];
   const baseGroups = useMemo(() =>
@@ -30,14 +32,14 @@ export default function ChatScreen() {
       .filter((group: any) => group && group.id),
     [profile?.memberships]
   );
-  
+
   // Get group IDs for useLastMessages
   const groupIds = useMemo(() => baseGroups.map((group: any) => group.id), [baseGroups]);
-  
+
   // Use real-time last messages
   const { data: lastMessagesData, isLoading: lastMessagesLoading, error: lastMessagesError } = useLastMessages(groupIds);
 
-  // Calculate combined loading state and error state  
+  // Calculate combined loading state and error state
   const isLoading = groupsLoading || profileLoading || lastMessagesLoading;
   const error = groupsError || profileError || lastMessagesError;
 
@@ -104,22 +106,22 @@ export default function ChatScreen() {
   const membershipsMap = useMemo(() => {
     return new Map((profile?.memberships || []).map((m: any) => [m.group?.id, m]));
   }, [profile?.memberships]);
-  
+
   // Calculate total unread messages directly from membership data
   const unreadData = useMemo(() => {
     if (!lastMessagesData?.messages || !membershipsMap.size) {
       return { messages: [] };
     }
-    
+
     const unreadMessages = lastMessagesData.messages.filter((msg: any) => {
       const membership = membershipsMap.get(msg.group?.id);
       return membership?.lastReadMessageAt && msg.createdAt > membership.lastReadMessageAt;
     });
-    
+
     return { messages: unreadMessages };
   }, [lastMessagesData?.messages, membershipsMap]);
-  
-  
+
+
   // Simple refresh function for pull-to-refresh (real-time queries auto-update)
   const [isRefreshing, setIsRefreshing] = useState(false);
   const handleRefresh = useCallback(async () => {
@@ -150,6 +152,57 @@ export default function ChatScreen() {
     } catch (error) {
       Alert.alert('Error', 'Failed to create group. Please try again.');
       console.error('Error creating group:', error);
+    }
+  };
+
+  const handleJoinViaLink = async () => {
+    if (!shareLink.trim()) {
+      Alert.alert("Error", "Please enter a group link");
+      return;
+    }
+
+    if (!currentProfile) {
+      Alert.alert("Error", "Please wait for your profile to load.");
+      return;
+    }
+
+    setIsJoining(true);
+    
+    try {
+      // Query group by share link directly from database
+      const result = await queryGroupByShareLink(shareLink.trim());
+      const group = result?.data?.groups?.[0];
+
+      if (group && group.id) {
+        // Check if user is already a member
+        const isAlreadyMember = group.memberships?.some(
+          (membership: any) => membership?.profile?.id === currentProfile.id,
+        );
+
+        if (isAlreadyMember) {
+          Alert.alert(
+            "Already a Member",
+            `You are already a member of "${group.name}".`,
+          );
+          setShareLink("");
+          return;
+        }
+
+        try {
+          await joinGroup(group.id, currentProfile.id);
+          Alert.alert("Success", `Joined group: ${group.name}`);
+          setShareLink("");
+        } catch {
+          Alert.alert("Error", "Failed to join group. Please try again.");
+        }
+      } else {
+        Alert.alert("Error", "Group not found. Please check the link.");
+      }
+    } catch (error) {
+      console.error("Error finding group:", error);
+      Alert.alert("Error", "Failed to find group. Please try again.");
+    } finally {
+      setIsJoining(false);
     }
   };
 
@@ -215,6 +268,10 @@ export default function ChatScreen() {
             onCreateGroup={() => setShowCreateModal(true)}
             onRefresh={handleRefresh}
             isRefreshing={isRefreshing}
+            shareLink={shareLink}
+            onShareLinkChange={setShareLink}
+            onJoinViaLink={handleJoinViaLink}
+            isJoining={isJoining}
           />
         )}
 

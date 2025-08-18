@@ -780,6 +780,27 @@ Feel free to message me anytime if you have questions or need help with the app!
     });
   }, [db]);
 
+  const queryGroupByShareLink = useCallback(async (shareLink: string) => {
+    if (!shareLink) {
+      return { data: { groups: [] } };
+    }
+
+    return await db.queryOnce({
+      groups: {
+        $: { where: { shareLink: shareLink } },
+        admin: {
+          avatar: {},
+        },
+        avatarFile: {},
+        memberships: {
+          profile: {
+            user: {},
+          },
+        },
+      },
+    });
+  }, [db]);
+
   const queryGroupsOnce = useCallback(async (userId: string) => {
     if (!userId) {
       return { data: null };
@@ -921,6 +942,7 @@ Feel free to message me anytime if you have questions or need help with the app!
     useUserMembership,
     useUnreadCount,
     queryAllGroupsOnce,
+    queryGroupByShareLink,
     queryGroupsOnce,
     queryProfileOnce,
     queryLastMessagesOnce,

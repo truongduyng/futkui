@@ -1,7 +1,8 @@
 import { Colors } from '@/constants/Colors';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { CachedAvatar } from './CachedAvatar';
 
 interface Group {
@@ -47,9 +48,26 @@ interface GroupListProps {
   onCreateGroup: () => void;
   onRefresh?: () => Promise<void>;
   isRefreshing?: boolean;
+  // Join club functionality
+  shareLink?: string;
+  onShareLinkChange?: (link: string) => void;
+  onJoinViaLink?: () => void;
+  isJoining?: boolean;
 }
 
-export function GroupList({ groups, memberships, unreadData, onGroupPress, onCreateGroup, onRefresh, isRefreshing = false }: GroupListProps) {
+export function GroupList({
+  groups,
+  memberships,
+  unreadData,
+  onGroupPress,
+  onCreateGroup,
+  onRefresh,
+  isRefreshing = false,
+  shareLink,
+  onShareLinkChange,
+  onJoinViaLink,
+  isJoining = false
+}: GroupListProps) {
   const colors = Colors['light'];
   const router = useRouter();
   // Helper function to get unread count for a group from the provided data
@@ -234,6 +252,73 @@ export function GroupList({ groups, memberships, unreadData, onGroupPress, onCre
           </TouchableOpacity>
         </View>
       </View>
+
+      {onJoinViaLink && onShareLinkChange && (
+        <View style={styles.joinSection}>
+          <View style={styles.joinContainer}>
+            <View style={[
+              styles.inputContainer,
+              {
+                backgroundColor: colors.background,
+                borderColor: shareLink ? colors.tint : colors.tabIconDefault,
+              }
+            ]}>
+              <Ionicons
+                name="link-outline"
+                size={18}
+                color={shareLink ? colors.tint : colors.tabIconDefault}
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={[
+                  styles.joinInput,
+                  {
+                    color: colors.text,
+                  },
+                ]}
+                value={shareLink || ''}
+                onChangeText={onShareLinkChange}
+                placeholder="Enter club link..."
+                placeholderTextColor={colors.tabIconDefault}
+                editable={!isJoining}
+              />
+              {shareLink && !isJoining && (
+                <TouchableOpacity
+                  onPress={() => onShareLinkChange('')}
+                  style={styles.clearButton}
+                >
+                  <Ionicons
+                    name="close-circle"
+                    size={18}
+                    color={colors.tabIconDefault}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+            <TouchableOpacity
+              style={[
+                styles.joinButton,
+                {
+                  backgroundColor: isJoining ? colors.tabIconDefault : colors.tint,
+                  opacity: (!shareLink?.trim() || isJoining) ? 0.6 : 1
+                }
+              ]}
+              onPress={onJoinViaLink}
+              disabled={!shareLink?.trim() || isJoining}
+              activeOpacity={0.8}
+            >
+              {isJoining ? (
+                <Ionicons name="hourglass-outline" size={16} color="white" />
+              ) : (
+                <>
+                  <Ionicons name="enter-outline" size={16} color="white" style={styles.buttonIcon} />
+                  <Text style={styles.joinButtonText}>Join</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       <FlatList
         data={safeGroups}
@@ -461,5 +546,64 @@ const styles = StyleSheet.create({
   unreadMessageText: {
     fontWeight: '600',
     color: Colors['light'].text,
+  },
+  // Join section styles
+  joinSection: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  joinContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  inputContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 2,
+    shadowColor: '#a0a0a0ff',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
+  joinInput: {
+    flex: 1,
+    fontSize: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 0,
+  },
+  clearButton: {
+    padding: 2,
+    marginLeft: 4,
+  },
+  joinButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 12,
+    minWidth: 70,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  buttonIcon: {
+    marginRight: 4,
+  },
+  joinButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
