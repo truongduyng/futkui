@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { useInstantDB } from '@/hooks/useInstantDB';
+import AntDesign from '@expo/vector-icons/AntDesign';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
@@ -215,7 +216,10 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
         style={styles.googleButton}
         onPress={handleGoogleSignIn}
       >
-        <Text style={styles.googleButtonText}>Sign in with Google</Text>
+        <View style={styles.googleButtonContent}>
+          <AntDesign name="google" size={14} style={styles.googleIcon} />
+          <Text style={styles.googleButtonText}>Sign in with Google</Text>
+        </View>
       </TouchableOpacity>
 
       {isAppleSignInAvailable && (
@@ -389,9 +393,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  googleButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleIcon: {
+    marginRight: 4,
+    color: 'white',
+  },
   googleButtonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
   },
   orText: {
