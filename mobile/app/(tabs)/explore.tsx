@@ -38,18 +38,10 @@ export default function ExploreScreen() {
   }, [queryAllGroupsOnce]);
   const currentProfile = profileData?.profiles?.[0];
 
-  // Show popular/featured groups for showcase (including user's own groups)
-  const showcaseGroups = allGroups
-    .filter(
-      (group: any) => group && group.id && group.admin?.handle !== "fk", // Filter out bot groups
-    )
-    .sort((a: any, b: any) => {
-      // Sort by member count (descending) to show most popular first
-      const aMemberCount = a.memberships?.length || 0;
-      const bMemberCount = b.memberships?.length || 0;
-      return bMemberCount - aMemberCount;
-    })
-    .slice(0, 10); // Show top 10 groups
+  // Show newest groups for showcase (filtered from 10 newest from DB)
+  const showcaseGroups = allGroups.filter(
+    (group: any) => group && group.id && group.admin?.handle !== "fk" // Filter out bot groups
+  );
 
   const handleJoinViaLink = async () => {
     if (!shareLink.trim()) {
@@ -332,8 +324,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   groupName: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "600",
     marginBottom: 4,
     letterSpacing: 0.3,
   },

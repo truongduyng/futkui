@@ -15,7 +15,7 @@ export default function TabLayout() {
     const context = useUnreadCount();
     totalUnreadCount = context.totalUnreadCount;
   } catch (error) {
-    console.warn('UnreadCountProvider not available, using default value');
+    console.warn('UnreadCountProvider not available, using default value', error);
   }
 
   return (
@@ -50,8 +50,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Menu',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="line.3.horizontal" color={color} />,
         }}
       />
     </Tabs>

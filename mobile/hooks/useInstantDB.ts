@@ -763,6 +763,10 @@ Feel free to message me anytime if you have questions or need help with the app!
   const queryAllGroupsOnce = useCallback(async () => {
     return await db.queryOnce({
       groups: {
+        $: {
+          order: { serverCreatedAt: 'desc' },
+          limit: 10
+        },
         admin: {
           avatar: {},
         },
