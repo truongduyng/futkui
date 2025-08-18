@@ -4,34 +4,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-**Start Development Server:**
+**Mobile App (React Native):**
 ```bash
-npm start
-```
-
-**Run on Specific Platforms:**
-```bash
+npm start        # Start development server
 npm run ios      # iOS simulator
 npm run android  # Android emulator
 npm run web      # Web browser
+npm run lint     # Linting
+npm run reset-project  # Reset project
 ```
 
-**Linting:**
+**Backend/Landing Page (Fastify):**
 ```bash
-npm run lint
-```
-
-**Reset Project:**
-```bash
-npm run reset-project
+cd be_landing
+npm start        # Production server
+npm run dev      # Development server with auto-reload
+npm test         # Run tests
 ```
 
 ## Architecture Overview
 
-FutKui is a React Native group chat app built with Expo and InstantDB for real-time functionality.
+FutKui is a React Native group chat app built with Expo and InstantDB for real-time functionality, with a Fastify backend for the web landing page.
 
 ### Core Tech Stack
-- **Frontend**: React Native with Expo Router for navigation
+- **Mobile Frontend**: React Native with Expo Router for navigation
+- **Backend/Landing**: Fastify (Node.js web framework) for server-side functionality and web landing page
 - **Database**: InstantDB (real-time database with live queries)
 - **Authentication**: Magic code authentication via InstantDB
 - **Styling**: React Native StyleSheet with theming support
@@ -43,12 +40,18 @@ FutKui is a React Native group chat app built with Expo and InstantDB for real-t
 - `instant.perms.ts`: Permission rules for data access control
 - `hooks/useInstantDB.ts`: Central hub for database operations and custom hooks
 
-**App Structure:**
+**Mobile App Structure:**
 - `app/_layout.tsx`: Root layout with theme provider
 - `app/(tabs)/`: Tab-based navigation (chat.tsx, explore.tsx)
 - `app/chat/[groupId].tsx`: Individual chat screen
 - `components/AuthGate.tsx`: Authentication wrapper with magic code flow
 - `components/chat/`: Chat-specific components (GroupList, MessageBubble, MessageInput, CreateGroupModal)
+
+**Backend/Landing Structure:**
+- `be_landing/app.js`: Main Fastify application entry point
+- `be_landing/routes/`: API routes and handlers
+- `be_landing/plugins/`: Fastify plugins for shared functionality
+- `be_landing/test/`: Test files for backend functionality
 
 **Data Flow:**
 - Real-time queries via `db.useQuery()` for live data updates
