@@ -81,7 +81,8 @@ export default function ExploreScreen() {
               // TODO: Implement actual account deletion logic
               Alert.alert("Account Deletion", "Account deletion functionality will be implemented soon.");
             } catch (error) {
-              Alert.alert("Error", "Failed to delete account. Please try again.");
+              console.log("Error deleting account:", error);
+
             }
           },
         },
@@ -299,7 +300,7 @@ export default function ExploreScreen() {
               { color: colors.tabIconDefault },
             ]}
           >
-            Most active clubs on the platform
+            Most recent clubs on the platform
           </Text>
           <View style={styles.groupList}>
             {showcaseGroups.length === 0 ? (
