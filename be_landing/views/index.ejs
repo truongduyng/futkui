@@ -1,132 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FutKui - Real-time Group Chat</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Custom gradient backgrounds */
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .gradient-text {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-    </style>
+    <%- include('partials/head') %>
 </head>
 <body class="bg-gray-50">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <div class="text-2xl font-bold gradient-text">FutKui</div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <a href="#features" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Features</a>
-                    <a href="#download" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium">Get Started</a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
+    <%- include('partials/header') %>
+    
     <!-- Hero Section -->
     <section class="gradient-bg text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-            <div class="text-center">
-                <h1 class="text-4xl md:text-6xl font-bold mb-6">
-                    Connect Instantly with 
-                    <span class="text-yellow-300">FutKui</span>
-                </h1>
-                <p class="text-xl md:text-2xl mb-8 text-indigo-100 max-w-3xl mx-auto">
-                    The fastest way to create and join group chats. Real-time messaging with instant setup and seamless sharing.
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="#download" class="bg-white text-indigo-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-100 transition-colors">
-                        Download Now
-                    </a>
-                    <a href="#features" class="border-2 border-white text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-white hover:text-indigo-600 transition-colors">
-                        Learn More
-                    </a>
-                </div>
-            </div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div class="text-center">
+          <h1 class="text-4xl md:text-6xl font-bold mb-6">
+            Connect Your Sports Team with
+            <span class="text-yellow-300">FutKui</span>
+          </h1>
+          <p class="text-xl md:text-2xl mb-8 text-indigo-100 max-w-3xl mx-auto">
+            The ultimate chat app for sports teams and clubs. Share images, coordinate games, and keep everyone connected with real-time messaging.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="#download"
+              class="bg-white text-indigo-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-100 transition-colors"
+            >
+              Download Now
+            </a>
+            <a
+              href="#features"
+              class="border-2 border-white text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-white hover:text-indigo-600 transition-colors"
+            >
+              Learn More
+            </a>
+          </div>
         </div>
+      </div>
     </section>
 
     <!-- Features Section -->
     <section id="features" class="py-24 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Why Choose FutKui?</h2>
-                <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-                    Built for speed, simplicity, and seamless real-time communication
-                </p>
-            </div>
-
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Feature 1 -->
-                <div class="text-center p-6">
-                    <div class="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-2">Lightning Fast</h3>
-                    <p class="text-gray-600">Real-time messaging powered by InstantDB. Messages appear instantly across all devices.</p>
-                </div>
-
-                <!-- Feature 2 -->
-                <div class="text-center p-6">
-                    <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-2">Simple & Secure</h3>
-                    <p class="text-gray-600">Magic code authentication. No complex passwords, just secure and simple access.</p>
-                </div>
-
-                <!-- Feature 3 -->
-                <div class="text-center p-6">
-                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a3 3 0 01-3-3v-1m7-4V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586A2 2 0 019 16h5a2 2 0 002-2z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-2">Easy Sharing</h3>
-                    <p class="text-gray-600">Share group links instantly. Friends can join with a single tap, no accounts needed.</p>
-                </div>
-            </div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Perfect for Sports Teams
+          </h2>
+          <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+            Built specifically for sports clubs and teams with features that matter most to athletes and coaches
+          </p>
         </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+          <!-- Feature 1 -->
+          <div class="text-center p-6">
+            <div
+              class="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+              <svg
+                class="w-8 h-8 text-indigo-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                ></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Real-time Team Chat</h3>
+            <p class="text-gray-600">
+              Instant messaging with your entire team. Share game updates, coordinate practice times, and celebrate victories together.
+            </p>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="text-center p-6">
+            <div
+              class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+              <svg
+                class="w-8 h-8 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                ></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Image & Media Sharing</h3>
+            <p class="text-gray-600">
+              Share photos from games, training sessions, and team events. Upload images directly from your device with loading indicators.
+            </p>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="text-center p-6">
+            <div
+              class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+              <svg
+                class="w-8 h-8 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a3 3 0 01-3-3v-1m7-4V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586A2 2 0 019 16h5a2 2 0 002-2z"
+                ></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Easy Team Management</h3>
+            <p class="text-gray-600">
+              Create sports clubs with custom names and avatars. Share invite links to add new team members instantly.
+            </p>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- How it Works -->
     <section class="py-24 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">How FutKui Works</h2>
-                <p class="text-xl text-gray-600">Get started in seconds</p>
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Get Your Team Connected</h2>
+                <p class="text-xl text-gray-600">Set up your sports club in just three easy steps</p>
             </div>
 
             <div class="grid md:grid-cols-3 gap-8">
                 <div class="text-center">
                     <div class="bg-indigo-600 text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">1</div>
-                    <h3 class="text-lg font-semibold mb-2">Create a Group</h3>
-                    <p class="text-gray-600">Start a new group chat with just a few taps</p>
+                    <h3 class="text-lg font-semibold mb-2">Create Your Sports Club</h3>
+                    <p class="text-gray-600">Choose a sport-themed avatar and create your team's chat group</p>
                 </div>
                 <div class="text-center">
                     <div class="bg-indigo-600 text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
-                    <h3 class="text-lg font-semibold mb-2">Share the Link</h3>
-                    <p class="text-gray-600">Send the unique group link to your friends</p>
+                    <h3 class="text-lg font-semibold mb-2">Invite Your Team</h3>
+                    <p class="text-gray-600">Share the unique invite link with teammates, coaches, and supporters</p>
                 </div>
                 <div class="text-center">
                     <div class="bg-indigo-600 text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">3</div>
-                    <h3 class="text-lg font-semibold mb-2">Start Chatting</h3>
-                    <p class="text-gray-600">Everyone can join instantly and start messaging</p>
+                    <h3 class="text-lg font-semibold mb-2">Communicate & Share</h3>
+                    <p class="text-gray-600">Start chatting, sharing game photos, and coordinating team activities</p>
                 </div>
             </div>
         </div>
@@ -134,58 +156,62 @@
 
     <!-- Download Section -->
     <section id="download" class="py-24 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Get FutKui Today</h2>
-            <p class="text-xl text-gray-600 mb-12">Available on all your favorite platforms</p>
-            
-            <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                <!-- App Store -->
-                <a href="#" class="bg-black text-white px-6 py-3 rounded-lg flex items-center space-x-3 hover:bg-gray-800 transition-colors">
-                    <svg class="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.09,16.67C20.06,16.74 19.67,18.11 18.71,19.5M13,3.5C13.73,2.67 14.94,2.04 15.94,2C16.07,3.17 15.6,4.35 14.9,5.19C14.21,6.04 13.07,6.7 11.95,6.61C11.8,5.46 12.36,4.26 13,3.5Z"/>
-                    </svg>
-                    <div class="text-left">
-                        <div class="text-sm">Download on the</div>
-                        <div class="text-lg font-semibold">App Store</div>
-                    </div>
-                </a>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Get FutKui for Your Team
+        </h2>
+        <p class="text-xl text-gray-600 mb-12">
+          Download now and start connecting your sports team today
+        </p>
 
-                <!-- Google Play -->
-                <a href="#" class="bg-black text-white px-6 py-3 rounded-lg flex items-center space-x-3 hover:bg-gray-800 transition-colors">
-                    <svg class="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
-                    </svg>
-                    <div class="text-left">
-                        <div class="text-sm">Get it on</div>
-                        <div class="text-lg font-semibold">Google Play</div>
-                    </div>
-                </a>
+        <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
+          <!-- App Store -->
+          <a
+            href="#"
+            class="bg-black text-white px-6 py-3 rounded-lg flex items-center space-x-3 hover:bg-gray-800 transition-colors"
+          >
+            <svg class="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.09,16.67C20.06,16.74 19.67,18.11 18.71,19.5M13,3.5C13.73,2.67 14.94,2.04 15.94,2C16.07,3.17 15.6,4.35 14.9,5.19C14.21,6.04 13.07,6.7 11.95,6.61C11.8,5.46 12.36,4.26 13,3.5Z"
+              />
+            </svg>
+            <div class="text-left">
+              <div class="text-sm">Download on the</div>
+              <div class="text-lg font-semibold">App Store</div>
             </div>
+          </a>
 
-            <!-- Web App -->
-            <div class="mt-8">
-                <p class="text-gray-600 mb-4">Or use it directly in your browser</p>
-                <a href="#" class="text-indigo-600 hover:text-indigo-700 font-semibold">Launch Web App →</a>
+          <!-- Google Play -->
+          <a
+            href="#"
+            class="bg-black text-white px-6 py-3 rounded-lg flex items-center space-x-3 hover:bg-gray-800 transition-colors"
+          >
+            <svg class="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"
+              />
+            </svg>
+            <div class="text-left">
+              <div class="text-sm">Get it on</div>
+              <div class="text-lg font-semibold">Google Play</div>
             </div>
+          </a>
         </div>
+
+        <!-- Web App -->
+        <div class="mt-8">
+          <p class="text-gray-600 mb-4">Perfect for teams, clubs, and sports organizations</p>
+          <div class="flex justify-center space-x-6 text-sm text-gray-500">
+            <span>⚽ Football</span>
+            <span>🏀 Basketball</span>
+            <span>🏐 Volleyball</span>
+            <span>🏈 Rugby</span>
+            <span>⚾ Baseball</span>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center">
-                <div class="text-2xl font-bold mb-4">FutKui</div>
-                <p class="text-gray-400 mb-6">Real-time group chat made simple</p>
-                <div class="flex justify-center space-x-6">
-                    <a href="#" class="text-gray-400 hover:text-white">Privacy</a>
-                    <a href="#" class="text-gray-400 hover:text-white">Terms</a>
-                    <a href="#" class="text-gray-400 hover:text-white">Support</a>
-                </div>
-                <div class="mt-8 pt-8 border-t border-gray-800 text-gray-400 text-sm">
-                    © 2025 FutKui. All rights reserved.
-                </div>
-            </div>
-        </div>
-    </footer>
+    <%- include('partials/footer') %>
 </body>
 </html>
