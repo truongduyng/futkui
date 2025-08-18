@@ -1,5 +1,6 @@
 import { CachedAvatar } from "@/components/chat/CachedAvatar";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
+import { WebViewModal } from "@/components/WebViewModal";
 import { Colors } from "@/constants/Colors";
 import { useInstantDB } from "@/hooks/useInstantDB";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,6 +24,8 @@ export default function ExploreScreen() {
 
   const [allGroups, setAllGroups] = useState<any[]>([]);
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
+  const [isPrivacyModalVisible, setIsPrivacyModalVisible] = useState(false);
+  const [isTermsModalVisible, setIsTermsModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchGroups = async () => {
@@ -62,11 +65,11 @@ export default function ExploreScreen() {
   };
 
   const handlePrivacy = () => {
-    Alert.alert("Privacy", "Privacy policy coming soon!");
+    setIsPrivacyModalVisible(true);
   };
 
   const handleTerms = () => {
-    Alert.alert("Terms of Service", "Terms of service coming soon!");
+    setIsTermsModalVisible(true);
   };
 
   const handleDeleteAccount = async () => {
@@ -390,6 +393,20 @@ export default function ExploreScreen() {
           }}
         />
       )}
+
+      <WebViewModal
+        visible={isPrivacyModalVisible}
+        onClose={() => setIsPrivacyModalVisible(false)}
+        url="http://localhost:3000/en/privacy"
+        title="Privacy Policy"
+      />
+
+      <WebViewModal
+        visible={isTermsModalVisible}
+        onClose={() => setIsTermsModalVisible(false)}
+        url="http://localhost:3000/en/terms"
+        title="Terms of Service"
+      />
     </SafeAreaView>
   );
 }
