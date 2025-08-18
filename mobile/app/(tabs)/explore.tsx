@@ -463,7 +463,6 @@ const styles = StyleSheet.create({
   },
   menuButtonTitle: {
     fontSize: 15,
-    fontWeight: "500",
     marginBottom: 1,
   },
   menuButtonSubtitle: {
