@@ -1,4 +1,4 @@
-package com.anonymous.futkui
+package com.futkui
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

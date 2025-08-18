@@ -1,4 +1,4 @@
-package com.anonymous.futkui
+package com.futkui
 
 import android.app.Application
 import android.content.res.Configuration

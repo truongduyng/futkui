@@ -30,7 +30,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>futkui</string>
-				<string>com.anonymous.futkui</string>
+				<string>com.futkui</string>
 			</array>
 		</dict>
 		<dict>

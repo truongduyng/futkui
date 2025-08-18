@@ -11,14 +11,14 @@
     "ios": {
       "supportsTablet": true,
       "usesAppleSignIn": true,
-      "bundleIdentifier": "com.anonymous.futkui"
+      "bundleIdentifier": "com.futkui"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.futkui"
+      "package": "com.futkui"
     },
     "web": {
       "bundler": "metro",
