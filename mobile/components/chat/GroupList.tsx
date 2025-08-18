@@ -1,5 +1,4 @@
 import { Colors } from '@/constants/Colors';
-import { instantClient } from '@/hooks/useInstantDB';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -85,9 +84,6 @@ export function GroupList({ groups, memberships, unreadData, onGroupPress, onCre
   // Ensure groups is always an array
   const safeGroups = groups || [];
 
-  const handleSignOut = () => {
-    instantClient.auth.signOut();
-  };
 
   const getLastMessage = React.useCallback((group: Group) => {
     if (!group.messages || group.messages.length === 0) return null;
@@ -228,19 +224,13 @@ export function GroupList({ groups, memberships, unreadData, onGroupPress, onCre
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Groups</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Clubs</Text>
         <View style={styles.headerButtons}>
-          <TouchableOpacity
-            style={[styles.signOutButton, { borderColor: colors.tint }]}
-            onPress={handleSignOut}
-          >
-            <Text style={[styles.signOutButtonText, { color: colors.tint }]}>Sign Out</Text>
-          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.createButton, { backgroundColor: colors.tint }]}
             onPress={onCreateGroup}
           >
-            <Text style={styles.createButtonText}>+ New Group</Text>
+            <Text style={styles.createButtonText}>+</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -287,25 +277,19 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
   },
-  signOutButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  signOutButtonText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
   createButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    width: 32,
+    height: 32,
     borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   createButtonText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 20,
   },
   listContainer: {
     paddingHorizontal: 16,
