@@ -1,5 +1,5 @@
 import React, { memo, useState } from 'react';
-import { Image, View, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Image, View } from 'react-native';
 
 interface CachedAvatarProps {
   uri: string;
@@ -23,8 +23,9 @@ export const CachedAvatar = memo(function CachedAvatar({ uri, size, style, fallb
     setHasError(false);
   };
 
-  const handleLoadEnd = () => {
+  const handleLoad = () => {
     setIsLoading(false);
+    setHasError(false);
   };
 
   const handleError = () => {
@@ -43,7 +44,7 @@ export const CachedAvatar = memo(function CachedAvatar({ uri, size, style, fallb
         style={[avatarStyle, { position: 'absolute' }]}
         resizeMode="cover"
         onLoadStart={handleLoadStart}
-        onLoadEnd={handleLoadEnd}
+        onLoad={handleLoad}
         onError={handleError}
       />
       {isLoading && (
@@ -53,7 +54,7 @@ export const CachedAvatar = memo(function CachedAvatar({ uri, size, style, fallb
           justifyContent: 'center',
           alignItems: 'center'
         }]}>
-          <ActivityIndicator size="small" color="#007AFF" />
+          <ActivityIndicator size="small" color="#cad0d7ff" />
         </View>
       )}
     </View>

@@ -1,7 +1,8 @@
+import { CachedAvatar } from "@/components/chat/CachedAvatar";
 import { Colors } from "@/constants/Colors";
 import { useInstantDB } from "@/hooks/useInstantDB";
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   SafeAreaView,
@@ -12,7 +13,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { CachedAvatar } from "@/components/chat/CachedAvatar";
 
 export default function ExploreScreen() {
   const [shareLink, setShareLink] = useState("");
@@ -20,7 +20,7 @@ export default function ExploreScreen() {
 
   const { queryAllGroupsOnce, useProfile, joinGroup } = useInstantDB();
   const { data: profileData } = useProfile();
-  
+
   const [allGroups, setAllGroups] = useState<any[]>([]);
 
   useEffect(() => {
@@ -62,7 +62,7 @@ export default function ExploreScreen() {
       (g: any) => g && g.shareLink === shareLink.trim(),
     );
     if (group && group.id && currentProfile) {
-      // Check if user is already a member  
+      // Check if user is already a member
       const isAlreadyMember = group.memberships?.some(
         (membership: any) => membership?.profile?.id === currentProfile.id,
       );
@@ -99,7 +99,7 @@ export default function ExploreScreen() {
       >
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Join a Group
+            Join a Club
           </Text>
           <View style={styles.joinContainer}>
             <TextInput
@@ -113,7 +113,7 @@ export default function ExploreScreen() {
               ]}
               value={shareLink}
               onChangeText={setShareLink}
-              placeholder="Enter group link..."
+              placeholder="Enter club link..."
               placeholderTextColor={colors.tabIconDefault}
             />
             <TouchableOpacity
