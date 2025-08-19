@@ -397,14 +397,14 @@ export default function ExploreScreen() {
       <WebViewModal
         visible={isPrivacyModalVisible}
         onClose={() => setIsPrivacyModalVisible(false)}
-        url="http://localhost:3000/en/privacy"
+        url="https://futkui.com/en/privacy"
         title="Privacy Policy"
       />
 
       <WebViewModal
         visible={isTermsModalVisible}
         onClose={() => setIsTermsModalVisible(false)}
-        url="http://localhost:3000/en/terms"
+        url="https://futkui.com/en/terms"
         title="Terms of Service"
       />
     </SafeAreaView>
