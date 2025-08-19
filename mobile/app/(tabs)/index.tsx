@@ -148,7 +148,6 @@ export default function ChatScreen() {
         ...groupData,
         adminId: currentProfile.id, // Use profile ID as admin ID
       });
-      Alert.alert('Success', 'Group created successfully!');
     } catch (error) {
       Alert.alert('Error', 'Failed to create group. Please try again.');
       console.error('Error creating group:', error);
@@ -167,7 +166,7 @@ export default function ChatScreen() {
     }
 
     setIsJoining(true);
-    
+
     try {
       // Query group by share link directly from database
       const result = await queryGroupByShareLink(shareLink.trim());

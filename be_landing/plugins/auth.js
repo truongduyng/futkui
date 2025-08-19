@@ -1,0 +1,39 @@
+import fastifyPlugin from 'fastify-plugin'
+import { init } from '@instantdb/admin'
+
+async function authPlugin(fastify) {
+  // Initialize InstantDB admin for token validation
+  const db = init({
+    appId: process.env.INSTANT_APP_ID,
+    adminToken: process.env.INSTANT_ADMIN_TOKEN
+  })
+
+  // Custom authentication decorator
+  fastify.decorate('authenticate', async function (request, reply) {
+    try {
+      const token = request.headers['authorization']?.replace('Bearer ', '') || request.headers['token']
+
+      if (!token) {
+        return reply.status(401).send({ error: 'No token provided' })
+      }
+
+      console.log('Validating token:', token)
+
+      // Verify token with InstantDB
+      const user = await db.auth.verifyToken(token)
+
+      if (!user) {
+        return reply.status(401).send({ error: 'Invalid token' })
+      }
+
+      // Store user in request for later use
+      request.user = user
+    } catch (error) {
+      console.error('Token validation error:', error)
+      fastify.log.error('Token validation error:', error)
+      return reply.status(401).send({ error: 'Authentication failed' })
+    }
+  })
+}
+
+export default fastifyPlugin(authPlugin)

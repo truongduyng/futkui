@@ -21,6 +21,7 @@ export default function ExploreScreen() {
   const { queryAllGroupsOnce, useProfile, instantClient } =
     useInstantDB();
   const { data: profileData } = useProfile();
+  const { user } = instantClient.useAuth();
 
   const [allGroups, setAllGroups] = useState<any[]>([]);
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
@@ -83,11 +84,30 @@ export default function ExploreScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              // TODO: Implement actual account deletion logic
-              Alert.alert("Account Deletion", "Account deletion functionality will be implemented soon.");
-            } catch (error) {
-              console.log("Error deleting account:", error);
+              const token = user?.refresh_token;
 
+              if (!token) {
+                Alert.alert("Error", "Unable to authenticate. Please try logging in again.");
+                return;
+              }
+
+              const response = await fetch('http://localhost:3000/api/account', {
+                method: 'DELETE',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                },
+              });
+
+              if (response.ok) {
+                await instantClient.auth.signOut();
+                Alert.alert("Account Deleted", "Your account has been successfully deleted.");
+              } else {
+                const errorData = await response.json();
+                Alert.alert("Deletion Failed", errorData.error || "Failed to delete account. Please try again.");
+              }
+            } catch (error) {
+              console.error("Error deleting account:", error);
+              Alert.alert("Error", "Unable to delete account. Please check your connection and try again.");
             }
           },
         },
