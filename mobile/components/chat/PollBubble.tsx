@@ -92,13 +92,13 @@ export const PollBubble = React.memo(function PollBubble({
   const formatTimeRemaining = (expiresAt: number) => {
     const now = Date.now();
     const timeLeft = expiresAt - now;
-    
+
     if (timeLeft <= 0) return 'Expired';
-    
+
     const days = Math.floor(timeLeft / (24 * 60 * 60 * 1000));
     const hours = Math.floor((timeLeft % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
     const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
-    
+
     if (days > 0) return `${days}d ${hours}h left`;
     if (hours > 0) return `${hours}h ${minutes}m left`;
     return `${minutes}m left`;
@@ -153,19 +153,6 @@ export const PollBubble = React.memo(function PollBubble({
             )}
           </View>
           <View style={styles.pollMetaRow}>
-            {poll.allowMultiple && (
-              <View style={[
-                styles.multipleTag,
-                { backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }
-              ]}>
-                <Text style={[
-                  styles.multipleTagText,
-                  { color: isOwnMessage ? 'white' : colors.text }
-                ]}>
-                  Multiple choice
-                </Text>
-              </View>
-            )}
             {poll.expiresAt && !wasClosedManually && (
               <Text style={[
                 styles.expirationText,
@@ -205,6 +192,7 @@ export const PollBubble = React.memo(function PollBubble({
                   <View style={styles.optionLeft}>
                     <View style={[
                       styles.optionIndicator,
+                      poll.allowMultiple ? styles.squareIndicator : styles.circleIndicator,
                       {
                         backgroundColor: isVoted
                           ? (isOwnMessage ? 'white' : colors.tint)
@@ -407,11 +395,16 @@ const styles = StyleSheet.create({
   optionIndicator: {
     width: 18,
     height: 18,
-    borderRadius: 9,
     borderWidth: 2,
     marginRight: 8,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  squareIndicator: {
+    borderRadius: 3,
+  },
+  circleIndicator: {
+    borderRadius: 9,
   },
   checkmark: {
     fontSize: 10,
