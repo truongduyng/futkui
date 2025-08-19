@@ -1,5 +1,8 @@
-# Use the official Node.js 18 Alpine image
-FROM node:18-alpine
+# Use the official Node.js 22 Alpine image
+FROM node:22-alpine
+
+# Install curl for health checks and debugging
+RUN apk add --no-cache curl
 
 # Set working directory
 WORKDIR /app
