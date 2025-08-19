@@ -1,6 +1,7 @@
 import { id, init } from '@instantdb/react-native';
 import { useCallback } from 'react';
 import schema from '../instant.schema';
+import { sendGroupNotification, getMemberPushTokens } from '../utils/notifications';
 
 const instantClient = init({
   appId: 'fef46afc-feff-4b78-be85-3c293174c5cc',
@@ -207,6 +208,56 @@ export function useInstantDB() {
     return botQuery.data.profiles?.[0] || null;
   }, [db]);
 
+  // Notification helper function
+  const triggerGroupNotifications = useCallback(async (data: {
+    groupId: string;
+    messageContent: string;
+    authorName: string;
+    authorId: string;
+    mentions?: string[];
+    messageId: string;
+  }) => {
+    try {
+      // Get group details and members
+      const groupQuery = await db.queryOnce({
+        groups: {
+          $: { where: { id: data.groupId } },
+          memberships: {
+            profile: {
+              user: {},
+            },
+          },
+        },
+      });
+
+      const group = groupQuery.data.groups?.[0];
+      if (!group) return;
+
+      // Get push tokens for all members except the message author
+      const memberTokens = await getMemberPushTokens(
+        group.memberships || [],
+        data.authorId
+      );
+
+      if (memberTokens.length === 0) return;
+
+      // Send notifications
+      await sendGroupNotification({
+        groupId: data.groupId,
+        groupName: group.name || 'Group Chat',
+        messageContent: data.messageContent,
+        authorName: data.authorName,
+        authorId: data.authorId,
+        mentions: data.mentions,
+        messageId: data.messageId,
+      }, memberTokens);
+
+    } catch (error) {
+      console.error('Error triggering group notifications:', error);
+      throw error;
+    }
+  }, [db]);
+
   const sendWelcomeMessage = useCallback(async (groupId: string, botProfileId: string) => {
     const welcomeMessage = `👋 Welcome to FutKui!
 
@@ -405,8 +456,9 @@ Feel free to message me anytime if you have questions or need help with the app!
         }
       }
 
+      const messageId = id();
       const result = await db.transact([
-        db.tx.messages[id()].update({
+        db.tx.messages[messageId].update({
           content: messageData.content || '', // Allow empty content for image-only messages
           authorName: messageData.authorName,
           createdAt: Date.now(),
@@ -420,9 +472,24 @@ Feel free to message me anytime if you have questions or need help with the app!
         }),
       ]);
 
+      // Trigger notifications after successful message send
+      try {
+        await triggerGroupNotifications({
+          groupId: messageData.groupId,
+          messageContent: messageData.content || '[Image]',
+          authorName: messageData.authorName,
+          authorId: messageData.authorId,
+          mentions: messageData.mentions,
+          messageId: messageId,
+        });
+      } catch (error) {
+        console.error('Failed to send notifications:', error);
+        // Don't throw error for notifications as message was already sent successfully
+      }
+
       return result;
     },
-    [db]
+    [db, triggerGroupNotifications]
   );
 
   const addOrUpdateReaction = useCallback(
@@ -740,6 +807,18 @@ Feel free to message me anytime if you have questions or need help with the app!
     [db]
   );
 
+  const updatePushToken = useCallback(
+    async (profileId: string, pushToken: string) => {
+      const result = await db.transact([
+        db.tx.profiles[profileId].update({
+          pushToken: pushToken,
+        }),
+      ]);
+      return result;
+    },
+    [db]
+  );
+
   const useUnreadCount = (groupId: string, lastReadMessageAt: number | undefined) => {
     if (!groupId) {
       return { data: { messages: [] }, isLoading: false, error: null };
@@ -963,5 +1042,6 @@ Feel free to message me anytime if you have questions or need help with the app!
     ensureUserHasBotGroup,
     getBotProfile,
     markMessagesAsRead,
+    updatePushToken,
   };
 }
