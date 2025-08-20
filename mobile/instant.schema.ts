@@ -7,10 +7,6 @@ const _schema = i.schema({
   // Take a look at this schema, and if everything looks good,
   // run `push schema` again to enforce the types.
   entities: {
-    $files: i.entity({
-      path: i.string().unique().indexed(),
-      url: i.string(),
-    }),
     $users: i.entity({
       email: i.string().unique().indexed().optional(),
     }),
@@ -25,6 +21,7 @@ const _schema = i.schema({
       name: i.string(),
       shareLink: i.string().unique(),
       sports: i.json().optional(),
+      avatarUrl: i.string().optional(),
     }),
     matches: i.entity({
       closedAt: i.number().optional(),
@@ -64,6 +61,7 @@ const _schema = i.schema({
       displayName: i.string().optional(),
       handle: i.string().unique().indexed(),
       pushToken: i.string().optional(),
+      avatarUrl: i.string().optional(),
     }),
     reactions: i.entity({
       createdAt: i.number(),
@@ -103,18 +101,6 @@ const _schema = i.schema({
         on: "profiles",
         has: "many",
         label: "adminGroups",
-      },
-    },
-    groupsAvatarFile: {
-      forward: {
-        on: "groups",
-        has: "one",
-        label: "avatarFile",
-      },
-      reverse: {
-        on: "$files",
-        has: "one",
-        label: "group",
       },
     },
     groupsMemberships: {
@@ -272,18 +258,6 @@ const _schema = i.schema({
         on: "votes",
         has: "one",
         label: "poll",
-      },
-    },
-    profilesAvatar: {
-      forward: {
-        on: "profiles",
-        has: "one",
-        label: "avatar",
-      },
-      reverse: {
-        on: "$files",
-        has: "one",
-        label: "profile",
       },
     },
     profilesUser: {

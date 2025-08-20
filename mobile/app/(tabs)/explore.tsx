@@ -142,9 +142,9 @@ export default function ExploreScreen() {
                     { backgroundColor: "rgba(255, 255, 255, 0.1)" },
                   ]}
                 >
-                  {currentProfile?.avatar?.url ? (
+                  {currentProfile?.avatarUrl ? (
                     <CachedAvatar
-                      uri={currentProfile.avatar.url}
+                      uri={currentProfile.avatarUrl}
                       size={32}
                       fallbackComponent={
                         <Text
@@ -345,13 +345,13 @@ export default function ExploreScreen() {
                     <View
                       style={[
                         styles.avatarContainer,
-                        group.avatarFile?.url &&
+                        group.avatarUrl &&
                           styles.avatarContainerWithImage,
                       ]}
                     >
-                      {group.avatarFile?.url ? (
+                      {group.avatarUrl ? (
                         <CachedAvatar
-                          uri={group.avatarFile.url}
+                          uri={group.avatarUrl}
                           size={40}
                           fallbackComponent={
                             <Text style={styles.groupEmoji}>

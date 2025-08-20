@@ -1,6 +1,7 @@
 import { Colors } from '@/constants/Colors';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { registerForPushNotificationsAsync } from '@/utils/notifications';
+import { uploadToR2 } from '@/utils/r2Upload';
 import { id } from '@instantdb/react-native';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
@@ -81,16 +82,12 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
 
       // Create profile with avatar
       const profileId = id();
-      let avatarFileId = null;
+      let avatarUrl = null;
 
       // Upload image (required)
       try {
-        const response = await fetch(selectedImage);
-        const blob = await response.blob();
         const fileName = `avatar-${profileId}-${Date.now()}.jpg`;
-
-        const uploadResult = await instantClient.storage.uploadFile(fileName, blob);
-        avatarFileId = uploadResult.data.id;
+        avatarUrl = await uploadToR2(selectedImage, fileName);
       } catch (error) {
         console.error('Error uploading avatar:', error);
         Alert.alert('Error', 'Failed to upload profile photo. Please try again.');
@@ -102,15 +99,13 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
       const pushToken = await registerForPushNotificationsAsync();
 
       // Create profile
-      let profileTransaction = instantClient.tx.profiles[profileId].update({
+      const profileTransaction = instantClient.tx.profiles[profileId].update({
         handle: handle.toLowerCase(),
         displayName: displayName.trim(),
         createdAt: Date.now(),
         pushToken: pushToken || undefined,
+        avatarUrl: avatarUrl,
       }).link({ user: userId });
-
-      // Link avatar (always required now)
-      profileTransaction = profileTransaction.link({ avatar: avatarFileId });
 
       await instantClient.transact([profileTransaction]);
 

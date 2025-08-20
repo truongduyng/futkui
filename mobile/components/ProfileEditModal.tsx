@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { useInstantDB } from '@/hooks/useInstantDB';
+import { uploadToR2 } from '@/utils/r2Upload';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState, useEffect } from 'react';
@@ -12,7 +13,7 @@ interface ProfileEditModalProps {
     id: string;
     handle: string;
     displayName?: string;
-    avatar?: { url: string };
+    avatarUrl?: string;
   };
   onProfileUpdated: () => void;
 }
@@ -90,17 +91,13 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
         }
       }
 
-      let avatarFileId = null;
+      let avatarUrl = null;
 
       // Upload new image if selected
       if (selectedImage) {
         try {
-          const response = await fetch(selectedImage);
-          const blob = await response.blob();
           const fileName = `avatar-${profile.id}-${Date.now()}.jpg`;
-
-          const uploadResult = await instantClient.storage.uploadFile(fileName, blob);
-          avatarFileId = uploadResult.data.id;
+          avatarUrl = await uploadToR2(selectedImage, fileName);
         } catch (error) {
           console.error('Error uploading avatar:', error);
           Alert.alert('Error', 'Failed to upload profile photo. Please try again.');
@@ -110,15 +107,11 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
       }
 
       // Update profile
-      let profileTransaction = instantClient.tx.profiles[profile.id].update({
+      const profileTransaction = instantClient.tx.profiles[profile.id].update({
         handle: handle.toLowerCase(),
         displayName: displayName.trim(),
+        ...(avatarUrl && { avatarUrl }),
       });
-
-      // Link new avatar if uploaded
-      if (avatarFileId) {
-        profileTransaction = profileTransaction.link({ avatar: avatarFileId });
-      }
 
       await instantClient.transact([profileTransaction]);
 
@@ -165,8 +158,8 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
                 <TouchableOpacity onPress={pickImage} activeOpacity={0.7}>
                   {selectedImage ? (
                     <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
-                  ) : profile.avatar?.url ? (
-                    <Image source={{ uri: profile.avatar.url }} style={styles.selectedImage} />
+                  ) : profile.avatarUrl ? (
+                    <Image source={{ uri: profile.avatarUrl }} style={styles.selectedImage} />
                   ) : (
                     <View style={[styles.imagePlaceholder, { borderColor: colors.icon }]}>
                       <Text style={[styles.placeholderText, { color: colors.tabIconDefault }]}>

@@ -140,20 +140,6 @@ const rules = {
       update: "isAuthenticated",
     },
   },
-  $files: {
-    bind: [
-      "isAuthenticated",
-      "auth.id != null",
-      "isOwner",
-      "auth.id != null && data.path.startsWith(auth.id + '/')",
-    ],
-    allow: {
-      view: "true",
-      create: "isAuthenticated",
-      delete: "isOwner",
-      update: "isOwner",
-    },
-  },
   groups: {
     bind: [
       "isAuthenticated",

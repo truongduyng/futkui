@@ -2,6 +2,7 @@ import { id, init } from '@instantdb/react-native';
 import { useCallback } from 'react';
 import schema from '../instant.schema';
 import { sendGroupNotification, getMemberPushTokens } from '../utils/notifications';
+import { uploadToR2 } from '../utils/r2Upload';
 
 const instantClient = init({
   appId: 'fef46afc-feff-4b78-be85-3c293174c5cc',
@@ -25,10 +26,7 @@ export function useInstantDB() {
         $: { where: { "user.id": user.id } },
         memberships: {
           group: {
-            admin: {
-              avatar: {},
-            },
-            avatarFile: {},
+            admin: {},
             messages: {},
           },
         },
@@ -47,9 +45,7 @@ export function useInstantDB() {
           order: { serverCreatedAt: 'desc' },
           limit: Math.max(100, groupIds.length * 10) // Ensure we get enough messages to cover all groups
         },
-        author: {
-          avatar: {},
-        },
+        author: {},
         poll: {},
         group: {}
       },
@@ -66,10 +62,7 @@ export function useInstantDB() {
   const useAllGroups = () => {
     return db.useQuery({
       groups: {
-        admin: {
-          avatar: {},
-        },
-        avatarFile: {},
+        admin: {},
         memberships: {
           profile: {
             user: {},
@@ -87,9 +80,7 @@ export function useInstantDB() {
     return db.useQuery({
       groups: {
         $: { where: { id: groupId } },
-        admin: {
-          avatar: {},
-        },
+        admin: {},
         memberships: {
           profile: {},
         },
@@ -109,9 +100,7 @@ export function useInstantDB() {
           order: { serverCreatedAt: 'desc' },
           limit: limit,
         },
-        author: {
-          avatar: {},
-        },
+        author: {},
         reactions: {
           user: {},
         },
@@ -131,7 +120,6 @@ export function useInstantDB() {
         },
         group: {},
       },
-      $files: {},
     });
   };
 
@@ -143,8 +131,7 @@ export function useInstantDB() {
 
     return db.useQuery({
       profiles: {
-        $: { where: { "user.id": user.id } },
-        avatar: {},
+        $: { where: { "user.id": user.id } }
       }
     });
   };
@@ -384,7 +371,7 @@ Feel free to message me anytime if you have questions or need help with the app!
     async (groupData: {
       name: string;
       description: string;
-      avatarFileId: string;
+      avatarUrl: string;
       sports: string[];
       adminId: string;
     }) => {
@@ -399,6 +386,8 @@ Feel free to message me anytime if you have questions or need help with the app!
           adminId: groupData.adminId,
           createdAt: Date.now(),
           shareLink,
+          avatarUrl: groupData.avatarUrl,
+          sports: groupData.sports,
         }).link({
           admin: groupData.adminId
         }),
@@ -411,28 +400,6 @@ Feel free to message me anytime if you have questions or need help with the app!
           profile: groupData.adminId
         }),
       ]);
-
-      // Update sports and avatar in separate transactions
-      const updates = [];
-
-      if (groupData.sports && groupData.sports.length > 0) {
-        updates.push(
-          db.tx.groups[groupId].update({
-            sports: groupData.sports,
-          })
-        );
-      }
-
-      // Link avatar file
-      updates.push(
-        db.tx.groups[groupId].link({
-          avatarFile: groupData.avatarFileId
-        })
-      );
-
-      if (updates.length > 0) {
-        await db.transact(updates);
-      }
 
       return result;
     },
@@ -453,14 +420,8 @@ Feel free to message me anytime if you have questions or need help with the app!
       // Upload image if provided
       if (messageData.imageUri) {
         try {
-          const response = await fetch(messageData.imageUri);
-          const blob = await response.blob();
           const fileName = `message-${Date.now()}.jpg`;
-
-          const uploadResult = await db.storage.uploadFile(fileName, blob);
-          // For now, store the file ID and handle URL resolution in the component
-          // TODO: Find a better way to get the download URL immediately after upload
-          imageUrl = uploadResult.data.id;
+          imageUrl = await uploadToR2(messageData.imageUri, fileName);
         } catch (error) {
           console.error('Error uploading image:', error);
           throw new Error('Failed to upload image');
@@ -898,10 +859,7 @@ Feel free to message me anytime if you have questions or need help with the app!
           order: { serverCreatedAt: 'desc' },
           limit: 10
         },
-        admin: {
-          avatar: {},
-        },
-        avatarFile: {},
+        admin: {},
         memberships: {
           profile: {
             user: {},
@@ -919,10 +877,7 @@ Feel free to message me anytime if you have questions or need help with the app!
     return await db.queryOnce({
       groups: {
         $: { where: { shareLink: shareLink } },
-        admin: {
-          avatar: {},
-        },
-        avatarFile: {},
+        admin: {},
         memberships: {
           profile: {
             user: {},
@@ -942,10 +897,7 @@ Feel free to message me anytime if you have questions or need help with the app!
         $: { where: { "user.id": userId } },
         memberships: {
           group: {
-            admin: {
-              avatar: {},
-            },
-            avatarFile: {},
+            admin: {},
             messages: {},
           },
         },
@@ -960,8 +912,7 @@ Feel free to message me anytime if you have questions or need help with the app!
 
     return await db.queryOnce({
       profiles: {
-        $: { where: { "user.id": userId } },
-        avatar: {},
+        $: { where: { "user.id": userId } }
       }
     });
   }, [db]);
@@ -976,9 +927,7 @@ Feel free to message me anytime if you have questions or need help with the app!
           order: { serverCreatedAt: 'desc' },
           limit: Math.max(100, groupIds.length * 10) // Ensure we get enough messages to cover all groups
         },
-        author: {
-          avatar: {},
-        },
+        author: {},
         poll: {},
         group: {}
       },

@@ -16,7 +16,6 @@ interface ChatItemRendererProps {
     id: string;
     adminId: string;
   };
-  getFileUrl: (fileId: string) => string | undefined;
   stableHandleVote: (pollId: string, optionId: string, votes: any[], allowMultiple: boolean) => void;
   stableHandleClosePoll: (pollId: string) => void;
   stableHandleReaction: (messageId: string, emoji: string, reactions: any[]) => void;
@@ -31,7 +30,6 @@ export function useChatItemRenderer({
   chatItems,
   currentProfile,
   group,
-  getFileUrl,
   stableHandleVote,
   stableHandleClosePoll,
   stableHandleReaction,
@@ -83,7 +81,7 @@ export function useChatItemRenderer({
       !previousItem ||
       previousAuthorId !== message.author?.id;
 
-    const resolvedImageUrl = message.imageUrl ? getFileUrl(message.imageUrl) : undefined;
+    const resolvedImageUrl = message.imageUrl;
 
     return (
       <>
@@ -156,7 +154,6 @@ export function useChatItemRenderer({
     currentProfile?.id,
     group?.adminId,
     shouldShowTimestamp,
-    getFileUrl,
     colors.tabIconDefault,
     stableHandleVote,
     stableHandleClosePoll,

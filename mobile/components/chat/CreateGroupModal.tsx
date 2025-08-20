@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { useInstantDB } from '@/hooks/useInstantDB';
+import { uploadToR2 } from '@/utils/r2Upload';
 import { id } from '@instantdb/react-native';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
@@ -18,7 +19,7 @@ import {
 interface CreateGroupModalProps {
   visible: boolean;
   onClose: () => void;
-  onCreateGroup: (groupData: { name: string; description: string; avatarFileId: string; sports: string[] }) => void;
+  onCreateGroup: (groupData: { name: string; description: string; avatarUrl: string; sports: string[] }) => void;
 }
 
 
@@ -76,17 +77,13 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
 
     try {
       // Upload image
-      const response = await fetch(selectedImage);
-      const blob = await response.blob();
       const fileName = `group-avatar-${id()}-${Date.now()}.jpg`;
-
-      const uploadResult = await instantClient.storage.uploadFile(fileName, blob);
-      const avatarFileId = uploadResult.data.id;
+      const avatarUrl = await uploadToR2(selectedImage, fileName);
 
       onCreateGroup({
         name: name.trim(),
         description: description.trim(),
-        avatarFileId,
+        avatarUrl,
         sports: selectedSports,
       });
 

@@ -8,16 +8,6 @@ interface UseChatDataProps {
 
 export function useChatData({ messagesData, groupId, messageLimit }: UseChatDataProps) {
   const messages = useMemo(() => messagesData?.messages || [], [messagesData?.messages]);
-  
-  const files = useMemo(() => messagesData?.$files || [], [messagesData?.$files]);
-
-  const fileUrlMap = useMemo(() => {
-    const map = new Map();
-    files.forEach((file) => {
-      map.set(file.id, file.url);
-    });
-    return map;
-  }, [files]);
 
   const polls = useMemo(() => {
     return messages
@@ -41,17 +31,10 @@ export function useChatData({ messagesData, groupId, messageLimit }: UseChatData
 
   const hasMoreMessages = messages.length >= messageLimit;
 
-  const getFileUrl = (fileId: string) => {
-    return fileUrlMap.get(fileId);
-  };
-
   return {
     messages,
-    files,
-    fileUrlMap,
     polls,
     matches,
     hasMoreMessages,
-    getFileUrl,
   };
 }

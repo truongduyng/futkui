@@ -61,7 +61,7 @@ export default function ChatScreen() {
   const group = groupData?.groups?.[0];
 
   // Process chat data
-  const { messages, polls, matches, hasMoreMessages, getFileUrl } = useChatData({
+  const { messages, polls, matches, hasMoreMessages } = useChatData({
     messagesData,
     groupId: groupId || "",
     messageLimit,
@@ -152,7 +152,6 @@ export default function ChatScreen() {
     chatItems: messages,
     currentProfile,
     group,
-    getFileUrl,
     stableHandleVote: (pollId, optionId, votes, allowMultiple) =>
       handleVote(pollId, optionId, votes, allowMultiple),
     stableHandleClosePoll: (pollId) => handleClosePoll(pollId),
