@@ -91,7 +91,7 @@ export default function ExploreScreen() {
                 return;
               }
 
-              const response = await fetch('http://localhost:3000/api/account', {
+              const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/account`, {
                 method: 'DELETE',
                 headers: {
                   'Authorization': `Bearer ${token}`,

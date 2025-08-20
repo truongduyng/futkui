@@ -1,6 +1,6 @@
 // R2 direct upload utility using signed URLs
 
-const BACKEND_URL = 'http://localhost:3000';
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 interface UploadResponse {
   uploadUrl: string;
