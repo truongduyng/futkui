@@ -3,147 +3,187 @@
 import type { InstantRules } from "@instantdb/react-native";
 
 const rules = {
-  profiles: {
-    allow: {
-      view: "true",
-      create: "isAuthenticated",
-      update: "isOwner",
-      delete: "false",
-    },
-    bind: ["isAuthenticated", "auth.id != null", "isOwner", "auth.id in data.ref('user.id')"]
-  },
-  groups: {
-    allow: {
-      view: "true",
-      create: "isAuthenticated",
-      update: "isAuthenticated",
-      delete: "isAdmin",
-    },
-    bind: ["isAuthenticated", "auth.id != null", "isAdmin", "auth.id in data.ref('admin.id')"]
-  },
-  messages: {
-    allow: {
-      view: "true",
-      create: "isAuthenticated && isGroupMember",
-      update: "isAuthor || isGroupMember",
-      delete: "isAuthor",
-    },
-    bind: [
-      "isAuthenticated", "auth.id != null",
-      "isAuthor", "auth.id in data.ref('author.user.id')",
-      "isGroupMember", "auth.id in data.ref('group.memberships.profile.user.id')"
-    ]
-  },
-  reactions: {
-    allow: {
-      view: "true",
-      create: "isAuthenticated && isGroupMember",
-      update: "isOwner",
-      delete: "isOwner",
-    },
-    bind: [
-      "isAuthenticated", "auth.id != null",
-      "isOwner", "auth.id in data.ref('user.user.id')",
-      "isGroupMember", "auth.id in data.ref('message.group.memberships.profile.user.id')"
-    ]
-  },
-  memberships: {
-    allow: {
-      view: "true",
-      create: "isAuthenticated",
-      update: "isOwner || isGroupAdmin",
-      delete: "isOwner || isGroupAdmin",
-    },
-    bind: [
-      "isAuthenticated", "auth.id != null",
-      "isOwner", "auth.id in data.ref('profile.user.id')",
-      "isGroupAdmin", "auth.id in data.ref('group.admin.user.id')"
-    ]
-  },
-  colors: {
-    allow: {
-      view: "true",
-      create: "isAuthenticated",
-      update: "isAuthenticated",
-      delete: "isAuthenticated",
-    },
-    bind: ["isAuthenticated", "auth.id != null"]
-  },
   polls: {
+    bind: [
+      "isAuthenticated",
+      "auth.id != null",
+      "isAuthor",
+      "auth.id in data.ref('message.author.user.id')",
+      "isGroupMember",
+      "auth.id in data.ref('message.group.memberships.profile.user.id')",
+    ],
     allow: {
       view: "true",
       create: "isAuthenticated && isGroupMember",
-      update: "isAuthor || isGroupMember",
       delete: "isAuthor",
+      update: "isAuthor || isGroupMember",
     },
-    bind: [
-      "isAuthenticated", "auth.id != null",
-      "isAuthor", "auth.id in data.ref('message.author.user.id')",
-      "isGroupMember", "auth.id in data.ref('message.group.memberships.profile.user.id')"
-    ]
-  },
-  votes: {
-    allow: {
-      view: "true",
-      create: "isAuthenticated && isGroupMember",
-      update: "isVoter",
-      delete: "isVoter",
-    },
-    bind: [
-      "isAuthenticated", "auth.id != null",
-      "isVoter", "auth.id in data.ref('user.user.id')",
-      "isGroupMember", "auth.id in data.ref('poll.message.group.memberships.profile.user.id')"
-    ]
-  },
-  matches: {
-    allow: {
-      view: "true",
-      create: "isAuthenticated && isGroupMember",
-      update: "isCreator || isGroupAdmin || isGroupMember",
-      delete: "isCreator || isGroupAdmin",
-    },
-    bind: [
-      "isAuthenticated", "auth.id != null",
-      "isCreator", "auth.id in data.ref('creator.user.id')",
-      "isGroupMember", "auth.id in data.ref('group.memberships.profile.user.id')",
-      "isGroupAdmin", "auth.id in data.ref('group.admin.user.id')"
-    ]
   },
   rsvps: {
+    bind: [
+      "isAuthenticated",
+      "auth.id != null",
+      "isRsvpOwner",
+      "auth.id in data.ref('user.user.id')",
+      "isGroupMember",
+      "auth.id in data.ref('match.group.memberships.profile.user.id')",
+    ],
     allow: {
       view: "true",
       create: "isAuthenticated && isGroupMember",
-      update: "isRsvpOwner",
       delete: "isRsvpOwner",
+      update: "isRsvpOwner",
     },
-    bind: [
-      "isAuthenticated", "auth.id != null",
-      "isRsvpOwner", "auth.id in data.ref('user.user.id')",
-      "isGroupMember", "auth.id in data.ref('match.group.memberships.profile.user.id')"
-    ]
   },
-  checkIns: {
+  reactions: {
+    bind: [
+      "isAuthenticated",
+      "auth.id != null",
+      "isOwner",
+      "auth.id in data.ref('user.user.id')",
+      "isGroupMember",
+      "auth.id in data.ref('message.group.memberships.profile.user.id')",
+    ],
     allow: {
       view: "true",
       create: "isAuthenticated && isGroupMember",
-      update: "isCheckInOwner",
-      delete: "isCheckInOwner",
+      delete: "isOwner",
+      update: "isOwner",
     },
-    bind: [
-      "isAuthenticated", "auth.id != null",
-      "isCheckInOwner", "auth.id in data.ref('user.user.id')",
-      "isGroupMember", "auth.id in data.ref('match.group.memberships.profile.user.id')"
-    ]
   },
-  $files: {
+  profiles: {
+    bind: [
+      "isAuthenticated",
+      "auth.id != null",
+      "isOwner",
+      "auth.id in data.ref('user.id')",
+    ],
     allow: {
       view: "true",
       create: "isAuthenticated",
+      delete: "false",
       update: "isOwner",
-      delete: "isOwner",
     },
-    bind: ["isAuthenticated", "auth.id != null", "isOwner", "auth.id != null && data.path.startsWith(auth.id + '/')"]
-  }
+  },
+  matches: {
+    bind: [
+      "isAuthenticated",
+      "auth.id != null",
+      "isCreator",
+      "auth.id in data.ref('creator.user.id')",
+      "isGroupMember",
+      "auth.id in data.ref('group.memberships.profile.user.id')",
+      "isGroupAdmin",
+      "auth.id in data.ref('group.admin.user.id')",
+    ],
+    allow: {
+      view: "true",
+      create: "isAuthenticated && isGroupMember",
+      delete: "isCreator || isGroupAdmin",
+      update: "isCreator || isGroupAdmin || isGroupMember",
+    },
+  },
+  votes: {
+    bind: [
+      "isAuthenticated",
+      "auth.id != null",
+      "isVoter",
+      "auth.id in data.ref('user.user.id')",
+      "isGroupMember",
+      "auth.id in data.ref('poll.message.group.memberships.profile.user.id')",
+    ],
+    allow: {
+      view: "true",
+      create: "isAuthenticated && isGroupMember",
+      delete: "isVoter",
+      update: "isVoter",
+    },
+  },
+  checkIns: {
+    bind: [
+      "isAuthenticated",
+      "auth.id != null",
+      "isCheckInOwner",
+      "auth.id in data.ref('user.user.id')",
+      "isGroupMember",
+      "auth.id in data.ref('match.group.memberships.profile.user.id')",
+    ],
+    allow: {
+      view: "true",
+      create: "isAuthenticated && isGroupMember",
+      delete: "isCheckInOwner",
+      update: "isCheckInOwner",
+    },
+  },
+  messages: {
+    bind: [
+      "isAuthenticated",
+      "auth.id != null",
+      "isAuthor",
+      "auth.id in data.ref('author.user.id')",
+      "isGroupMember",
+      "auth.id in data.ref('group.memberships.profile.user.id')",
+    ],
+    allow: {
+      view: "true",
+      create: "isAuthenticated && isGroupMember",
+      delete: "isAuthor",
+      update: "isAuthor || isGroupMember",
+    },
+  },
+  colors: {
+    bind: ["isAuthenticated", "auth.id != null"],
+    allow: {
+      view: "true",
+      create: "isAuthenticated",
+      delete: "isAuthenticated",
+      update: "isAuthenticated",
+    },
+  },
+  $files: {
+    bind: [
+      "isAuthenticated",
+      "auth.id != null",
+      "isOwner",
+      "auth.id != null && data.path.startsWith(auth.id + '/')",
+    ],
+    allow: {
+      view: "true",
+      create: "isAuthenticated",
+      delete: "isOwner",
+      update: "isOwner",
+    },
+  },
+  groups: {
+    bind: [
+      "isAuthenticated",
+      "auth.id != null",
+      "isAdmin",
+      "auth.id in data.ref('admin.id')",
+    ],
+    allow: {
+      view: "true",
+      create: "isAuthenticated",
+      delete: "isAdmin",
+      update: "isAuthenticated",
+    },
+  },
+  memberships: {
+    bind: [
+      "isAuthenticated",
+      "auth.id != null",
+      "isOwner",
+      "auth.id in data.ref('profile.user.id')",
+      "isGroupAdmin",
+      "auth.id in data.ref('group.admin.user.id')",
+    ],
+    allow: {
+      view: "true",
+      create: "isAuthenticated",
+      delete: "isOwner || isGroupAdmin",
+      update: "isOwner || isGroupAdmin",
+    },
+  },
 } satisfies InstantRules;
 
 export default rules;

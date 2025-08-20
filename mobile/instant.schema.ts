@@ -3,6 +3,9 @@
 import { i } from "@instantdb/react-native";
 
 const _schema = i.schema({
+  // We inferred 3 attributes!
+  // Take a look at this schema, and if everything looks good,
+  // run `push schema` again to enforce the types.
   entities: {
     $files: i.entity({
       path: i.string().unique().indexed(),
@@ -11,14 +14,9 @@ const _schema = i.schema({
     $users: i.entity({
       email: i.string().unique().indexed().optional(),
     }),
-    profiles: i.entity({
-      handle: i.string().unique().indexed(),
-      displayName: i.string().optional(),
-      createdAt: i.number(),
-      pushToken: i.string().optional(),
-    }),
-    colors: i.entity({
-      value: i.string().optional(),
+    checkIns: i.entity({
+      checkedInAt: i.number(),
+      location: i.string().optional(),
     }),
     groups: i.entity({
       adminId: i.string(),
@@ -26,72 +24,110 @@ const _schema = i.schema({
       description: i.string(),
       name: i.string(),
       shareLink: i.string().unique(),
-      sports: i.json().optional(), // Array of sport names: ['football', 'basketball', 'tennis']
-    }),
-    messages: i.entity({
-      content: i.string().optional(),
-      authorName: i.string(),
-      createdAt: i.number().indexed(),
-      updatedAt: i.number(),
-      imageUrl: i.string().optional(),
-      type: i.string().optional(), // 'text', 'image', 'poll'
-      mentions: i.json().optional(), // Array of mentioned usernames
-    }),
-    polls: i.entity({
-      question: i.string(),
-      options: i.json(), // Array of option objects: [{id: string, text: string}]
-      createdAt: i.number(),
-      expiresAt: i.number().optional(),
-      closedAt: i.number().optional(), // Manual close timestamp
-      allowMultiple: i.boolean().optional(),
-    }),
-    votes: i.entity({
-      optionId: i.string(),
-      createdAt: i.number(),
+      sports: i.json().optional(),
     }),
     matches: i.entity({
-      title: i.string(),
+      closedAt: i.number().optional(),
+      createdAt: i.number(),
       description: i.string(),
-      gameType: i.string(), // 'internal', 'external', 'friendly', etc.
+      gameType: i.string(),
+      isActive: i.boolean(),
       location: i.string(),
-      matchDate: i.number(), // Unix timestamp
-      createdAt: i.number(),
-      isActive: i.boolean(), // true until match day is over
-      closedAt: i.number().optional(), // Manual close timestamp
+      matchDate: i.number(),
+      title: i.string(),
     }),
-    rsvps: i.entity({
-      response: i.string(), // 'yes', 'no', 'maybe'
+    memberships: i.entity({
       createdAt: i.number(),
+      lastReadMessageAt: i.number().optional(),
+      profileGroupKey: i.string().unique(),
+      role: i.string().optional(),
+    }),
+    messages: i.entity({
+      authorName: i.string(),
+      content: i.string().optional(),
+      createdAt: i.number().indexed(),
+      imageUrl: i.string().optional(),
+      mentions: i.json().optional(),
+      type: i.string().optional(),
       updatedAt: i.number(),
     }),
-    checkIns: i.entity({
-      checkedInAt: i.number(),
-      location: i.string().optional(), // Optional location data
+    polls: i.entity({
+      allowMultiple: i.boolean().optional(),
+      closedAt: i.number().optional(),
+      createdAt: i.number(),
+      expiresAt: i.number().optional(),
+      options: i.json(),
+      question: i.string(),
+    }),
+    profiles: i.entity({
+      createdAt: i.number(),
+      displayName: i.string().optional(),
+      handle: i.string().unique().indexed(),
+      pushToken: i.string().optional(),
     }),
     reactions: i.entity({
       createdAt: i.number(),
       emoji: i.string(),
       userName: i.string(),
     }),
-    memberships: i.entity({
+    rsvps: i.entity({
       createdAt: i.number(),
-      role: i.string().optional(), // 'member', 'admin', etc.
-      profileGroupKey: i.string().unique(), // composite key for profile + group uniqueness
-      lastReadMessageAt: i.number().optional(), // timestamp of last read message
+      response: i.string(),
+      updatedAt: i.number(),
+    }),
+    votes: i.entity({
+      createdAt: i.number(),
+      optionId: i.string(),
     }),
   },
   links: {
-    userProfiles: {
-      forward: { on: "profiles", has: "one", label: "user" },
-      reverse: { on: "$users", has: "one", label: "profile" },
+    checkInsUser: {
+      forward: {
+        on: "checkIns",
+        has: "one",
+        label: "user",
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "checkIns",
+      },
     },
-    groupAdmins: {
-      forward: { on: "groups", has: "one", label: "admin" },
-      reverse: { on: "profiles", has: "many", label: "adminGroups" },
+    groupsAdmin: {
+      forward: {
+        on: "groups",
+        has: "one",
+        label: "admin",
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "adminGroups",
+      },
     },
-    messageAuthors: {
-      forward: { on: "messages", has: "one", label: "author", required: true },
-      reverse: { on: "profiles", has: "many", label: "messages" },
+    groupsAvatarFile: {
+      forward: {
+        on: "groups",
+        has: "one",
+        label: "avatarFile",
+      },
+      reverse: {
+        on: "$files",
+        has: "one",
+        label: "group",
+      },
+    },
+    groupsMemberships: {
+      forward: {
+        on: "groups",
+        has: "many",
+        label: "memberships",
+      },
+      reverse: {
+        on: "memberships",
+        has: "one",
+        label: "group",
+      },
     },
     groupsMessages: {
       forward: {
@@ -103,6 +139,91 @@ const _schema = i.schema({
         on: "messages",
         has: "one",
         label: "group",
+      },
+    },
+    matchesCheckIns: {
+      forward: {
+        on: "matches",
+        has: "many",
+        label: "checkIns",
+      },
+      reverse: {
+        on: "checkIns",
+        has: "one",
+        label: "match",
+      },
+    },
+    matchesCreator: {
+      forward: {
+        on: "matches",
+        has: "one",
+        label: "creator",
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "createdMatches",
+      },
+    },
+    matchesGroup: {
+      forward: {
+        on: "matches",
+        has: "one",
+        label: "group",
+      },
+      reverse: {
+        on: "groups",
+        has: "many",
+        label: "matches",
+      },
+    },
+    matchesMessage: {
+      forward: {
+        on: "matches",
+        has: "one",
+        label: "message",
+      },
+      reverse: {
+        on: "messages",
+        has: "one",
+        label: "match",
+      },
+    },
+    matchesRsvps: {
+      forward: {
+        on: "matches",
+        has: "many",
+        label: "rsvps",
+      },
+      reverse: {
+        on: "rsvps",
+        has: "one",
+        label: "match",
+      },
+    },
+    membershipsProfile: {
+      forward: {
+        on: "memberships",
+        has: "one",
+        label: "profile",
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "memberships",
+      },
+    },
+    messagesAuthor: {
+      forward: {
+        on: "messages",
+        has: "one",
+        label: "author",
+        required: true,
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "messages",
       },
     },
     messagesReactions: {
@@ -117,70 +238,102 @@ const _schema = i.schema({
         label: "message",
       },
     },
-    reactionUsers: {
-      forward: { on: "reactions", has: "one", label: "user" },
-      reverse: { on: "profiles", has: "many", label: "reactions" },
+    pollsMatch: {
+      forward: {
+        on: "polls",
+        has: "one",
+        label: "match",
+      },
+      reverse: {
+        on: "matches",
+        has: "one",
+        label: "poll",
+      },
     },
-    profileAvatars: {
-      forward: { on: "profiles", has: "one", label: "avatar" },
-      reverse: { on: "$files", has: "one", label: "profile" },
+    pollsMessage: {
+      forward: {
+        on: "polls",
+        has: "one",
+        label: "message",
+      },
+      reverse: {
+        on: "messages",
+        has: "one",
+        label: "poll",
+      },
     },
-    groupAvatars: {
-      forward: { on: "groups", has: "one", label: "avatarFile" },
-      reverse: { on: "$files", has: "one", label: "group" },
+    pollsVotes: {
+      forward: {
+        on: "polls",
+        has: "many",
+        label: "votes",
+      },
+      reverse: {
+        on: "votes",
+        has: "one",
+        label: "poll",
+      },
     },
-    groupMemberships: {
-      forward: { on: "groups", has: "many", label: "memberships" },
-      reverse: { on: "memberships", has: "one", label: "group" },
+    profilesAvatar: {
+      forward: {
+        on: "profiles",
+        has: "one",
+        label: "avatar",
+      },
+      reverse: {
+        on: "$files",
+        has: "one",
+        label: "profile",
+      },
     },
-    membershipProfiles: {
-      forward: { on: "memberships", has: "one", label: "profile" },
-      reverse: { on: "profiles", has: "many", label: "memberships" },
+    profilesUser: {
+      forward: {
+        on: "profiles",
+        has: "one",
+        label: "user",
+      },
+      reverse: {
+        on: "$users",
+        has: "one",
+        label: "profile",
+      },
     },
-    pollMessages: {
-      forward: { on: "polls", has: "one", label: "message" },
-      reverse: { on: "messages", has: "one", label: "poll" },
+    reactionsUser: {
+      forward: {
+        on: "reactions",
+        has: "one",
+        label: "user",
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "reactions",
+      },
     },
-    pollVotes: {
-      forward: { on: "polls", has: "many", label: "votes" },
-      reverse: { on: "votes", has: "one", label: "poll" },
+    rsvpsUser: {
+      forward: {
+        on: "rsvps",
+        has: "one",
+        label: "user",
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "rsvps",
+      },
     },
-    voteUsers: {
-      forward: { on: "votes", has: "one", label: "user" },
-      reverse: { on: "profiles", has: "many", label: "votes" },
+    votesUser: {
+      forward: {
+        on: "votes",
+        has: "one",
+        label: "user",
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "votes",
+      },
     },
-    matchGroups: {
-      forward: { on: "matches", has: "one", label: "group" },
-      reverse: { on: "groups", has: "many", label: "matches" },
-    },
-    matchCreators: {
-      forward: { on: "matches", has: "one", label: "creator" },
-      reverse: { on: "profiles", has: "many", label: "createdMatches" },
-    },
-    matchRsvps: {
-      forward: { on: "matches", has: "many", label: "rsvps" },
-      reverse: { on: "rsvps", has: "one", label: "match" },
-    },
-    rsvpUsers: {
-      forward: { on: "rsvps", has: "one", label: "user" },
-      reverse: { on: "profiles", has: "many", label: "rsvps" },
-    },
-    matchCheckIns: {
-      forward: { on: "matches", has: "many", label: "checkIns" },
-      reverse: { on: "checkIns", has: "one", label: "match" },
-    },
-    checkInUsers: {
-      forward: { on: "checkIns", has: "one", label: "user" },
-      reverse: { on: "profiles", has: "many", label: "checkIns" },
-    },
-    pollMatches: {
-      forward: { on: "polls", has: "one", label: "match" },
-      reverse: { on: "matches", has: "one", label: "poll" },
-    },
-    matchMessages: {
-      forward: { on: "matches", has: "one", label: "message" },
-      reverse: { on: "messages", has: "one", label: "match" },
-    }
   },
   rooms: {},
 });
