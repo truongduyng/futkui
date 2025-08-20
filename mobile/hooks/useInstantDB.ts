@@ -249,8 +249,6 @@ export function useInstantDB() {
 
       if (memberTokens.length === 0) return;
 
-      console.log('Sending notifications to members:', memberTokens);
-
       // Send notifications
       await sendGroupNotification({
         groupId: data.groupId,

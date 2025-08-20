@@ -71,7 +71,6 @@ export function addNotificationResponseReceivedListener(
 }
 
 export async function sendPushNotification(messages: any[]) {
-  console.log('Sending push notifications:', messages);
   try {
     const response = await fetch('https://exp.host/--/api/v2/push/send', {
       method: 'POST',
