@@ -32,9 +32,7 @@ interface MessageBubbleProps {
     id: string;
     handle: string;
     displayName?: string;
-    avatar?: {
-      url: string;
-    };
+    avatarUrl?: string;
   };
   createdAt: Date;
   isOwnMessage: boolean;
@@ -122,7 +120,7 @@ export const MessageBubble = React.memo(function MessageBubble({
         pageY: number,
       ) => {
         setMessagePosition({ x: pageX, y: pageY, width, height });
-        
+
         if (content && content.trim()) {
           // Show both reactions (above) and copy options (below) for text messages
           if (onAddReaction && !isOwnMessage) {
@@ -164,9 +162,9 @@ export const MessageBubble = React.memo(function MessageBubble({
       >
         {!isOwnMessage && showAuthor && (
           <View style={styles.authorSection}>
-            {author?.avatar?.url && (
-              <CachedAvatar 
-                uri={author.avatar.url} 
+            {author?.avatarUrl && (
+              <CachedAvatar
+                uri={author.avatarUrl}
                 size={16}
                 style={styles.authorAvatar}
               />
@@ -269,7 +267,7 @@ export const MessageBubble = React.memo(function MessageBubble({
                   ))}
                 </View>
               )}
-              
+
               {/* Message options below message */}
               {showMessageOptions && content && content.trim() && (
                 <View

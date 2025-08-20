@@ -13,10 +13,7 @@ interface Group {
   createdAt: number;
   shareLink: string;
   adminId: string;
-  avatarFile?: {
-    id: string;
-    url: string;
-  };
+  avatarUrl?: string;
   admin?: {
     id: string;
     handle: string;
@@ -165,11 +162,11 @@ export function GroupList({
         <View style={[
           styles.avatarContainer,
           isBotGroup && styles.botAvatarContainer,
-          group.avatarFile?.url && !isBotGroup && styles.avatarContainerWithImage
+          group.avatarUrl && !isBotGroup && styles.avatarContainerWithImage
         ]}>
-          {group.avatarFile?.url && !isBotGroup ? (
+          {group.avatarUrl && !isBotGroup ? (
             <CachedAvatar
-              uri={group.avatarFile.url}
+              uri={group.avatarUrl}
               size={50}
               fallbackComponent={
                 <Text style={[
