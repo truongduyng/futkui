@@ -71,6 +71,7 @@ export function addNotificationResponseReceivedListener(
 }
 
 export async function sendPushNotification(messages: any[]) {
+  console.log('Sending push notifications:', messages);
   try {
     const response = await fetch('https://exp.host/--/api/v2/push/send', {
       method: 'POST',
@@ -81,11 +82,11 @@ export async function sendPushNotification(messages: any[]) {
       },
       body: JSON.stringify(messages),
     });
-    
+
     if (!response.ok) {
       console.error('Failed to send push notification:', response.status);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Error sending push notification:', error);
@@ -101,6 +102,14 @@ interface NotificationData {
   authorId: string;
   mentions?: string[];
   messageId: string;
+  messageType?: 'text' | 'poll' | 'match';
+  pollData?: {
+    question: string;
+    options: any[];
+  };
+  matchData?: {
+    description: string;
+  };
 }
 
 interface BatchedNotification {
@@ -110,6 +119,7 @@ interface BatchedNotification {
     content: string;
     authorName: string;
     messageId: string;
+    messageType?: 'text' | 'poll' | 'match';
   }[];
   scheduledAt: number;
   timeoutId: ReturnType<typeof setTimeout>;
@@ -118,37 +128,67 @@ interface BatchedNotification {
 // Store for batched notifications (60s grouping)
 const notificationBatches = new Map<string, BatchedNotification>();
 
+// Helper function to generate notification content based on message type
+function generateNotificationContent(data: NotificationData): string {
+  switch (data.messageType) {
+    case 'poll':
+      if (data.pollData) {
+        const optionCount = data.pollData.options.length;
+        return `📊 ${data.pollData.question} (${optionCount} options)`;
+      }
+      return '📊 Created a poll';
+
+    case 'match':
+      if (data.matchData && data.matchData.description) {
+        return `⚽ ${data.matchData.description}`;
+      }
+      return '⚽ Created a match';
+
+    case 'text':
+    default:
+      return data.messageContent || '';
+  }
+}
+
 export async function sendGroupNotification(data: NotificationData, memberTokens: string[]) {
   if (!memberTokens.length) return;
 
-  // Check if message contains mentions
+  // Check if message contains mentions or is a poll/match (send immediately)
   const hasMentions = data.mentions && data.mentions.length > 0;
+  const isImmediate = hasMentions || data.messageType === 'poll' || data.messageType === 'match';
 
-  if (hasMentions) {
-    // Send immediate notification for @mentions
-    await sendImmediateMentionNotification(data, memberTokens);
+  if (isImmediate) {
+    // Send immediate notification for @mentions, polls, and matches
+    await sendImmediateNotification(data, memberTokens);
   } else {
-    // Batch regular messages for 60 seconds
+    // Batch regular text messages for 60 seconds
     await batchRegularNotification(data, memberTokens);
   }
 }
 
-async function sendImmediateMentionNotification(data: NotificationData, memberTokens: string[]) {
+async function sendImmediateNotification(data: NotificationData, memberTokens: string[]) {
   const mentionText = data.mentions?.map(m => `@${m}`).join(' ') || '';
-  
+  const content = generateNotificationContent(data);
+
+  // Determine notification type and channel based on message type and mentions
+  const hasMentions = data.mentions && data.mentions.length > 0;
+  const notificationType = hasMentions ? 'mention' : data.messageType || 'message';
+  const channelId = hasMentions ? 'mentions' : (data.messageType === 'poll' || data.messageType === 'match' ? 'mentions' : 'messages');
+
   const notifications = memberTokens.map(token => ({
     to: token,
     sound: 'default',
     title: `${data.groupName}`,
-    body: `${data.authorName}: ${mentionText} ${data.messageContent}`.trim(),
+    body: `${data.authorName}: ${mentionText} ${content}`.trim(),
     data: {
       groupId: data.groupId,
       messageId: data.messageId,
-      type: 'mention',
+      type: notificationType,
+      messageType: data.messageType,
       priority: 'high'
     },
     priority: 'high' as const,
-    channelId: 'mentions',
+    channelId,
   }));
 
   await sendPushNotification(notifications);
@@ -156,37 +196,40 @@ async function sendImmediateMentionNotification(data: NotificationData, memberTo
 
 async function batchRegularNotification(data: NotificationData, memberTokens: string[]) {
   const batchKey = data.groupId;
-  
+  const content = generateNotificationContent(data);
+
   // Clear existing timeout if it exists
   if (notificationBatches.has(batchKey)) {
     const existingBatch = notificationBatches.get(batchKey)!;
     clearTimeout(existingBatch.timeoutId);
-    
+
     // Add message to existing batch
     existingBatch.messages.push({
-      content: data.messageContent,
+      content,
       authorName: data.authorName,
       messageId: data.messageId,
+      messageType: data.messageType,
     });
-    
+
     // Reset timer
     existingBatch.timeoutId = setTimeout(() => {
       sendBatchedNotifications(batchKey, memberTokens);
     }, 60000); // 60 seconds
-    
+
   } else {
     // Create new batch
     const timeoutId = setTimeout(() => {
       sendBatchedNotifications(batchKey, memberTokens);
     }, 60000); // 60 seconds
-    
+
     notificationBatches.set(batchKey, {
       groupId: data.groupId,
       groupName: data.groupName,
       messages: [{
-        content: data.messageContent,
+        content,
         authorName: data.authorName,
         messageId: data.messageId,
+        messageType: data.messageType,
       }],
       scheduledAt: Date.now(),
       timeoutId,
@@ -203,7 +246,7 @@ async function sendBatchedNotifications(batchKey: string, memberTokens: string[]
 
   const messageCount = batch.messages.length;
   const authors = [...new Set(batch.messages.map(m => m.authorName))];
-  
+
   let title = batch.groupName;
   let body = '';
 
@@ -212,7 +255,6 @@ async function sendBatchedNotifications(batchKey: string, memberTokens: string[]
     const msg = batch.messages[0];
     body = `${msg.authorName}: ${msg.content}`;
   } else if (authors.length === 1) {
-    // Multiple messages from same author
     body = `${authors[0]} sent ${messageCount} messages`;
   } else {
     // Multiple messages from different authors
@@ -258,7 +300,7 @@ export function setupNotificationChannels() {
       showBadge: true,
     });
 
-    // Normal priority channel for regular messages  
+    // Normal priority channel for regular messages
     Notifications.setNotificationChannelAsync('messages', {
       name: 'Messages',
       importance: Notifications.AndroidImportance.DEFAULT,
@@ -274,11 +316,11 @@ export function setupNotificationChannels() {
 // Helper to get member push tokens from group
 export async function getMemberPushTokens(groupMembers: any[], excludeUserId?: string): Promise<string[]> {
   const tokens = groupMembers
-    .filter(member => 
-      member.profile?.pushToken && 
+    .filter(member =>
+      member.profile?.pushToken &&
       member.profile.user?.id !== excludeUserId
     )
     .map(member => member.profile.pushToken);
-    
+
   return tokens;
 }
