@@ -68,7 +68,6 @@ export function GroupList({
 }: GroupListProps) {
   const { t } = useTranslation();
   const colors = Colors['light'];
-  const router = useRouter();
   // Helper function to get unread count for a group from the provided data
   const getUnreadCount = React.useCallback((groupId: string, membership?: any) => {
     if (!unreadData?.messages) return 0;
@@ -88,19 +87,12 @@ export function GroupList({
         >
           <Text style={styles.emptyStateButtonText}>{t('empty.createGroupButton')}</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.emptyStateButtonSecondary, { borderColor: colors.tint }]}
-          onPress={() => router.push('/(tabs)/explore')}
-        >
-          <Text style={[styles.emptyStateButtonSecondaryText, { color: colors.tint }]}>{t('empty.joinGroupButton')}</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
 
   // Ensure groups is always an array
   const safeGroups = groups || [];
-
 
   const getLastMessage = React.useCallback((group: Group) => {
     if (!group.messages || group.messages.length === 0) return null;
@@ -311,7 +303,7 @@ export function GroupList({
               ) : (
                 <>
                   <Ionicons name="enter-outline" size={16} color="white" style={styles.buttonIcon} />
-                  <Text style={styles.joinButtonText}>Join</Text>
+                  <Text style={styles.joinButtonText}>{t('common.join')}</Text>
                 </>
               )}
             </TouchableOpacity>

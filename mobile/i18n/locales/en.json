@@ -9,7 +9,8 @@
     "sending": "Sending...",
     "verifying": "Verifying...",
     "success": "Success",
-    "back": "Back"
+    "back": "Back",
+    "join": "Join"
   },
   "auth": {
     "welcome": "Welcome to FutKui",

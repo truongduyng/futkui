@@ -9,7 +9,8 @@
     "sending": "Đang gửi...",
     "verifying": "Đang xác minh...",
     "success": "Thành công",
-    "back": "Quay lại"
+    "back": "Quay lại",
+    "join": "Tham gia"
   },
   "auth": {
     "welcome": "Chào mừng đến với FutKui",
