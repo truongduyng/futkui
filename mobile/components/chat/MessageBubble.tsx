@@ -13,6 +13,7 @@ import {
   View
 } from "react-native";
 import { useTranslation } from 'react-i18next';
+import { useToast } from '@/hooks/useToast';
 import { MentionText } from "./MentionText";
 import { CachedAvatar } from "./CachedAvatar";
 
@@ -60,6 +61,7 @@ export const MessageBubble = React.memo(function MessageBubble({
 }: MessageBubbleProps) {
   const { t } = useTranslation();
   const colors = Colors["light"];
+  const { showSuccess, showError } = useToast();
   const [showReactionOptions, setShowReactionOptions] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
   const [showMessageOptions, setShowMessageOptions] = useState(false);
@@ -103,9 +105,9 @@ export const MessageBubble = React.memo(function MessageBubble({
         await Clipboard.setStringAsync(content);
         setShowMessageOptions(false);
         setShowReactionOptions(false);
-        // Could add a toast notification here instead of alert
+        showSuccess("Copied!", "Message copied to clipboard");
       } catch {
-        // Silent fail - could add toast notification
+        showError("Error", "Failed to copy message");
       }
     }
   };

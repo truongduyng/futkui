@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Animated, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useToast } from '@/hooks/useToast';
 
 export default function ChatScreen() {
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ export default function ChatScreen() {
   const [isJoining, setIsJoining] = useState(false);
   const router = useRouter();
   const colors = Colors['light'];
+  const { showSuccess, showError } = useToast();
 
   const { useGroups, useLastMessages, useProfile, createGroup, queryGroupByShareLink, joinGroup } = useInstantDB();
   const { setTotalUnreadCount } = useUnreadCount();
@@ -141,7 +143,7 @@ export default function ChatScreen() {
 
   const handleCreateGroup = async (groupData: { name: string; description: string; avatarUrl: string; sports: string[] }) => {
     if (!currentProfile) {
-      Alert.alert(t('common.error'), t('groups.waitProfileLoad'));
+      showError(t('common.error'), t('groups.waitProfileLoad'));
       return;
     }
 
@@ -151,19 +153,19 @@ export default function ChatScreen() {
         adminId: currentProfile.id, // Use profile ID as admin ID
       });
     } catch (error) {
-      Alert.alert(t('common.error'), t('groups.failedCreateGroup'));
+      showError(t('common.error'), t('groups.failedCreateGroup'));
       console.error('Error creating group:', error);
     }
   };
 
   const handleJoinViaLink = async () => {
     if (!shareLink.trim()) {
-      Alert.alert(t('common.error'), t('groups.pleaseEnterLink'));
+      showError(t('common.error'), t('groups.pleaseEnterLink'));
       return;
     }
 
     if (!currentProfile) {
-      Alert.alert(t('common.error'), t('groups.waitProfileLoad'));
+      showError(t('common.error'), t('groups.waitProfileLoad'));
       return;
     }
 
@@ -181,7 +183,7 @@ export default function ChatScreen() {
         );
 
         if (isAlreadyMember) {
-          Alert.alert(
+          showError(
             t('groups.alreadyMember'),
             `${t('groups.alreadyMemberMessage')} "${group.name}".`,
           );
@@ -191,17 +193,17 @@ export default function ChatScreen() {
 
         try {
           await joinGroup(group.id, currentProfile.id);
-          Alert.alert(t('common.success'), `${t('groups.joinedGroup')} ${group.name}`);
+          showSuccess(t('common.success'), `${t('groups.joinedGroup')} ${group.name}`);
           setShareLink("");
         } catch {
-          Alert.alert(t('common.error'), t('groups.failedJoinGroup'));
+          showError(t('common.error'), t('groups.failedJoinGroup'));
         }
       } else {
-        Alert.alert(t('common.error'), t('groups.groupNotFound'));
+        showError(t('common.error'), t('groups.groupNotFound'));
       }
     } catch (error) {
       console.error("Error finding group:", error);
-      Alert.alert(t('common.error'), t('groups.failedFindGroup'));
+      showError(t('common.error'), t('groups.failedFindGroup'));
     } finally {
       setIsJoining(false);
     }

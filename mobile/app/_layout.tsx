@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { AuthGate } from '@/components/AuthGate';
 import { UnreadCountProvider } from '@/contexts/UnreadCountContext';
+import Toast from 'react-native-toast-message';
 import '@/i18n';
 
 
@@ -37,6 +38,7 @@ export default function RootLayout() {
         </AuthGate>
       </UnreadCountProvider>
       <StatusBar style="dark" />
+      <Toast />
     </ThemeProvider>
   );
 }

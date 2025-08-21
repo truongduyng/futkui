@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { Alert } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
+import { useToast } from './useToast';
 
 interface Profile {
   id: string;
@@ -60,30 +61,19 @@ export function useChatHandlers({
   setSelectedImageUrl,
 }: UseChatHandlersProps) {
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
 
-  const handleShareGroup = useCallback(() => {
+  const handleShareGroup = useCallback(async () => {
     if (group?.shareLink) {
-      Alert.alert(
-        "Share Group",
-        `Share this link to invite others to join "${group.name}":\n\n${group.shareLink}`,
-        [
-          {
-            text: "Copy Link",
-            onPress: async () => {
-              try {
-                await Clipboard.setStringAsync(group.shareLink);
-                Alert.alert("Copied!", "Group link copied to clipboard");
-              } catch (error) {
-                console.error("Copy error:", error);
-                Alert.alert("Error", "Failed to copy link to clipboard");
-              }
-            },
-          },
-          { text: "Cancel", style: "cancel" },
-        ],
-      );
+      try {
+        await Clipboard.setStringAsync(group.shareLink);
+        showSuccess("Copied!", "Group link copied to clipboard");
+      } catch (error) {
+        console.error("Copy error:", error);
+        showError("Error", "Failed to copy link to clipboard");
+      }
     }
-  }, [group?.shareLink, group?.name]);
+  }, [group?.shareLink, showSuccess, showError]);
 
   const handleLeaveGroup = useCallback(() => {
     Alert.alert(
@@ -100,27 +90,27 @@ export function useChatHandlers({
               if (userMembership) {
                 await leaveGroup(userMembership.id);
                 router.back();
-                Alert.alert("Left Group", `You have left ${group.name}`);
+                showSuccess("Left Group", `You have left ${group.name}`);
               } else {
-                Alert.alert(
+                showError(
                   "Error",
                   "Unable to find your membership in this group.",
                 );
               }
             } catch (error) {
               console.error("Leave group error:", error);
-              Alert.alert("Error", "Failed to leave group. Please try again.");
+              showError("Error", "Failed to leave group. Please try again.");
             }
           },
         },
         { text: "Cancel", style: "cancel" },
       ],
     );
-  }, [currentProfile, group, userMembership, leaveGroup, router]);
+  }, [currentProfile, group, userMembership, leaveGroup, router, showSuccess, showError]);
 
   const handleSendMessage = async (content: string, imageUri?: string, mentions?: string[]) => {
     if (!currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
+      showError("Error", "Please wait for your profile to load.");
       return;
     }
 
@@ -138,14 +128,14 @@ export function useChatHandlers({
       setIsNearBottom(true);
       setShowScrollToBottom(false);
     } catch (error) {
-      Alert.alert("Error", "Failed to send message. Please try again.");
+      showError("Error", "Failed to send message. Please try again.");
       console.error("Error sending message:", error);
     }
   };
 
   const handleSendPoll = async (question: string, options: { id: string; text: string }[], allowMultiple: boolean, expiresAt?: number) => {
     if (!currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
+      showError("Error", "Please wait for your profile to load.");
       return;
     }
 
@@ -164,7 +154,7 @@ export function useChatHandlers({
       setIsNearBottom(true);
       setShowScrollToBottom(false);
     } catch (error) {
-      Alert.alert("Error", "Failed to send poll. Please try again.");
+      showError("Error", "Failed to send poll. Please try again.");
       console.error("Error sending poll:", error);
     }
   };
@@ -177,7 +167,7 @@ export function useChatHandlers({
     matchDate: number;
   }) => {
     if (!currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
+      showError("Error", "Please wait for your profile to load.");
       return;
     }
 
@@ -197,7 +187,7 @@ export function useChatHandlers({
       setIsNearBottom(true);
       setShowScrollToBottom(false);
     } catch (error) {
-      Alert.alert("Error", "Failed to create match. Please try again.");
+      showError("Error", "Failed to create match. Please try again.");
       console.error("Error creating match:", error);
     }
   };
@@ -208,7 +198,7 @@ export function useChatHandlers({
     existingReactions: any[],
   ) => {
     if (!currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
+      showError("Error", "Please wait for your profile to load.");
       return;
     }
 
@@ -221,10 +211,10 @@ export function useChatHandlers({
         existingReactions,
       });
     } catch (error) {
-      Alert.alert("Error", "Failed to add reaction. Please try again.");
+      showError("Error", "Failed to add reaction. Please try again.");
       console.error("Error adding reaction:", error);
     }
-  }, [currentProfile, addReaction]);
+  }, [currentProfile, addReaction, showError]);
 
   const handleReactionPress = useCallback((
     messageId: string,
@@ -240,7 +230,7 @@ export function useChatHandlers({
 
   const handleVote = useCallback(async (pollId: string, optionId: string, existingVotes: any[], allowMultiple: boolean) => {
     if (!currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
+      showError("Error", "Please wait for your profile to load.");
       return;
     }
 
@@ -253,14 +243,14 @@ export function useChatHandlers({
         allowMultiple,
       });
     } catch (error) {
-      Alert.alert("Error", "Failed to vote. Please try again.");
+      showError("Error", "Failed to vote. Please try again.");
       console.error("Error voting:", error);
     }
-  }, [currentProfile, vote]);
+  }, [currentProfile, vote, showError]);
 
   const handleClosePoll = useCallback(async (pollId: string) => {
     if (!currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
+      showError("Error", "Please wait for your profile to load.");
       return;
     }
 
@@ -275,7 +265,7 @@ export function useChatHandlers({
             try {
               await closePoll(pollId);
             } catch (error) {
-              Alert.alert("Error", "Failed to close poll. Please try again.");
+              showError("Error", "Failed to close poll. Please try again.");
               console.error("Error closing poll:", error);
             }
           },
@@ -283,11 +273,11 @@ export function useChatHandlers({
         { text: "Cancel", style: "cancel" },
       ]
     );
-  }, [currentProfile, closePoll]);
+  }, [currentProfile, closePoll, showError]);
 
   const handleRsvp = useCallback(async (matchId: string, response: 'yes' | 'no' | 'maybe') => {
     if (!currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
+      showError("Error", "Please wait for your profile to load.");
       return;
     }
 
@@ -300,14 +290,14 @@ export function useChatHandlers({
         existingRsvps: (match as any)?.rsvps || [],
       });
     } catch (error) {
-      Alert.alert("Error", "Failed to RSVP. Please try again.");
+      showError("Error", "Failed to RSVP. Please try again.");
       console.error("Error RSVPing to match:", error);
     }
-  }, [currentProfile, rsvpToMatch, matches]);
+  }, [currentProfile, rsvpToMatch, matches, showError]);
 
   const handleCheckIn = useCallback(async (matchId: string) => {
     if (!currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
+      showError("Error", "Please wait for your profile to load.");
       return;
     }
 
@@ -316,16 +306,16 @@ export function useChatHandlers({
         matchId,
         userId: currentProfile.id,
       });
-      Alert.alert("Success", "You've checked in to the match!");
+      showSuccess("Success", "You've checked in to the match!");
     } catch (error) {
-      Alert.alert("Error", "Failed to check in. Please try again.");
+      showError("Error", "Failed to check in. Please try again.");
       console.error("Error checking in to match:", error);
     }
-  }, [currentProfile, checkInToMatch]);
+  }, [currentProfile, checkInToMatch, showSuccess, showError]);
 
   const handleCloseMatch = useCallback(async (matchId: string) => {
     if (!currentProfile) {
-      Alert.alert("Error", "Please wait for your profile to load.");
+      showError("Error", "Please wait for your profile to load.");
       return;
     }
 
@@ -340,7 +330,7 @@ export function useChatHandlers({
             try {
               await closeMatch(matchId);
             } catch (error) {
-              Alert.alert("Error", "Failed to close match. Please try again.");
+              showError("Error", "Failed to close match. Please try again.");
               console.error("Error closing match:", error);
             }
           },
@@ -348,7 +338,7 @@ export function useChatHandlers({
         { text: "Cancel", style: "cancel" },
       ]
     );
-  }, [currentProfile, closeMatch]);
+  }, [currentProfile, closeMatch, showError]);
 
   return {
     handleShareGroup,

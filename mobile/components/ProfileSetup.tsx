@@ -5,8 +5,9 @@ import { uploadToR2 } from '@/utils/r2Upload';
 import { id } from '@instantdb/react-native';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useToast } from '@/hooks/useToast';
 
 interface ProfileSetupProps {
   userId: string;
@@ -21,6 +22,7 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const colors = Colors['light'];
   const { instantClient } = useInstantDB();
+  const { showError } = useToast();
 
   const isValidHandle = (handle: string) => {
     return /^[a-zA-Z0-9_]{3,20}$/.test(handle);
@@ -29,7 +31,7 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(t('profile.permissionRequired'), t('profile.permissionMessage'));
+      showError(t('profile.permissionRequired'), t('profile.permissionMessage'));
       return;
     }
 
@@ -47,22 +49,22 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
 
   const handleSubmit = async () => {
     if (!handle.trim()) {
-      Alert.alert(t('common.error'), t('profile.errorHandle'));
+      showError(t('common.error'), t('profile.errorHandle'));
       return;
     }
 
     if (!isValidHandle(handle)) {
-      Alert.alert(t('common.error'), t('profile.errorHandleFormat'));
+      showError(t('common.error'), t('profile.errorHandleFormat'));
       return;
     }
 
     if (!displayName.trim()) {
-      Alert.alert(t('common.error'), t('profile.errorDisplayName'));
+      showError(t('common.error'), t('profile.errorDisplayName'));
       return;
     }
 
     if (!selectedImage) {
-      Alert.alert(t('common.error'), t('profile.errorPhoto'));
+      showError(t('common.error'), t('profile.errorPhoto'));
       return;
     }
 
@@ -77,7 +79,7 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
       });
 
       if (existingProfile.data.profiles && existingProfile.data.profiles.length > 0) {
-        Alert.alert(t('common.error'), t('profile.handleTaken'));
+        showError(t('common.error'), t('profile.handleTaken'));
         setIsSubmitting(false);
         return;
       }
@@ -92,7 +94,7 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
         avatarUrl = await uploadToR2(selectedImage, fileName);
       } catch (error) {
         console.error('Error uploading avatar:', error);
-        Alert.alert(t('common.error'), t('profile.failedUploadPhoto'));
+        showError(t('common.error'), t('profile.failedUploadPhoto'));
         setIsSubmitting(false);
         return;
       }
@@ -114,7 +116,7 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
       onProfileCreated();
     } catch (error) {
       console.error('Error creating profile:', error);
-      Alert.alert(t('common.error'), t('profile.failedCreateProfile'));
+      showError(t('common.error'), t('profile.failedCreateProfile'));
     } finally {
       setIsSubmitting(false);
     }
