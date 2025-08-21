@@ -1,6 +1,5 @@
 import { CreateGroupModal } from '@/components/chat/CreateGroupModal';
 import { GroupList } from '@/components/chat/GroupList';
-import { LanguageSelector } from '@/components/LanguageSelector';
 import { Colors } from '@/constants/Colors';
 import { GroupRefreshProvider } from '@/contexts/GroupRefreshContext';
 import { useUnreadCount } from '@/contexts/UnreadCountContext';
@@ -13,7 +12,6 @@ import { useTranslation } from 'react-i18next';
 export default function ChatScreen() {
   const { t } = useTranslation();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [isJoining, setIsJoining] = useState(false);
   const router = useRouter();
@@ -275,7 +273,6 @@ export default function ChatScreen() {
             onShareLinkChange={setShareLink}
             onJoinViaLink={handleJoinViaLink}
             isJoining={isJoining}
-            onLanguagePress={() => setShowLanguageSelector(true)}
           />
         )}
 
@@ -285,10 +282,6 @@ export default function ChatScreen() {
           onCreateGroup={handleCreateGroup}
         />
 
-        <LanguageSelector
-          visible={showLanguageSelector}
-          onClose={() => setShowLanguageSelector(false)}
-        />
       </SafeAreaView>
     </GroupRefreshProvider>
   );

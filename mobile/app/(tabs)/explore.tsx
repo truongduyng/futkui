@@ -6,7 +6,9 @@ import { useInstantDB } from "@/hooks/useInstantDB";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
+  ActionSheetIOS,
   Alert,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -15,6 +17,8 @@ import {
   View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import i18n from '@/i18n';
 
 export default function ExploreScreen() {
   const { t } = useTranslation();
@@ -73,6 +77,55 @@ export default function ExploreScreen() {
 
   const handleTerms = () => {
     setIsTermsModalVisible(true);
+  };
+
+  const handleLanguageSelection = () => {
+    const options = [t('common.cancel'), t('chat.english'), t('chat.vietnamese')];
+    const cancelButtonIndex = 0;
+
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex,
+          title: t('chat.selectLanguage'),
+        },
+        async (buttonIndex) => {
+          if (buttonIndex === 1) {
+            // English selected
+            await AsyncStorage.setItem('selectedLanguage', 'en');
+            await i18n.changeLanguage('en');
+          } else if (buttonIndex === 2) {
+            // Vietnamese selected
+            await AsyncStorage.setItem('selectedLanguage', 'vi');
+            await i18n.changeLanguage('vi');
+          }
+        }
+      );
+    } else {
+      // For Android, use Alert
+      Alert.alert(
+        t('chat.selectLanguage'),
+        '',
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('chat.english'),
+            onPress: async () => {
+              await AsyncStorage.setItem('selectedLanguage', 'en');
+              await i18n.changeLanguage('en');
+            }
+          },
+          {
+            text: t('chat.vietnamese'),
+            onPress: async () => {
+              await AsyncStorage.setItem('selectedLanguage', 'vi');
+              await i18n.changeLanguage('vi');
+            }
+          }
+        ]
+      );
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -187,6 +240,45 @@ export default function ExploreScreen() {
                     ]}
                   >
                     @{currentProfile?.handle}
+                  </Text>
+                </View>
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={colors.tabIconDefault}
+              />
+            </TouchableOpacity>
+
+            <View style={[styles.menuSeparator, { backgroundColor: colors.tabIconDefault }]} />
+
+            <TouchableOpacity
+              style={styles.menuButton}
+              onPress={handleLanguageSelection}
+              activeOpacity={0.8}
+            >
+              <View style={styles.menuButtonContent}>
+                <View
+                  style={[
+                    styles.menuIconContainer,
+                    { backgroundColor: "rgba(34, 197, 94, 0.1)" },
+                  ]}
+                >
+                  <Ionicons name="language-outline" size={20} color="#22C55E" />
+                </View>
+                <View style={styles.menuTextContainer}>
+                  <Text
+                    style={[styles.menuButtonTitle, { color: colors.text }]}
+                  >
+                    {t('chat.language')}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.menuButtonSubtitle,
+                      { color: colors.tabIconDefault },
+                    ]}
+                  >
+                    {i18n.language === 'vi' ? t('chat.vietnamese') : t('chat.english')}
                   </Text>
                 </View>
               </View>

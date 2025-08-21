@@ -204,6 +204,10 @@
     "groupActivities": "Hoạt động nhóm",
     "noActiveActivities": "Không có hoạt động nào",
     "createActivityPrompt": "Tạo bình chọn hoặc trận đấu trong cuộc trò chuyện để xem chúng ở đây",
-    "welcomeMessage": "👋 Chào mừng đến với FutKui!\n\nTôi là trợ lý cá nhân của bạn, sẵn sàng giúp bạn với:\n• 📅 Thông báo và nhắc nhở trận đấu\n• ⚽ Cập nhật đội bóng và thông báo\n• 🔔 Thông báo quan trọng của ứng dụng\n• 💬 Hỗ trợ nhanh khi bạn cần\n\nHãy nhắn tin cho tôi bất cứ lúc nào nếu bạn có câu hỏi hoặc cần giúp đỡ với ứng dụng!"
+    "welcomeMessage": "👋 Chào mừng đến với FutKui!\n\nTôi là trợ lý cá nhân của bạn, sẵn sàng giúp bạn với:\n• 📅 Thông báo và nhắc nhở trận đấu\n• ⚽ Cập nhật đội bóng và thông báo\n• 🔔 Thông báo quan trọng của ứng dụng\n• 💬 Hỗ trợ nhanh khi bạn cần\n\nHãy nhắn tin cho tôi bất cứ lúc nào nếu bạn có câu hỏi hoặc cần giúp đỡ với ứng dụng!",
+    "language": "Ngôn ngữ",
+    "selectLanguage": "Chọn ngôn ngữ",
+    "english": "English",
+    "vietnamese": "Tiếng Việt"
   }
 }

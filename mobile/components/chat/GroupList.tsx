@@ -51,7 +51,6 @@ interface GroupListProps {
   onShareLinkChange?: (link: string) => void;
   onJoinViaLink?: () => void;
   isJoining?: boolean;
-  onLanguagePress?: () => void;
 }
 
 export function GroupList({
@@ -65,8 +64,7 @@ export function GroupList({
   shareLink,
   onShareLinkChange,
   onJoinViaLink,
-  isJoining = false,
-  onLanguagePress
+  isJoining = false
 }: GroupListProps) {
   const { t } = useTranslation();
   const colors = Colors['light'];
@@ -245,14 +243,6 @@ export function GroupList({
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>{t('navigation.clubs')}</Text>
         <View style={styles.headerButtons}>
-          {onLanguagePress && (
-            <TouchableOpacity
-              style={[styles.languageButton, { borderColor: colors.tabIconDefault }]}
-              onPress={onLanguagePress}
-            >
-              <Text style={styles.languageButtonText}>🌐</Text>
-            </TouchableOpacity>
-          )}
           <TouchableOpacity
             style={[styles.createButton, { backgroundColor: colors.tint }]}
             onPress={onCreateGroup}

@@ -204,6 +204,10 @@
     "groupActivities": "Group Activities",
     "noActiveActivities": "No Active Activities",
     "createActivityPrompt": "Create a poll or match in the chat to see them here",
-    "welcomeMessage": "👋 Welcome to FutKui!\n\nI'm your personal assistant here to help you with:\n• 📅 Match notifications and reminders\n• ⚽ Team updates and announcements\n• 🔔 Important app notifications\n• 💬 Quick support when you need it\n\nFeel free to message me anytime if you have questions or need help with the app!"
+    "welcomeMessage": "👋 Welcome to FutKui!\n\nI'm your personal assistant here to help you with:\n• 📅 Match notifications and reminders\n• ⚽ Team updates and announcements\n• 🔔 Important app notifications\n• 💬 Quick support when you need it\n\nFeel free to message me anytime if you have questions or need help with the app!",
+    "language": "Language",
+    "selectLanguage": "Select Language",
+    "english": "English",
+    "vietnamese": "Tiếng Việt"
   }
 }
