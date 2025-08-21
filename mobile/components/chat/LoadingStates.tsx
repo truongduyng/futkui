@@ -1,24 +1,26 @@
 import { Colors } from "@/constants/Colors";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from 'react-i18next';
 
 interface LoadingStatesProps {
   type: "loading" | "loadingGroup" | "loadingMessages" | "groupNotFound";
 }
 
 export function LoadingStates({ type }: LoadingStatesProps) {
+  const { t } = useTranslation();
   const colors = Colors["light"];
 
   const getContent = () => {
     switch (type) {
       case "loading":
-        return "Loading...";
+        return t('common.loading');
       case "loadingGroup":
-        return "Loading group...";
+        return t('chat.loadingGroup');
       case "loadingMessages":
-        return "Loading messages...";
+        return t('chat.loadingMessages');
       case "groupNotFound":
-        return "Group not found";
+        return t('chat.groupNotFound');
     }
   };
 

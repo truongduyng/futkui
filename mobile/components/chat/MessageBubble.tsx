@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
+import { useTranslation } from 'react-i18next';
 import { MentionText } from "./MentionText";
 import { CachedAvatar } from "./CachedAvatar";
 
@@ -57,6 +58,7 @@ export const MessageBubble = React.memo(function MessageBubble({
   imageUrl,
   onImagePress,
 }: MessageBubbleProps) {
+  const { t } = useTranslation();
   const colors = Colors["light"];
   const [showReactionOptions, setShowReactionOptions] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
@@ -170,7 +172,7 @@ export const MessageBubble = React.memo(function MessageBubble({
               />
             )}
             <Text style={[styles.authorName, { color: colors.text }]}>
-              {author?.handle || "Unknown"}
+              {author?.handle || t('chat.unknown')}
             </Text>
           </View>
         )}
@@ -286,7 +288,7 @@ export const MessageBubble = React.memo(function MessageBubble({
                   >
                     <View style={styles.messageOptionContent}>
                       <Ionicons name="copy-outline" size={18} color="#666" />
-                      <Text style={styles.messageOptionText}>Copy text</Text>
+                      <Text style={styles.messageOptionText}>{t('chat.copyText')}</Text>
                     </View>
                   </TouchableOpacity>
                 </View>
@@ -357,7 +359,7 @@ export const MessageBubble = React.memo(function MessageBubble({
             <TouchableOpacity activeOpacity={1}>
               <View style={styles.bottomSheetHeader}>
                 <Text style={[styles.bottomSheetTitle, { color: colors.text }]}>
-                  Reactions
+                  {t('chat.reactions')}
                 </Text>
                 <TouchableOpacity onPress={() => setShowReactionDetails(false)}>
                   <Text style={[styles.closeButton, { color: colors.tint }]}>
@@ -394,7 +396,7 @@ export const MessageBubble = React.memo(function MessageBubble({
                           >
                             {reaction.user?.handle ||
                               reaction.userName ||
-                              "Unknown"}
+                              t('chat.unknown')}
                           </Text>
                         </View>
                       ))}

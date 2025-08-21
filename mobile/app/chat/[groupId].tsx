@@ -21,9 +21,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ChatScreen() {
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ groupId: string }>();
   const groupId = params?.groupId;
   const colors = Colors["light"];

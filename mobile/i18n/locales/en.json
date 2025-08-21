@@ -208,6 +208,16 @@
     "language": "Language",
     "selectLanguage": "Select Language",
     "english": "English",
-    "vietnamese": "Tiếng Việt"
+    "vietnamese": "Tiếng Việt",
+    "copyText": "Copy text",
+    "reactions": "Reactions",
+    "uploading": "Uploading...",
+    "permissionNeeded": "Permission needed",
+    "cameraRollPermission": "Sorry, we need camera roll permissions to upload images.",
+    "errorPickImage": "Failed to pick image",
+    "send": "Send",
+    "loadingGroup": "Loading group...",
+    "loadingMessages": "Loading messages...",
+    "groupNotFound": "Group not found"
   }
 }

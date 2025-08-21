@@ -208,6 +208,16 @@
     "language": "Ngôn ngữ",
     "selectLanguage": "Chọn ngôn ngữ",
     "english": "English",
-    "vietnamese": "Tiếng Việt"
+    "vietnamese": "Tiếng Việt",
+    "copyText": "Sao chép văn bản",
+    "reactions": "Phản ứng",
+    "uploading": "Đang tải lên...",
+    "permissionNeeded": "Cần quyền truy cập",
+    "cameraRollPermission": "Xin lỗi, chúng tôi cần quyền truy cập thư viện ảnh để tải lên hình ảnh.",
+    "errorPickImage": "Không thể chọn hình ảnh",
+    "send": "Gửi",
+    "loadingGroup": "Đang tải nhóm...",
+    "loadingMessages": "Đang tải tin nhắn...",
+    "groupNotFound": "Không tìm thấy nhóm"
   }
 }

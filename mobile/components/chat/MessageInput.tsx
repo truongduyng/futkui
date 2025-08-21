@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from 'react-i18next';
 import { CreatePollModal } from "./CreatePollModal";
 import { CreateMatchModal } from "./CreateMatchModal";
 import { MentionPicker } from "./MentionPicker";
@@ -58,6 +59,7 @@ export function MessageInput({
   members = [],
   disabled,
 }: MessageInputProps) {
+  const { t } = useTranslation();
   const [message, setMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showPollModal, setShowPollModal] = useState(false);
@@ -122,8 +124,8 @@ export function MessageInput({
         await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
-          "Permission needed",
-          "Sorry, we need camera roll permissions to upload images.",
+          t('chat.permissionNeeded'),
+          t('chat.cameraRollPermission'),
         );
         return;
       }
@@ -141,7 +143,7 @@ export function MessageInput({
         setSelectedImage(compressedUri);
       }
     } catch {
-      Alert.alert("Error", "Failed to pick image");
+      Alert.alert(t('common.error'), t('chat.errorPickImage'));
     }
   };
 
@@ -226,7 +228,7 @@ export function MessageInput({
           {isSending && (
             <View style={styles.imageLoadingOverlay}>
               <ActivityIndicator size="small" color="white" />
-              <Text style={styles.uploadingText}>Uploading...</Text>
+              <Text style={styles.uploadingText}>{t('chat.uploading')}</Text>
             </View>
           )}
           <TouchableOpacity
@@ -293,7 +295,7 @@ export function MessageInput({
           }]}
           value={message}
           onChangeText={handleTextChange}
-          placeholder={isSending ? "Sending..." : "Type a message..."}
+          placeholder={isSending ? t('common.sending') : t('chat.typeMessage')}
           placeholderTextColor={colors.tabIconDefault}
           multiline
           maxLength={1000}
@@ -320,7 +322,7 @@ export function MessageInput({
           {isSending ? (
             <ActivityIndicator size="small" color="white" />
           ) : (
-            <Text style={styles.sendButtonText}>Send</Text>
+            <Text style={styles.sendButtonText}>{t('chat.send')}</Text>
           )}
         </TouchableOpacity>
       </View>
