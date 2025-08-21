@@ -1,32 +1,23 @@
 import { Colors } from "@/constants/Colors";
 import { useNavigation } from "expo-router";
-import { useCallback, useEffect } from "react";
-import { Alert } from "react-native";
+import { useCallback, useEffect, useState } from "react";
 
 interface UseChatHeaderProps {
   group: any;
-  handleShareGroup: () => void;
-  handleLeaveGroup: () => void;
 }
 
-export function useChatHeader({ group, handleShareGroup, handleLeaveGroup }: UseChatHeaderProps) {
+export function useChatHeader({ group }: UseChatHeaderProps) {
   const navigation = useNavigation();
   const colors = Colors["light"];
+  const [showBottomSheet, setShowBottomSheet] = useState(false);
 
   const showOptionsMenu = useCallback(() => {
-    Alert.alert("Group Options", "", [
-      {
-        text: "Share Group",
-        onPress: handleShareGroup,
-      },
-      {
-        text: "Leave Group",
-        style: "destructive",
-        onPress: handleLeaveGroup,
-      },
-      { text: "Cancel", style: "cancel" },
-    ]);
-  }, [handleShareGroup, handleLeaveGroup]);
+    setShowBottomSheet(true);
+  }, []);
+
+  const hideOptionsMenu = useCallback(() => {
+    setShowBottomSheet(false);
+  }, []);
 
   useEffect(() => {
     if (group) {
@@ -46,5 +37,5 @@ export function useChatHeader({ group, handleShareGroup, handleLeaveGroup }: Use
     }
   }, [group, navigation, colors]);
 
-  return { showOptionsMenu };
+  return { showOptionsMenu, showBottomSheet, hideOptionsMenu };
 }

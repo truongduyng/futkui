@@ -1,5 +1,6 @@
 import { ActivityBar } from "@/components/chat/ActivityBar";
 import { useChatItemRenderer } from "@/components/chat/ChatItemRenderer";
+import { GroupOptionsBottomSheet } from "@/components/chat/GroupOptionsBottomSheet";
 import { ImageModal } from "@/components/chat/ImageModal";
 import { LoadingHeader } from "@/components/chat/LoadingHeader";
 import { LoadingStates } from "@/components/chat/LoadingStates";
@@ -21,11 +22,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ChatScreen() {
-  const { t } = useTranslation();
   const params = useLocalSearchParams<{ groupId: string }>();
   const groupId = params?.groupId;
   const colors = Colors["light"];
@@ -57,7 +56,7 @@ export default function ChatScreen() {
   const { data: messagesData, isLoading: isLoadingMessages } = useMessages(groupId || "", messageLimit);
   const { data: profileData } = useProfile();
   const { data: membershipData } = useUserMembership(groupId || "");
-  
+
   const currentProfile = profileData?.profiles?.[0];
   const userMembership = membershipData?.memberships?.[0];
   const group = groupData?.groups?.[0];
@@ -132,7 +131,7 @@ export default function ChatScreen() {
   });
 
   // Header management
-  const { showOptionsMenu } = useChatHeader({ group, handleShareGroup, handleLeaveGroup });
+  const { showOptionsMenu, showBottomSheet, hideOptionsMenu } = useChatHeader({ group });
 
   useEffect(() => {
     if (group) {
@@ -140,9 +139,15 @@ export default function ChatScreen() {
         headerRight: () => (
           <TouchableOpacity
             onPress={showOptionsMenu}
-            style={{ marginRight: 4, padding: 8 }}
+            style={{
+              minWidth: 44,
+              minHeight: 44,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+            activeOpacity={0.7}
           >
-            <Text style={{ color: colors.tint, fontSize: 16 }}>⋯</Text>
+            <Text style={{ color: colors.tint, fontSize: 24, fontWeight: '700' }}>⋯</Text>
           </TouchableOpacity>
         ),
       });
@@ -262,6 +267,13 @@ export default function ChatScreen() {
           visible={!!selectedImageUrl}
           imageUrl={selectedImageUrl}
           onClose={() => setSelectedImageUrl(null)}
+        />
+
+        <GroupOptionsBottomSheet
+          visible={showBottomSheet}
+          onClose={hideOptionsMenu}
+          onShareGroup={handleShareGroup}
+          onLeaveGroup={handleLeaveGroup}
         />
       </View>
   );

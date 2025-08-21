@@ -220,5 +220,10 @@
     "loadingGroup": "Đang tải nhóm...",
     "loadingMessages": "Đang tải tin nhắn...",
     "groupNotFound": "Không tìm thấy nhóm"
+  },
+  "groupOptions": {
+    "title": "Tùy chọn nhóm",
+    "shareGroup": "Chia sẻ nhóm",
+    "leaveGroup": "Rời khỏi nhóm"
   }
 }

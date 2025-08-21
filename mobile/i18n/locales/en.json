@@ -220,5 +220,10 @@
     "loadingGroup": "Loading group...",
     "loadingMessages": "Loading messages...",
     "groupNotFound": "Group not found"
+  },
+  "groupOptions": {
+    "title": "Group Options",
+    "shareGroup": "Share Group",
+    "leaveGroup": "Leave Group"
   }
 }
