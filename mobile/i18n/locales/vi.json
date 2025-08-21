@@ -235,11 +235,11 @@
     },
     "leaveGroup": {
       "title": "Rời khỏi nhóm",
-      "confirmMessage": "Bạn có chắc chắn muốn rời khỏi \"{groupName}\"?",
+      "confirmMessage": "Bạn có chắc chắn muốn rời khỏi \"{{groupName}}\"?",
       "leave": "Rời khỏi",
       "cancel": "Hủy",
       "successTitle": "Đã rời nhóm",
-      "successMessage": "Bạn đã rời khỏi {groupName}",
+      "successMessage": "Bạn đã rời khỏi {{groupName}}",
       "errorTitle": "Lỗi",
       "membershipNotFound": "Không thể tìm thấy thành viên của bạn trong nhóm này.",
       "failedToLeave": "Không thể rời khỏi nhóm. Vui lòng thử lại."

@@ -235,11 +235,11 @@
     },
     "leaveGroup": {
       "title": "Leave Group",
-      "confirmMessage": "Are you sure you want to leave \"{groupName}\"?",
+      "confirmMessage": "Are you sure you want to leave \"{{groupName}}\"?",
       "leave": "Leave",
       "cancel": "Cancel",
       "successTitle": "Left Group",
-      "successMessage": "You have left {groupName}",
+      "successMessage": "You have left {{groupName}}",
       "errorTitle": "Error",
       "membershipNotFound": "Unable to find your membership in this group.",
       "failedToLeave": "Failed to leave group. Please try again."
