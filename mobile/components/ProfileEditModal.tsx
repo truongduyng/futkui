@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState, useEffect } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Modal, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 interface ProfileEditModalProps {
   visible: boolean;
@@ -19,6 +20,7 @@ interface ProfileEditModalProps {
 }
 
 export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }: ProfileEditModalProps) {
+  const { t } = useTranslation();
   const [handle, setHandle] = useState(profile.handle || '');
   const [displayName, setDisplayName] = useState(profile.displayName || '');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission required', 'Sorry, we need camera roll permissions to upload avatar images.');
+      Alert.alert(t('profile.permissionRequired'), t('profile.permissionMessage'));
       return;
     }
 
@@ -59,17 +61,17 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
 
   const handleSubmit = async () => {
     if (!handle.trim()) {
-      Alert.alert('Error', 'Please enter a username');
+      Alert.alert(t('common.error'), t('profile.errorHandle'));
       return;
     }
 
     if (!isValidHandle(handle)) {
-      Alert.alert('Error', 'Username must be 3-20 characters and contain only letters, numbers, and underscores');
+      Alert.alert(t('common.error'), t('profile.errorHandleFormat'));
       return;
     }
 
     if (!displayName.trim()) {
-      Alert.alert('Error', 'Please enter a display name');
+      Alert.alert(t('common.error'), t('profile.errorDisplayName'));
       return;
     }
 
@@ -85,7 +87,7 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
         });
 
         if (existingProfile.data.profiles && existingProfile.data.profiles.length > 0) {
-          Alert.alert('Error', 'Username is already taken. Please choose another one.');
+          Alert.alert(t('common.error'), t('profile.handleTaken'));
           setIsSubmitting(false);
           return;
         }
@@ -100,7 +102,7 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
           avatarUrl = await uploadToR2(selectedImage, fileName);
         } catch (error) {
           console.error('Error uploading avatar:', error);
-          Alert.alert('Error', 'Failed to upload profile photo. Please try again.');
+          Alert.alert(t('common.error'), t('profile.failedUploadPhoto'));
           setIsSubmitting(false);
           return;
         }
@@ -119,7 +121,7 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
       onClose();
     } catch (error) {
       console.error('Error updating profile:', error);
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
+      Alert.alert(t('common.error'), t('profile.failedUpdateProfile'));
     } finally {
       setIsSubmitting(false);
     }
@@ -137,7 +139,7 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Ionicons name="close" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Edit Profile</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{t('profile.editProfile')}</Text>
           <View style={styles.placeholder} />
         </View>
 
@@ -152,7 +154,7 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.content}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Profile Photo</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('profile.profilePhoto')}</Text>
 
               <View style={styles.imagePickerSection}>
                 <TouchableOpacity onPress={pickImage} activeOpacity={0.7}>
@@ -163,24 +165,24 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
                   ) : (
                     <View style={[styles.imagePlaceholder, { borderColor: colors.icon }]}>
                       <Text style={[styles.placeholderText, { color: colors.tabIconDefault }]}>
-                        Tap to select photo
+                        {t('profile.tapSelectPhoto')}
                       </Text>
                     </View>
                   )}
                 </TouchableOpacity>
                 <Text style={[styles.imageHint, { color: colors.tabIconDefault }]}>
-                  Tap to change profile photo
+                  {t('profile.tapChangePhoto')}
                 </Text>
               </View>
 
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Username</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('profile.username')}</Text>
               <TextInput
                 style={[styles.input, {
                   borderColor: colors.icon,
                   color: colors.text,
                   backgroundColor: colors.background
                 }]}
-                placeholder="Enter username (3-20 characters)"
+                placeholder={t('profile.placeholderHandle')}
                 placeholderTextColor={colors.tabIconDefault}
                 value={handle}
                 onChangeText={setHandle}
@@ -189,17 +191,17 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
                 maxLength={20}
               />
               <Text style={[styles.inputHint, { color: colors.tabIconDefault }]}>
-                Only letters, numbers, and underscores allowed
+                {t('profile.handleHint')}
               </Text>
 
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Display Name</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('profile.displayName')}</Text>
               <TextInput
                 style={[styles.input, {
                   borderColor: colors.icon,
                   color: colors.text,
                   backgroundColor: colors.background
                 }]}
-                placeholder="Enter your display name"
+                placeholder={t('profile.placeholderDisplayName')}
                 placeholderTextColor={colors.tabIconDefault}
                 value={displayName}
                 onChangeText={setDisplayName}
@@ -212,7 +214,7 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
                 disabled={isSubmitting}
               >
                 <Text style={styles.buttonText}>
-                  {isSubmitting ? 'Updating Profile...' : 'Update Profile'}
+                  {isSubmitting ? t('profile.updatingProfile') : t('profile.updateProfile')}
                 </Text>
               </TouchableOpacity>
             </View>

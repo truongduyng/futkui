@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { AuthGate } from '@/components/AuthGate';
 import { UnreadCountProvider } from '@/contexts/UnreadCountContext';
+import '@/i18n';
 
 
 export default function RootLayout() {

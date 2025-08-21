@@ -7,6 +7,7 @@ import Constants from 'expo-constants';
 import * as Crypto from 'expo-crypto';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { ProfileSetup } from './ProfileSetup';
 
 // Helper function to detect if running in Expo Go
@@ -20,6 +21,7 @@ interface AuthGateProps {
 
 function AuthenticatedContent({ children }: { children: React.ReactNode }) {
   const colors = Colors['light'];
+  const { t } = useTranslation();
   const { instantClient, useProfile, ensureUserHasBotGroup } = useInstantDB();
   const { user } = instantClient.useAuth();
   const botGroupInitiatedRef = useRef(new Set<string>());
@@ -54,7 +56,7 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
   if (profileLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.text, { color: colors.text }]}>Loading...</Text>
+        <Text style={[styles.text, { color: colors.text }]}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -71,7 +73,7 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
   if (!profile) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.text, { color: colors.text }]}>Setting up your profile...</Text>
+        <Text style={[styles.text, { color: colors.text }]}>{t('auth.settingUpProfile')}</Text>
       </View>
     );
   }
@@ -82,6 +84,7 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
 export function AuthGate({ children }: AuthGateProps) {
   const [sentEmail, setSentEmail] = useState('');
   const colors = Colors['light'];
+  const { t } = useTranslation();
 
   const { instantClient } = useInstantDB();
   const { user, isLoading: authLoading } = instantClient.useAuth();
@@ -96,7 +99,7 @@ export function AuthGate({ children }: AuthGateProps) {
   if (authLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.text, { color: colors.text }]}>Loading...</Text>
+        <Text style={[styles.text, { color: colors.text }]}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -119,6 +122,7 @@ export function AuthGate({ children }: AuthGateProps) {
 }
 
 function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email: string) => void; colors: any; instantClient: any }) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isAppleSignInAvailable, setIsAppleSignInAvailable] = useState(false);
@@ -161,7 +165,7 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
       await instantClient.auth.sendMagicCode({ email });
       onSendEmail(email);
     } catch (error) {
-      Alert.alert('Error', 'Failed to send code. Please try again.');
+      Alert.alert(t('common.error'), t('auth.failedSendCode'));
       console.error('Auth error:', error);
     } finally {
       setIsLoading(false);
@@ -196,7 +200,7 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
         // User canceled the sign-in flow
         return;
       }
-      Alert.alert('Error', 'Failed to sign in with Apple. Please try again.');
+      Alert.alert(t('common.error'), t('auth.failedAppleSignIn'));
       console.error('Apple Sign In error:', error);
     }
   };
@@ -224,16 +228,16 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
         // User canceled the sign-in flow
         return;
       }
-      Alert.alert('Error', 'Failed to sign in with Google. Please try again.');
+      Alert.alert(t('common.error'), t('auth.failedGoogleSignIn'));
       console.error('Google Sign In error:', error);
     }
   };
 
   return (
     <>
-      <Text style={[styles.title, { color: colors.text }]}>Welcome to FutKui</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{t('auth.welcome')}</Text>
       <Text style={[styles.subtitle, { color: colors.text }]}>
-        Choose how to get started
+        {t('auth.chooseMethod')}
       </Text>
 
       {showGoogleSignIn && (
@@ -243,7 +247,7 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
         >
           <View style={styles.googleButtonContent}>
             <AntDesign name="google" size={14} style={styles.googleIcon} />
-            <Text style={styles.googleButtonText}>Sign in with Google</Text>
+            <Text style={styles.googleButtonText}>{t('auth.signInGoogle')}</Text>
           </View>
         </TouchableOpacity>
       )}
@@ -268,7 +272,7 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
           color: colors.text,
           backgroundColor: colors.background
         }]}
-        placeholder="Enter your email"
+        placeholder={t('auth.placeholderEmail')}
         placeholderTextColor={colors.tabIconDefault}
         value={email}
         onChangeText={setEmail}
@@ -282,7 +286,7 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
         disabled={isLoading}
       >
         <Text style={styles.buttonText}>
-          {isLoading ? 'Sending...' : 'Send Code'}
+          {isLoading ? t('common.sending') : t('auth.sendCode')}
         </Text>
       </TouchableOpacity>
     </>
@@ -295,6 +299,7 @@ function CodeStep({ sentEmail, onBack, colors, instantClient }: {
   colors: any;
   instantClient: any;
 }) {
+  const { t } = useTranslation();
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -308,7 +313,7 @@ function CodeStep({ sentEmail, onBack, colors, instantClient }: {
       console.log('Sign-in successful!');
 
     } catch (error) {
-      Alert.alert('Error', 'Invalid code. Please try again.');
+      Alert.alert(t('common.error'), t('auth.invalidCode'));
       setCode('');
       console.error('Auth error:', error);
     } finally {
@@ -318,9 +323,9 @@ function CodeStep({ sentEmail, onBack, colors, instantClient }: {
 
   return (
     <>
-      <Text style={[styles.title, { color: colors.text }]}>Enter Code</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{t('auth.enterCode')}</Text>
       <Text style={[styles.subtitle, { color: colors.text }]}>
-        We sent a code to <Text style={{ fontWeight: 'bold' }}>{sentEmail}</Text>
+        {t('auth.enterCodeSent')} <Text style={{ fontWeight: 'bold' }}>{sentEmail}</Text>
       </Text>
       <TextInput
         style={[styles.input, {
@@ -328,7 +333,7 @@ function CodeStep({ sentEmail, onBack, colors, instantClient }: {
           color: colors.text,
           backgroundColor: colors.background
         }]}
-        placeholder="Enter 6-digit code"
+        placeholder={t('auth.placeholderCode')}
         placeholderTextColor={colors.tabIconDefault}
         value={code}
         onChangeText={setCode}
@@ -341,12 +346,12 @@ function CodeStep({ sentEmail, onBack, colors, instantClient }: {
         disabled={isLoading}
       >
         <Text style={styles.buttonText}>
-          {isLoading ? 'Verifying...' : 'Verify Code'}
+          {isLoading ? t('common.verifying') : t('auth.verifyCode')}
         </Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.backButton} onPress={onBack}>
         <Text style={[styles.backButtonText, { color: colors.tint }]}>
-          Back to email
+          {t('auth.backToEmail')}
         </Text>
       </TouchableOpacity>
     </>

@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import schema from '../instant.schema';
 import { sendGroupNotification, getMemberPushTokens } from '../utils/notifications';
 import { uploadToR2 } from '../utils/r2Upload';
+import { getTranslation } from '../i18n';
 
 const instantClient = init({
   appId: 'fef46afc-feff-4b78-be85-3c293174c5cc',
@@ -257,15 +258,7 @@ export function useInstantDB() {
   }, [db]);
 
   const sendWelcomeMessage = useCallback(async (groupId: string, botProfileId: string) => {
-    const welcomeMessage = `👋 Welcome to FutKui!
-
-I'm your personal assistant here to help you with:
-• 📅 Match notifications and reminders
-• ⚽ Team updates and announcements
-• 🔔 Important app notifications
-• 💬 Quick support when you need it
-
-Feel free to message me anytime if you have questions or need help with the app!`;
+    const welcomeMessage = getTranslation('chat.welcomeMessage');
 
     await db.transact([
       db.tx.messages[id()].update({

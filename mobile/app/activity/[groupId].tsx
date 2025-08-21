@@ -10,8 +10,10 @@ import {
   Text,
   View,
 } from "react-native";
+import { useTranslation } from 'react-i18next';
 
 export default function ActivityDetailsScreen() {
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ groupId: string }>();
   const groupId = params?.groupId;
   const colors = Colors["light"];
@@ -63,8 +65,8 @@ export default function ActivityDetailsScreen() {
 
   useEffect(() => {
     navigation.setOptions({
-      title: "Group Activities",
-      headerBackTitle: "Back",
+      title: t('chat.groupActivities'),
+      headerBackTitle: t('common.back'),
       headerShown: true,
       headerStyle: {
         backgroundColor: colors.background,
@@ -145,7 +147,7 @@ export default function ActivityDetailsScreen() {
     return (
       <View style={[styles.container, styles.centered, { backgroundColor: colors.background }]}>
         <Text style={[styles.loadingText, { color: colors.text }]}>
-          Loading...
+          {t('common.loading')}
         </Text>
       </View>
     );
@@ -164,7 +166,7 @@ export default function ActivityDetailsScreen() {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionIcon}>📊</Text>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                Active Polls
+                {t('chat.activePolls')}
               </Text>
               <View style={[styles.badge, { backgroundColor: colors.tint }]}>
                 <Text style={styles.badgeText}>{activePolls.length}</Text>
@@ -203,7 +205,7 @@ export default function ActivityDetailsScreen() {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionIcon}>⚽</Text>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                Upcoming Matches
+                {t('chat.upcomingMatches')}
               </Text>
               <View style={[styles.badge, { backgroundColor: colors.tint }]}>
                 <Text style={styles.badgeText}>{upcomingMatches.length}</Text>
@@ -257,10 +259,10 @@ export default function ActivityDetailsScreen() {
               <Text style={styles.emptyStateEmoji}>🎯</Text>
             </View>
             <Text style={[styles.emptyStateText, { color: colors.text }]}>
-              No Active Activities
+              {t('chat.noActiveActivities')}
             </Text>
             <Text style={[styles.emptyStateSubtext, { color: colors.tabIconDefault }]}>
-              Create a poll or match in the chat to see them here
+              {t('chat.createActivityPrompt')}
             </Text>
           </View>
         )}

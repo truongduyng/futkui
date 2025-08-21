@@ -6,6 +6,7 @@ import { id } from '@instantdb/react-native';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 interface ProfileSetupProps {
   userId: string;
@@ -13,6 +14,7 @@ interface ProfileSetupProps {
 }
 
 export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
+  const { t } = useTranslation();
   const [handle, setHandle] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -27,7 +29,7 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission required', 'Sorry, we need camera roll permissions to upload avatar images.');
+      Alert.alert(t('profile.permissionRequired'), t('profile.permissionMessage'));
       return;
     }
 
@@ -45,22 +47,22 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
 
   const handleSubmit = async () => {
     if (!handle.trim()) {
-      Alert.alert('Error', 'Please enter a username');
+      Alert.alert(t('common.error'), t('profile.errorHandle'));
       return;
     }
 
     if (!isValidHandle(handle)) {
-      Alert.alert('Error', 'Username must be 3-20 characters and contain only letters, numbers, and underscores');
+      Alert.alert(t('common.error'), t('profile.errorHandleFormat'));
       return;
     }
 
     if (!displayName.trim()) {
-      Alert.alert('Error', 'Please enter a display name');
+      Alert.alert(t('common.error'), t('profile.errorDisplayName'));
       return;
     }
 
     if (!selectedImage) {
-      Alert.alert('Error', 'Please select a profile photo');
+      Alert.alert(t('common.error'), t('profile.errorPhoto'));
       return;
     }
 
@@ -75,7 +77,7 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
       });
 
       if (existingProfile.data.profiles && existingProfile.data.profiles.length > 0) {
-        Alert.alert('Error', 'Username is already taken. Please choose another one.');
+        Alert.alert(t('common.error'), t('profile.handleTaken'));
         setIsSubmitting(false);
         return;
       }
@@ -90,7 +92,7 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
         avatarUrl = await uploadToR2(selectedImage, fileName);
       } catch (error) {
         console.error('Error uploading avatar:', error);
-        Alert.alert('Error', 'Failed to upload profile photo. Please try again.');
+        Alert.alert(t('common.error'), t('profile.failedUploadPhoto'));
         setIsSubmitting(false);
         return;
       }
@@ -112,7 +114,7 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
       onProfileCreated();
     } catch (error) {
       console.error('Error creating profile:', error);
-      Alert.alert('Error', 'Failed to create profile. Please try again.');
+      Alert.alert(t('common.error'), t('profile.failedCreateProfile'));
     } finally {
       setIsSubmitting(false);
     }
@@ -131,12 +133,12 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.content}>
-            <Text style={[styles.title, { color: colors.text }]}>Set up your profile</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('profile.setupProfile')}</Text>
             <Text style={[styles.subtitle, { color: colors.text }]}>
-              Choose how you want to appear to other users
+              {t('profile.setupSubtitle')}
             </Text>
 
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Profile Photo</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('profile.profilePhoto')}</Text>
 
             <View style={styles.imagePickerSection}>
               <TouchableOpacity onPress={pickImage} activeOpacity={0.7}>
@@ -145,21 +147,21 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
                 ) : (
                   <View style={[styles.imagePlaceholder, { borderColor: colors.icon }]}>
                     <Text style={[styles.placeholderText, { color: colors.tabIconDefault }]}>
-                      Tap to select photo
+                      {t('profile.tapSelectPhoto')}
                     </Text>
                   </View>
                 )}
               </TouchableOpacity>
             </View>
 
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Username</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('profile.username')}</Text>
             <TextInput
               style={[styles.input, {
                 borderColor: colors.icon,
                 color: colors.text,
                 backgroundColor: colors.background
               }]}
-              placeholder="Enter username (3-20 characters)"
+              placeholder={t('profile.placeholderHandle')}
               placeholderTextColor={colors.tabIconDefault}
               value={handle}
               onChangeText={setHandle}
@@ -168,17 +170,17 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
               maxLength={20}
             />
             <Text style={[styles.inputHint, { color: colors.tabIconDefault }]}>
-              Only letters, numbers, and underscores allowed
+              {t('profile.handleHint')}
             </Text>
 
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Display Name</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('profile.displayName')}</Text>
             <TextInput
               style={[styles.input, {
                 borderColor: colors.icon,
                 color: colors.text,
                 backgroundColor: colors.background
               }]}
-              placeholder="Enter your display name"
+              placeholder={t('profile.placeholderDisplayName')}
               placeholderTextColor={colors.tabIconDefault}
               value={displayName}
               onChangeText={setDisplayName}
@@ -191,7 +193,7 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
               disabled={isSubmitting}
             >
               <Text style={styles.buttonText}>
-                {isSubmitting ? 'Creating Profile...' : 'Create Profile'}
+                {isSubmitting ? t('profile.creatingProfile') : t('profile.createProfile')}
               </Text>
             </TouchableOpacity>
           </View>

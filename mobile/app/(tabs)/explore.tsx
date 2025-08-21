@@ -14,8 +14,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export default function ExploreScreen() {
+  const { t } = useTranslation();
   const colors = Colors["light"];
 
   const { queryAllGroupsOnce, useProfile, instantClient } =
@@ -51,10 +53,10 @@ export default function ExploreScreen() {
 
 
   const handleSignOut = async () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t('explore.signOut'), t('explore.signOutConfirm'), [
+      { text: t('common.cancel'), style: "cancel" },
       {
-        text: "Sign Out",
+        text: t('explore.signOut'),
         style: "destructive",
         onPress: () => instantClient.auth.signOut(),
       },
@@ -75,19 +77,19 @@ export default function ExploreScreen() {
 
   const handleDeleteAccount = async () => {
     Alert.alert(
-      "Delete Account",
-      "Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your data.",
+      t('explore.deleteAccount'),
+      t('explore.deleteAccountConfirm'),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t('common.cancel'), style: "cancel" },
         {
-          text: "Delete Account",
+          text: t('explore.deleteAccount'),
           style: "destructive",
           onPress: async () => {
             try {
               const token = user?.refresh_token;
 
               if (!token) {
-                Alert.alert("Error", "Unable to authenticate. Please try logging in again.");
+                Alert.alert(t('common.error'), t('explore.authError'));
                 return;
               }
 
@@ -100,14 +102,14 @@ export default function ExploreScreen() {
 
               if (response.ok) {
                 await instantClient.auth.signOut();
-                Alert.alert("Account Deleted", "Your account has been successfully deleted.");
+                Alert.alert(t('explore.deleteAccount'), t('explore.accountDeleted'));
               } else {
                 const errorData = await response.json();
-                Alert.alert("Deletion Failed", errorData.error || "Failed to delete account. Please try again.");
+                Alert.alert(t('explore.deleteAccount'), errorData.error || t('explore.deletionFailed'));
               }
             } catch (error) {
               console.error("Error deleting account:", error);
-              Alert.alert("Error", "Unable to delete account. Please check your connection and try again.");
+              Alert.alert(t('common.error'), t('explore.deleteError'));
             }
           },
         },
@@ -127,7 +129,7 @@ export default function ExploreScreen() {
         {/* Top Menu Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Menu
+            {t('explore.menu')}
           </Text>
           <View style={[styles.menuContainer, { backgroundColor: colors.background }]}>
             <TouchableOpacity
@@ -215,7 +217,7 @@ export default function ExploreScreen() {
                   <Text
                     style={[styles.menuButtonTitle, { color: colors.text }]}
                   >
-                    Privacy
+                    {t('explore.privacy')}
                   </Text>
                 </View>
               </View>
@@ -250,7 +252,7 @@ export default function ExploreScreen() {
                   <Text
                     style={[styles.menuButtonTitle, { color: colors.text }]}
                   >
-                    Terms of Service
+                    {t('explore.termsOfService')}
                   </Text>
                 </View>
               </View>
@@ -279,7 +281,7 @@ export default function ExploreScreen() {
                 </View>
                 <View style={styles.menuTextContainer}>
                   <Text style={[styles.menuButtonTitle, { color: "#FF6B6B" }]}>
-                    Sign Out
+                    {t('explore.signOut')}
                   </Text>
                 </View>
               </View>
@@ -304,7 +306,7 @@ export default function ExploreScreen() {
                 </View>
                 <View style={styles.menuTextContainer}>
                   <Text style={[styles.menuButtonTitle, { color: "#DC2626" }]}>
-                    Delete Account
+                    {t('explore.deleteAccount')}
                   </Text>
                 </View>
               </View>
@@ -315,7 +317,7 @@ export default function ExploreScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Communities
+            {t('explore.communities')}
           </Text>
           <Text
             style={[
@@ -323,14 +325,14 @@ export default function ExploreScreen() {
               { color: colors.tabIconDefault },
             ]}
           >
-            Most recent clubs on the platform
+            {t('explore.communitiesDescription')}
           </Text>
           <View style={styles.groupList}>
             {showcaseGroups.length === 0 ? (
               <Text
                 style={[styles.emptyText, { color: colors.tabIconDefault }]}
               >
-                No communities to showcase at the moment.
+                {t('explore.noCommunitiesYet')}
               </Text>
             ) : (
               showcaseGroups.map((group: any) => {

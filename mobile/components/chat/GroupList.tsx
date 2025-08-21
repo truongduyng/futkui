@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { CachedAvatar } from './CachedAvatar';
 
 interface Group {
@@ -50,6 +51,7 @@ interface GroupListProps {
   onShareLinkChange?: (link: string) => void;
   onJoinViaLink?: () => void;
   isJoining?: boolean;
+  onLanguagePress?: () => void;
 }
 
 export function GroupList({
@@ -63,8 +65,10 @@ export function GroupList({
   shareLink,
   onShareLinkChange,
   onJoinViaLink,
-  isJoining = false
+  isJoining = false,
+  onLanguagePress
 }: GroupListProps) {
+  const { t } = useTranslation();
   const colors = Colors['light'];
   const router = useRouter();
   // Helper function to get unread count for a group from the provided data
@@ -75,22 +79,22 @@ export function GroupList({
 
   const renderEmptyState = () => (
     <View style={styles.emptyStateContainer}>
-      <Text style={[styles.emptyStateTitle, { color: colors.text }]}>No Groups Yet</Text>
+      <Text style={[styles.emptyStateTitle, { color: colors.text }]}>{t('empty.noGroupsYet')}</Text>
       <Text style={[styles.emptyStateMessage, { color: colors.tabIconDefault }]}>
-        Create a new group or join an existing one to start chatting!
+        {t('empty.createOrJoin')}
       </Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.emptyStateButton, { backgroundColor: colors.tint }]}
           onPress={onCreateGroup}
         >
-          <Text style={styles.emptyStateButtonText}>Create Group</Text>
+          <Text style={styles.emptyStateButtonText}>{t('empty.createGroupButton')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.emptyStateButtonSecondary, { borderColor: colors.tint }]}
           onPress={() => router.push('/(tabs)/explore')}
         >
-          <Text style={[styles.emptyStateButtonSecondaryText, { color: colors.tint }]}>Join Group</Text>
+          <Text style={[styles.emptyStateButtonSecondaryText, { color: colors.tint }]}>{t('empty.joinGroupButton')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -239,8 +243,16 @@ export function GroupList({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Clubs</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t('navigation.clubs')}</Text>
         <View style={styles.headerButtons}>
+          {onLanguagePress && (
+            <TouchableOpacity
+              style={[styles.languageButton, { borderColor: colors.tabIconDefault }]}
+              onPress={onLanguagePress}
+            >
+              <Text style={styles.languageButtonText}>🌐</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             style={[styles.createButton, { backgroundColor: colors.tint }]}
             onPress={onCreateGroup}
@@ -275,7 +287,7 @@ export function GroupList({
                 ]}
                 value={shareLink || ''}
                 onChangeText={onShareLinkChange}
-                placeholder="Enter club link..."
+                placeholder={t('input.enterClubLink')}
                 placeholderTextColor={colors.tabIconDefault}
                 editable={!isJoining}
               />
@@ -358,6 +370,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+  },
+  languageButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  languageButtonText: {
+    fontSize: 16,
   },
   createButton: {
     width: 32,

@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 interface CreateGroupModalProps {
   visible: boolean;
@@ -24,12 +25,13 @@ interface CreateGroupModalProps {
 
 
 const SPORTS_OPTIONS = [
-  { emoji: '⚽', name: 'Football' },
-  { emoji: '🏓', name: 'Pickleball' },
-  { emoji: '🏸', name: 'Badminton' },
+  { emoji: '⚽', nameKey: 'sports.football' },
+  { emoji: '🏓', nameKey: 'sports.pickleball' },
+  { emoji: '🏸', nameKey: 'sports.badminton' },
 ];
 
 export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGroupModalProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission required', 'Sorry, we need camera roll permissions to upload group images.');
+      Alert.alert(t('createGroup.permissionRequired'), t('createGroup.permissionMessage'));
       return;
     }
 
@@ -59,17 +61,17 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      Alert.alert('Error', 'Please enter a club name');
+      Alert.alert(t('common.error'), t('createGroup.errorName'));
       return;
     }
 
     if (!description.trim()) {
-      Alert.alert('Error', 'Please enter a club description');
+      Alert.alert(t('common.error'), t('createGroup.errorDescription'));
       return;
     }
 
     if (!selectedImage) {
-      Alert.alert('Error', 'Please select a group image');
+      Alert.alert(t('common.error'), t('createGroup.errorImage'));
       return;
     }
 
@@ -95,7 +97,7 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
       onClose();
     } catch (error) {
       console.error('Error uploading group image:', error);
-      Alert.alert('Error', 'Failed to upload group image. Please try again.');
+      Alert.alert(t('common.error'), t('createGroup.failedUpload'));
     } finally {
       setIsSubmitting(false);
     }
@@ -126,19 +128,19 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleCancel}>
-            <Text style={[styles.cancelButton, { color: colors.tint }]}>Cancel</Text>
+            <Text style={[styles.cancelButton, { color: colors.tint }]}>{t('common.cancel')}</Text>
           </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.text }]}>Create Sports Club</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{t('createGroup.title')}</Text>
           <TouchableOpacity onPress={handleCreate} disabled={isSubmitting}>
             <Text style={[styles.createButton, { color: colors.tint }]}>
-              {isSubmitting ? 'Creating...' : 'Create'}
+              {isSubmitting ? t('common.creating') : t('common.create')}
             </Text>
           </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.content}>
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Club Image</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('createGroup.clubImage')}</Text>
             <View style={styles.imagePickerSection}>
               <TouchableOpacity onPress={pickImage} activeOpacity={0.7}>
                 {selectedImage ? (
@@ -146,7 +148,7 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
                 ) : (
                   <View style={[styles.imagePlaceholder, { borderColor: colors.tabIconDefault }]}>
                     <Text style={[styles.placeholderText, { color: colors.tabIconDefault }]}>
-                      Tap to select image
+                      {t('createGroup.tapSelectImage')}
                     </Text>
                   </View>
                 )}
@@ -155,37 +157,40 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
           </View>
 
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Sports (Optional)</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('createGroup.sportsOptional')}</Text>
             <Text style={[styles.sectionSubtitle, { color: colors.tabIconDefault }]}>
-              Select the sports your club plays
+              {t('createGroup.selectSports')}
             </Text>
             <View style={styles.sportsGrid}>
-              {SPORTS_OPTIONS.map((sport) => (
-                <TouchableOpacity
-                  key={sport.name}
-                  style={[
-                    styles.sportOption,
-                    selectedSports.includes(sport.name) && {
-                      backgroundColor: colors.tint,
-                      borderColor: colors.tint
-                    }
-                  ]}
-                  onPress={() => toggleSport(sport.name)}
-                >
-                  <Text style={styles.sportEmoji}>{sport.emoji}</Text>
-                  <Text style={[
-                    styles.sportName,
-                    { color: selectedSports.includes(sport.name) ? 'white' : colors.text }
-                  ]}>
-                    {sport.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {SPORTS_OPTIONS.map((sport) => {
+                const sportName = t(sport.nameKey);
+                return (
+                  <TouchableOpacity
+                    key={sport.nameKey}
+                    style={[
+                      styles.sportOption,
+                      selectedSports.includes(sportName) && {
+                        backgroundColor: colors.tint,
+                        borderColor: colors.tint
+                      }
+                    ]}
+                    onPress={() => toggleSport(sportName)}
+                  >
+                    <Text style={styles.sportEmoji}>{sport.emoji}</Text>
+                    <Text style={[
+                      styles.sportName,
+                      { color: selectedSports.includes(sportName) ? 'white' : colors.text }
+                    ]}>
+                      {sportName}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
 
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Club Name</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('createGroup.clubName')}</Text>
             <TextInput
               style={[styles.input, {
                 color: colors.text,
@@ -194,14 +199,14 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
               }]}
               value={name}
               onChangeText={setName}
-              placeholder="Enter club name..."
+              placeholder={t('createGroup.placeholderName')}
               placeholderTextColor={colors.tabIconDefault}
               maxLength={50}
             />
           </View>
 
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Description</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('createGroup.description')}</Text>
             <TextInput
               style={[styles.textArea, {
                 color: colors.text,
@@ -210,7 +215,7 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
               }]}
               value={description}
               onChangeText={setDescription}
-              placeholder="Describe your sports club..."
+              placeholder={t('createGroup.placeholderDescription')}
               placeholderTextColor={colors.tabIconDefault}
               multiline
               numberOfLines={4}

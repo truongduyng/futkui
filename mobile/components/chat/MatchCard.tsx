@@ -2,6 +2,7 @@ import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 interface RsvpData {
   id: string;
@@ -74,6 +75,7 @@ export const MatchCard = React.memo(function MatchCard({
   isCreator = false,
   isGroupAdmin = false,
 }: MatchCardProps) {
+  const { t } = useTranslation();
   const colors = Colors['light'];
 
   const matchDateTime = new Date(match.matchDate);
@@ -162,7 +164,7 @@ export const MatchCard = React.memo(function MatchCard({
     >
       {!isOwnMessage && showAuthor && (
         <Text style={[styles.authorName, { color: colors.text }]}>
-          {author?.handle || "Unknown"}
+          {author?.handle || t('chat.unknown')}
         </Text>
       )}
 
@@ -185,7 +187,7 @@ export const MatchCard = React.memo(function MatchCard({
                   isOwnMessage ? styles.ownText : { color: colors.text },
                 ]}
               >
-                Match Event
+                {t('chat.matchEvent')}
               </Text>
             </View>
             {canCloseMatch && (
@@ -200,7 +202,7 @@ export const MatchCard = React.memo(function MatchCard({
                   styles.closeButtonText,
                   { color: isOwnMessage ? 'white' : colors.text }
                 ]}>
-                  Close
+                  {t('chat.close')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -222,7 +224,7 @@ export const MatchCard = React.memo(function MatchCard({
               {formatDate(matchDateTime)} at {formatTime(matchDateTime)}
               {isMatchToday && (
                 <Text style={[styles.todayBadge, { color: isOwnMessage ? '#FFD700' : '#22C55E' }]}>
-                  {' '}• TODAY
+                  {' '}• {t('chat.today')}
                 </Text>
               )}
             </Text>
@@ -244,7 +246,7 @@ export const MatchCard = React.memo(function MatchCard({
               styles.sectionTitle,
               isOwnMessage ? styles.ownText : { color: colors.text }
             ]}>
-              Your Response
+              {t('chat.yourResponse')}
             </Text>
             <View style={styles.rsvpButtons}>
               {(['yes', 'no', 'maybe'] as const).map((response) => {
@@ -262,7 +264,7 @@ export const MatchCard = React.memo(function MatchCard({
                     onPress={() => onRsvp(response)}
                   >
                     <Text style={[styles.rsvpButtonText, { color: buttonStyle.textColor }]}>
-                      {response === 'yes' ? '✓ Yes' : response === 'no' ? '✗ No' : '? Maybe'}
+                      {response === 'yes' ? `✓ ${t('chat.yes')}` : response === 'no' ? `✗ ${t('chat.no')}` : `? ${t('chat.maybe')}`}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -278,12 +280,12 @@ export const MatchCard = React.memo(function MatchCard({
               styles.sectionTitle,
               isOwnMessage ? styles.ownText : { color: colors.text }
             ]}>
-              Match Day Check-in
+              {t('chat.matchDayCheckIn')}
             </Text>
             {userCheckedIn ? (
               <View style={[styles.checkedInBadge, { backgroundColor: '#22C55E' }]}>
                 <Ionicons name="checkmark-circle" size={16} color="white" />
-                <Text style={styles.checkedInText}>Checked In!</Text>
+                <Text style={styles.checkedInText}>{t('chat.checkedIn')}</Text>
               </View>
             ) : canCheckIn ? (
               <TouchableOpacity
@@ -291,14 +293,14 @@ export const MatchCard = React.memo(function MatchCard({
                 onPress={onCheckIn}
               >
                 <Ionicons name="log-in" size={16} color="white" />
-                <Text style={styles.checkInButtonText}>Check In</Text>
+                <Text style={styles.checkInButtonText}>{t('chat.checkIn')}</Text>
               </TouchableOpacity>
             ) : (
               <Text style={[
                 styles.checkInDisabled,
                 isOwnMessage ? styles.ownText : { color: colors.tabIconDefault }
               ]}>
-                Check-in not available
+                {t('chat.checkInNotAvailable')}
               </Text>
             )}
           </View>
@@ -311,14 +313,14 @@ export const MatchCard = React.memo(function MatchCard({
               styles.summaryTitle,
               isOwnMessage ? styles.ownText : { color: colors.text }
             ]}>
-              Responses ({match.rsvps.length} total)
+              {t('chat.responses')} ({match.rsvps.length} {t('chat.total')})
             </Text>
             {isMatchClosed && (
               <Text style={[
                 styles.closedText,
                 isOwnMessage ? styles.ownText : { color: colors.tabIconDefault }
               ]}>
-                Match closed
+                {t('chat.matchClosed')}
               </Text>
             )}
           </View>
@@ -350,7 +352,7 @@ export const MatchCard = React.memo(function MatchCard({
                   styles.rsvpCountText,
                   isOwnMessage ? styles.ownText : { color: colors.tabIconDefault }
                 ]}>
-                  {match.checkIns.length} checked in
+                  {match.checkIns.length} {t('chat.checkedInCount')}
                 </Text>
               </View>
             )}

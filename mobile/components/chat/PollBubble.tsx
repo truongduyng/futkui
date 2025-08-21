@@ -1,6 +1,7 @@
 import { Colors } from '@/constants/Colors';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 interface PollOption {
   id: string;
@@ -52,6 +53,7 @@ export const PollBubble = React.memo(function PollBubble({
   createdAt,
   showAuthor = true,
 }: PollBubbleProps) {
+  const { t } = useTranslation();
   const colors = Colors['light'];
 
   // Calculate vote counts and user votes
@@ -93,7 +95,7 @@ export const PollBubble = React.memo(function PollBubble({
     const now = Date.now();
     const timeLeft = expiresAt - now;
 
-    if (timeLeft <= 0) return 'Expired';
+    if (timeLeft <= 0) return t('chat.expired');
 
     const days = Math.floor(timeLeft / (24 * 60 * 60 * 1000));
     const hours = Math.floor((timeLeft % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
@@ -113,7 +115,7 @@ export const PollBubble = React.memo(function PollBubble({
     >
       {!isOwnMessage && showAuthor && (
         <Text style={[styles.authorName, { color: colors.text }]}>
-          {author?.handle || "Unknown"}
+          {author?.handle || t('chat.unknown')}
         </Text>
       )}
 
@@ -147,7 +149,7 @@ export const PollBubble = React.memo(function PollBubble({
                   styles.closeButtonText,
                   { color: isOwnMessage ? 'white' : colors.text }
                 ]}>
-                  Close Poll
+                  {t('chat.closePoll')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -158,7 +160,7 @@ export const PollBubble = React.memo(function PollBubble({
                 styles.expirationText,
                 { color: isOwnMessage ? 'rgba(255,255,255,0.8)' : colors.tabIconDefault }
               ]}>
-                {isExpired ? 'Expired' : formatTimeRemaining(poll.expiresAt)}
+                {isExpired ? t('chat.expired') : formatTimeRemaining(poll.expiresAt)}
               </Text>
             )}
           </View>
@@ -225,7 +227,7 @@ export const PollBubble = React.memo(function PollBubble({
                         isOwnMessage ? styles.ownText : { color: colors.tabIconDefault },
                       ]}
                     >
-                      {voteCount} {voteCount === 1 ? 'vote' : 'votes'}
+                      {voteCount} {voteCount === 1 ? t('chat.vote') : t('chat.votes')}
                     </Text>
                     {totalVotes > 0 && (
                       <Text
@@ -267,7 +269,7 @@ export const PollBubble = React.memo(function PollBubble({
               isOwnMessage ? styles.ownText : { color: colors.tabIconDefault },
             ]}
           >
-            {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'} total
+            {totalVotes} {totalVotes === 1 ? t('chat.vote') : t('chat.votes')} {t('chat.total')}
           </Text>
           {isExpired && (
             <Text
@@ -276,7 +278,7 @@ export const PollBubble = React.memo(function PollBubble({
                 isOwnMessage ? styles.ownText : { color: colors.tabIconDefault },
               ]}
             >
-              {wasClosedManually ? 'Poll closed' : 'Poll ended'}
+              {wasClosedManually ? t('chat.pollClosed') : t('chat.pollEnded')}
             </Text>
           )}
         </View>

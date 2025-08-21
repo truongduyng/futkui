@@ -2,6 +2,7 @@ import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 interface PollOption {
   id: string;
@@ -15,6 +16,7 @@ interface CreatePollModalProps {
 }
 
 export function CreatePollModal({ visible, onClose, onCreatePoll }: CreatePollModalProps) {
+  const { t } = useTranslation();
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState<PollOption[]>([
     { id: '1', text: '' },
@@ -28,6 +30,8 @@ export function CreatePollModal({ visible, onClose, onCreatePoll }: CreatePollMo
   const addOption = () => {
     if (options.length < 6) {
       setOptions([...options, { id: generateId(), text: '' }]);
+    } else {
+      Alert.alert(t('common.error'), t('chat.maxOptions'));
     }
   };
 
@@ -45,13 +49,13 @@ export function CreatePollModal({ visible, onClose, onCreatePoll }: CreatePollMo
 
   const handleCreate = () => {
     if (!question.trim()) {
-      Alert.alert('Error', 'Please enter a question');
+      Alert.alert(t('common.error'), t('chat.errorQuestion'));
       return;
     }
 
     const validOptions = options.filter(option => option.text.trim());
     if (validOptions.length < 2) {
-      Alert.alert('Error', 'Please provide at least 2 options');
+      Alert.alert(t('common.error'), t('chat.errorMinOptions'));
       return;
     }
 
@@ -92,22 +96,22 @@ export function CreatePollModal({ visible, onClose, onCreatePoll }: CreatePollMo
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleClose} style={styles.cancelButton}>
-            <Text style={[styles.cancelText, { color: colors.text }]}>Cancel</Text>
+            <Text style={[styles.cancelText, { color: colors.text }]}>{t('common.cancel')}</Text>
           </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.text }]}>Create Poll</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{t('chat.createPollTitle')}</Text>
           <TouchableOpacity onPress={handleCreate} style={[styles.createButton, { backgroundColor: colors.tint }]}>
-            <Text style={styles.createText}>Create</Text>
+            <Text style={styles.createText}>{t('common.create')}</Text>
           </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Question</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('chat.question')}</Text>
             <TextInput
               style={[styles.questionInput, { color: colors.text, borderColor: colors.tabIconDefault }]}
               value={question}
               onChangeText={setQuestion}
-              placeholder="Ask a question..."
+              placeholder={t('chat.questionPlaceholder')}
               placeholderTextColor={colors.tabIconDefault}
               multiline
               maxLength={200}
@@ -116,7 +120,7 @@ export function CreatePollModal({ visible, onClose, onCreatePoll }: CreatePollMo
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Options</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('chat.options')}</Text>
               <TouchableOpacity 
                 onPress={addOption}
                 disabled={options.length >= 6}
@@ -139,7 +143,7 @@ export function CreatePollModal({ visible, onClose, onCreatePoll }: CreatePollMo
                     style={[styles.optionInput, { color: colors.text, borderColor: colors.tabIconDefault }]}
                     value={option.text}
                     onChangeText={(text) => updateOption(option.id, text)}
-                    placeholder={`Option ${index + 1}`}
+                    placeholder={t('chat.optionPlaceholder')}
                     placeholderTextColor={colors.tabIconDefault}
                     maxLength={100}
                   />
@@ -164,7 +168,7 @@ export function CreatePollModal({ visible, onClose, onCreatePoll }: CreatePollMo
             >
               <View style={styles.settingLeft}>
                 <Text style={[styles.settingText, { color: colors.text }]}>
-                  Allow multiple choices
+                  {t('chat.allowMultiple')}
                 </Text>
                 <Text style={[styles.settingDescription, { color: colors.tabIconDefault }]}>
                   Let people select more than one option

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from 'react-i18next';
 
 interface Poll {
   id?: string;
@@ -34,6 +35,7 @@ interface ActivityBarProps {
 }
 
 export function ActivityBar({ polls, matches, groupId }: ActivityBarProps) {
+  const { t } = useTranslation();
   const colors = Colors["light"];
   const router = useRouter();
 
@@ -64,11 +66,13 @@ export function ActivityBar({ polls, matches, groupId }: ActivityBarProps) {
     const parts: string[] = [];
 
     if (activePolls.length > 0) {
-      parts.push(`${activePolls.length} Active Poll${activePolls.length !== 1 ? 's' : ''}`);
+      const pollText = activePolls.length === 1 ? t('chat.activePoll') : t('chat.activePolls');
+      parts.push(`${activePolls.length} ${pollText}`);
     }
 
     if (upcomingMatches.length > 0) {
-      parts.push(`${upcomingMatches.length} Upcoming Match${upcomingMatches.length !== 1 ? 'es' : ''}`);
+      const matchText = upcomingMatches.length === 1 ? t('chat.upcomingMatch') : t('chat.upcomingMatches');
+      parts.push(`${upcomingMatches.length} ${matchText}`);
     }
 
     return parts.join(' · ');

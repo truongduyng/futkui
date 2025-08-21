@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from 'react-i18next';
 
 interface CreateMatchModalProps {
   visible: boolean;
@@ -29,6 +30,7 @@ export function CreateMatchModal({
   onClose,
   onCreateMatch,
 }: CreateMatchModalProps) {
+  const { t } = useTranslation();
   const [description, setDescription] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
@@ -37,8 +39,8 @@ export function CreateMatchModal({
   const handleCreate = () => {
     if (!description.trim()) {
       Alert.alert(
-        "Error",
-        "Please enter match details including time, location, and game type",
+        t('common.error'),
+        t('chat.errorMatchDetails'),
       );
       return;
     }
@@ -47,7 +49,7 @@ export function CreateMatchModal({
     const matchDateTime = selectedDate;
 
     onCreateMatch({
-      title: "Match Event",
+      title: t('chat.matchEvent'),
       description: description.trim(),
       gameType: "match",
       location: "",
@@ -86,17 +88,17 @@ export function CreateMatchModal({
         <View style={styles.header}>
           <TouchableOpacity onPress={handleClose} style={styles.cancelButton}>
             <Text style={[styles.cancelText, { color: colors.text }]}>
-              Cancel
+              {t('common.cancel')}
             </Text>
           </TouchableOpacity>
           <Text style={[styles.title, { color: colors.text }]}>
-            Create Match
+            {t('chat.createMatchTitle')}
           </Text>
           <TouchableOpacity
             onPress={handleCreate}
             style={[styles.createButton, { backgroundColor: colors.tint }]}
           >
-            <Text style={styles.createText}>Create</Text>
+            <Text style={styles.createText}>{t('common.create')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -104,13 +106,12 @@ export function CreateMatchModal({
 
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              Match Details
+              {t('chat.matchDetails')}
             </Text>
             <Text
               style={[styles.sectionHint, { color: colors.tabIconDefault }]}
             >
-              Include location, time, game type, what to bring, any special
-              instructions, etc.
+              {t('chat.matchDetailsHint')}
             </Text>
             <TextInput
               style={[
@@ -119,7 +120,7 @@ export function CreateMatchModal({
               ]}
               value={description}
               onChangeText={setDescription}
-              placeholder="e.g., Join us for football at Central Park this Saturday at 6pm. Internal match between group members. Please bring water bottle and wear sports gear. Meet at the main entrance 15 minutes early."
+              placeholder={t('chat.matchDetailsPlaceholder')}
               placeholderTextColor={colors.tabIconDefault}
               multiline
               maxLength={500}
@@ -129,12 +130,12 @@ export function CreateMatchModal({
 
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              Date & Time
+              {t('chat.dateTime')}
             </Text>
             <Text
               style={[styles.sectionHint, { color: colors.tabIconDefault }]}
             >
-              Select when the match will take place
+              {t('chat.dateTimeHint')}
             </Text>
             <View style={[styles.pickerContainer]}>
               <DateTimePicker
