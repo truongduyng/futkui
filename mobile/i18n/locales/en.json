@@ -225,5 +225,83 @@
     "title": "Group Options",
     "shareGroup": "Share Group",
     "leaveGroup": "Leave Group"
+  },
+  "hooks": {
+    "shareGroup": {
+      "copied": "Copied!",
+      "copiedMessage": "Group link copied to clipboard",
+      "errorTitle": "Error",
+      "failedCopy": "Failed to copy link to clipboard"
+    },
+    "leaveGroup": {
+      "title": "Leave Group",
+      "confirmMessage": "Are you sure you want to leave \"{groupName}\"?",
+      "leave": "Leave",
+      "cancel": "Cancel",
+      "successTitle": "Left Group",
+      "successMessage": "You have left {groupName}",
+      "errorTitle": "Error",
+      "membershipNotFound": "Unable to find your membership in this group.",
+      "failedToLeave": "Failed to leave group. Please try again."
+    },
+    "sendMessage": {
+      "errorTitle": "Error",
+      "waitProfile": "Please wait for your profile to load.",
+      "failedSend": "Failed to send message. Please try again."
+    },
+    "sendPoll": {
+      "errorTitle": "Error",
+      "waitProfile": "Please wait for your profile to load.",
+      "failedSend": "Failed to send poll. Please try again."
+    },
+    "createMatch": {
+      "errorTitle": "Error",
+      "waitProfile": "Please wait for your profile to load.",
+      "failedCreate": "Failed to create match. Please try again."
+    },
+    "addReaction": {
+      "errorTitle": "Error",
+      "waitProfile": "Please wait for your profile to load.",
+      "failedAdd": "Failed to add reaction. Please try again."
+    },
+    "vote": {
+      "errorTitle": "Error",
+      "waitProfile": "Please wait for your profile to load.",
+      "failedVote": "Failed to vote. Please try again."
+    },
+    "closePoll": {
+      "title": "Close Poll",
+      "confirmMessage": "Are you sure you want to close this poll? This action cannot be undone.",
+      "closePoll": "Close Poll",
+      "cancel": "Cancel",
+      "errorTitle": "Error",
+      "waitProfile": "Please wait for your profile to load.",
+      "failedClose": "Failed to close poll. Please try again."
+    },
+    "rsvp": {
+      "errorTitle": "Error",
+      "waitProfile": "Please wait for your profile to load.",
+      "failedRsvp": "Failed to RSVP. Please try again."
+    },
+    "checkIn": {
+      "successTitle": "Success",
+      "successMessage": "You've checked in to the match!",
+      "errorTitle": "Error",
+      "waitProfile": "Please wait for your profile to load.",
+      "failedCheckIn": "Failed to check in. Please try again."
+    },
+    "closeMatch": {
+      "title": "Close Match",
+      "confirmMessage": "Are you sure you want to close this match? This action cannot be undone.",
+      "closeMatch": "Close Match",
+      "cancel": "Cancel",
+      "errorTitle": "Error",
+      "waitProfile": "Please wait for your profile to load.",
+      "failedClose": "Failed to close match. Please try again."
+    }
+  },
+  "bot": {
+    "groupName": "FutKui",
+    "groupDescription": "Your personal FutKui assistant for notifications and updates"
   }
 }

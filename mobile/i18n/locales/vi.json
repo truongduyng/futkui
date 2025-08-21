@@ -210,7 +210,7 @@
     "selectLanguage": "Chọn ngôn ngữ",
     "english": "English",
     "vietnamese": "Tiếng Việt",
-    "copyText": "Sao chép văn bản",
+    "copyText": "Sao chép",
     "reactions": "Phản ứng",
     "uploading": "Đang tải lên...",
     "permissionNeeded": "Cần quyền truy cập",
@@ -225,5 +225,83 @@
     "title": "Tùy chọn nhóm",
     "shareGroup": "Chia sẻ nhóm",
     "leaveGroup": "Rời khỏi nhóm"
+  },
+  "hooks": {
+    "shareGroup": {
+      "copied": "Đã sao chép!",
+      "copiedMessage": "Link nhóm đã được sao chép vào clipboard",
+      "errorTitle": "Lỗi",
+      "failedCopy": "Không thể sao chép link vào clipboard"
+    },
+    "leaveGroup": {
+      "title": "Rời khỏi nhóm",
+      "confirmMessage": "Bạn có chắc chắn muốn rời khỏi \"{groupName}\"?",
+      "leave": "Rời khỏi",
+      "cancel": "Hủy",
+      "successTitle": "Đã rời nhóm",
+      "successMessage": "Bạn đã rời khỏi {groupName}",
+      "errorTitle": "Lỗi",
+      "membershipNotFound": "Không thể tìm thấy thành viên của bạn trong nhóm này.",
+      "failedToLeave": "Không thể rời khỏi nhóm. Vui lòng thử lại."
+    },
+    "sendMessage": {
+      "errorTitle": "Lỗi",
+      "waitProfile": "Vui lòng đợi hồ sơ của bạn tải xong.",
+      "failedSend": "Không thể gửi tin nhắn. Vui lòng thử lại."
+    },
+    "sendPoll": {
+      "errorTitle": "Lỗi",
+      "waitProfile": "Vui lòng đợi hồ sơ của bạn tải xong.",
+      "failedSend": "Không thể gửi bình chọn. Vui lòng thử lại."
+    },
+    "createMatch": {
+      "errorTitle": "Lỗi",
+      "waitProfile": "Vui lòng đợi hồ sơ của bạn tải xong.",
+      "failedCreate": "Không thể tạo trận đấu. Vui lòng thử lại."
+    },
+    "addReaction": {
+      "errorTitle": "Lỗi",
+      "waitProfile": "Vui lòng đợi hồ sơ của bạn tải xong.",
+      "failedAdd": "Không thể thêm phản ứng. Vui lòng thử lại."
+    },
+    "vote": {
+      "errorTitle": "Lỗi",
+      "waitProfile": "Vui lòng đợi hồ sơ của bạn tải xong.",
+      "failedVote": "Không thể bình chọn. Vui lòng thử lại."
+    },
+    "closePoll": {
+      "title": "Đóng bình chọn",
+      "confirmMessage": "Bạn có chắc chắn muốn đóng bình chọn này? Hành động này không thể hoàn tác.",
+      "closePoll": "Đóng bình chọn",
+      "cancel": "Hủy",
+      "errorTitle": "Lỗi",
+      "waitProfile": "Vui lòng đợi hồ sơ của bạn tải xong.",
+      "failedClose": "Không thể đóng bình chọn. Vui lòng thử lại."
+    },
+    "rsvp": {
+      "errorTitle": "Lỗi",
+      "waitProfile": "Vui lòng đợi hồ sơ của bạn tải xong.",
+      "failedRsvp": "Không thể phản hồi RSVP. Vui lòng thử lại."
+    },
+    "checkIn": {
+      "successTitle": "Thành công",
+      "successMessage": "Bạn đã check-in vào trận đấu!",
+      "errorTitle": "Lỗi",
+      "waitProfile": "Vui lòng đợi hồ sơ của bạn tải xong.",
+      "failedCheckIn": "Không thể check-in. Vui lòng thử lại."
+    },
+    "closeMatch": {
+      "title": "Đóng trận đấu",
+      "confirmMessage": "Bạn có chắc chắn muốn đóng trận đấu này? Hành động này không thể hoàn tác.",
+      "closeMatch": "Đóng trận đấu",
+      "cancel": "Hủy",
+      "errorTitle": "Lỗi",
+      "waitProfile": "Vui lòng đợi hồ sơ của bạn tải xong.",
+      "failedClose": "Không thể đóng trận đấu. Vui lòng thử lại."
+    }
+  },
+  "bot": {
+    "groupName": "FutKui",
+    "groupDescription": "Trợ lý cá nhân FutKui của bạn cho thông báo và cập nhật"
   }
 }

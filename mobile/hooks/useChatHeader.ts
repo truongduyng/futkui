@@ -1,6 +1,7 @@
 import { Colors } from "@/constants/Colors";
 import { useNavigation } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 interface UseChatHeaderProps {
   group: any;
@@ -8,6 +9,7 @@ interface UseChatHeaderProps {
 
 export function useChatHeader({ group }: UseChatHeaderProps) {
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const colors = Colors["light"];
   const [showBottomSheet, setShowBottomSheet] = useState(false);
 
@@ -23,7 +25,7 @@ export function useChatHeader({ group }: UseChatHeaderProps) {
     if (group) {
       navigation.setOptions({
         title: group.name,
-        headerBackTitle: "Back",
+        headerBackTitle: t('common.back'),
         headerShown: true,
         headerStyle: {
           backgroundColor: colors.background,
@@ -35,7 +37,7 @@ export function useChatHeader({ group }: UseChatHeaderProps) {
         headerRight: undefined
       });
     }
-  }, [group, navigation, colors]);
+  }, [group, navigation, colors, t]);
 
   return { showOptionsMenu, showBottomSheet, hideOptionsMenu };
 }

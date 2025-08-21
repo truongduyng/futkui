@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { Alert } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useToast } from './useToast';
 
 interface Profile {
@@ -61,27 +62,28 @@ export function useChatHandlers({
   setSelectedImageUrl,
 }: UseChatHandlersProps) {
   const router = useRouter();
+  const { t } = useTranslation();
   const { showSuccess, showError } = useToast();
 
   const handleShareGroup = useCallback(async () => {
     if (group?.shareLink) {
       try {
         await Clipboard.setStringAsync(group.shareLink);
-        showSuccess("Copied!", "Group link copied to clipboard");
+        showSuccess(t('hooks.shareGroup.copied'), t('hooks.shareGroup.copiedMessage'));
       } catch (error) {
         console.error("Copy error:", error);
-        showError("Error", "Failed to copy link to clipboard");
+        showError(t('hooks.shareGroup.errorTitle'), t('hooks.shareGroup.failedCopy'));
       }
     }
-  }, [group?.shareLink, showSuccess, showError]);
+  }, [group?.shareLink, showSuccess, showError, t]);
 
   const handleLeaveGroup = useCallback(() => {
     Alert.alert(
-      "Leave Group",
-      `Are you sure you want to leave "${group?.name}"?`,
+      t('hooks.leaveGroup.title'),
+      t('hooks.leaveGroup.confirmMessage', { groupName: group?.name }),
       [
         {
-          text: "Leave",
+          text: t('hooks.leaveGroup.leave'),
           style: "destructive",
           onPress: async () => {
             if (!currentProfile || !group) return;
@@ -90,27 +92,27 @@ export function useChatHandlers({
               if (userMembership) {
                 await leaveGroup(userMembership.id);
                 router.back();
-                showSuccess("Left Group", `You have left ${group.name}`);
+                showSuccess(t('hooks.leaveGroup.successTitle'), t('hooks.leaveGroup.successMessage', { groupName: group.name }));
               } else {
                 showError(
-                  "Error",
-                  "Unable to find your membership in this group.",
+                  t('hooks.leaveGroup.errorTitle'),
+                  t('hooks.leaveGroup.membershipNotFound'),
                 );
               }
             } catch (error) {
               console.error("Leave group error:", error);
-              showError("Error", "Failed to leave group. Please try again.");
+              showError(t('hooks.leaveGroup.errorTitle'), t('hooks.leaveGroup.failedToLeave'));
             }
           },
         },
-        { text: "Cancel", style: "cancel" },
+        { text: t('hooks.leaveGroup.cancel'), style: "cancel" },
       ],
     );
-  }, [currentProfile, group, userMembership, leaveGroup, router, showSuccess, showError]);
+  }, [currentProfile, group, userMembership, leaveGroup, router, showSuccess, showError, t]);
 
   const handleSendMessage = async (content: string, imageUri?: string, mentions?: string[]) => {
     if (!currentProfile) {
-      showError("Error", "Please wait for your profile to load.");
+      showError(t('hooks.sendMessage.errorTitle'), t('hooks.sendMessage.waitProfile'));
       return;
     }
 
@@ -128,14 +130,14 @@ export function useChatHandlers({
       setIsNearBottom(true);
       setShowScrollToBottom(false);
     } catch (error) {
-      showError("Error", "Failed to send message. Please try again.");
+      showError(t('hooks.sendMessage.errorTitle'), t('hooks.sendMessage.failedSend'));
       console.error("Error sending message:", error);
     }
   };
 
   const handleSendPoll = async (question: string, options: { id: string; text: string }[], allowMultiple: boolean, expiresAt?: number) => {
     if (!currentProfile) {
-      showError("Error", "Please wait for your profile to load.");
+      showError(t('hooks.sendPoll.errorTitle'), t('hooks.sendPoll.waitProfile'));
       return;
     }
 
@@ -154,7 +156,7 @@ export function useChatHandlers({
       setIsNearBottom(true);
       setShowScrollToBottom(false);
     } catch (error) {
-      showError("Error", "Failed to send poll. Please try again.");
+      showError(t('hooks.sendPoll.errorTitle'), t('hooks.sendPoll.failedSend'));
       console.error("Error sending poll:", error);
     }
   };
@@ -167,7 +169,7 @@ export function useChatHandlers({
     matchDate: number;
   }) => {
     if (!currentProfile) {
-      showError("Error", "Please wait for your profile to load.");
+      showError(t('hooks.createMatch.errorTitle'), t('hooks.createMatch.waitProfile'));
       return;
     }
 
@@ -187,7 +189,7 @@ export function useChatHandlers({
       setIsNearBottom(true);
       setShowScrollToBottom(false);
     } catch (error) {
-      showError("Error", "Failed to create match. Please try again.");
+      showError(t('hooks.createMatch.errorTitle'), t('hooks.createMatch.failedCreate'));
       console.error("Error creating match:", error);
     }
   };
@@ -198,7 +200,7 @@ export function useChatHandlers({
     existingReactions: any[],
   ) => {
     if (!currentProfile) {
-      showError("Error", "Please wait for your profile to load.");
+      showError(t('hooks.addReaction.errorTitle'), t('hooks.addReaction.waitProfile'));
       return;
     }
 
@@ -211,10 +213,10 @@ export function useChatHandlers({
         existingReactions,
       });
     } catch (error) {
-      showError("Error", "Failed to add reaction. Please try again.");
+      showError(t('hooks.addReaction.errorTitle'), t('hooks.addReaction.failedAdd'));
       console.error("Error adding reaction:", error);
     }
-  }, [currentProfile, addReaction, showError]);
+  }, [currentProfile, addReaction, showError, t]);
 
   const handleReactionPress = useCallback((
     messageId: string,
@@ -230,7 +232,7 @@ export function useChatHandlers({
 
   const handleVote = useCallback(async (pollId: string, optionId: string, existingVotes: any[], allowMultiple: boolean) => {
     if (!currentProfile) {
-      showError("Error", "Please wait for your profile to load.");
+      showError(t('hooks.vote.errorTitle'), t('hooks.vote.waitProfile'));
       return;
     }
 
@@ -243,41 +245,41 @@ export function useChatHandlers({
         allowMultiple,
       });
     } catch (error) {
-      showError("Error", "Failed to vote. Please try again.");
+      showError(t('hooks.vote.errorTitle'), t('hooks.vote.failedVote'));
       console.error("Error voting:", error);
     }
-  }, [currentProfile, vote, showError]);
+  }, [currentProfile, vote, showError, t]);
 
   const handleClosePoll = useCallback(async (pollId: string) => {
     if (!currentProfile) {
-      showError("Error", "Please wait for your profile to load.");
+      showError(t('hooks.closePoll.errorTitle'), t('hooks.closePoll.waitProfile'));
       return;
     }
 
     Alert.alert(
-      "Close Poll",
-      "Are you sure you want to close this poll? This action cannot be undone.",
+      t('hooks.closePoll.title'),
+      t('hooks.closePoll.confirmMessage'),
       [
         {
-          text: "Close Poll",
+          text: t('hooks.closePoll.closePoll'),
           style: "destructive",
           onPress: async () => {
             try {
               await closePoll(pollId);
             } catch (error) {
-              showError("Error", "Failed to close poll. Please try again.");
+              showError(t('hooks.closePoll.errorTitle'), t('hooks.closePoll.failedClose'));
               console.error("Error closing poll:", error);
             }
           },
         },
-        { text: "Cancel", style: "cancel" },
+        { text: t('hooks.closePoll.cancel'), style: "cancel" },
       ]
     );
-  }, [currentProfile, closePoll, showError]);
+  }, [currentProfile, closePoll, showError, t]);
 
   const handleRsvp = useCallback(async (matchId: string, response: 'yes' | 'no' | 'maybe') => {
     if (!currentProfile) {
-      showError("Error", "Please wait for your profile to load.");
+      showError(t('hooks.rsvp.errorTitle'), t('hooks.rsvp.waitProfile'));
       return;
     }
 
@@ -290,14 +292,14 @@ export function useChatHandlers({
         existingRsvps: (match as any)?.rsvps || [],
       });
     } catch (error) {
-      showError("Error", "Failed to RSVP. Please try again.");
+      showError(t('hooks.rsvp.errorTitle'), t('hooks.rsvp.failedRsvp'));
       console.error("Error RSVPing to match:", error);
     }
-  }, [currentProfile, rsvpToMatch, matches, showError]);
+  }, [currentProfile, rsvpToMatch, matches, showError, t]);
 
   const handleCheckIn = useCallback(async (matchId: string) => {
     if (!currentProfile) {
-      showError("Error", "Please wait for your profile to load.");
+      showError(t('hooks.checkIn.errorTitle'), t('hooks.checkIn.waitProfile'));
       return;
     }
 
@@ -306,39 +308,39 @@ export function useChatHandlers({
         matchId,
         userId: currentProfile.id,
       });
-      showSuccess("Success", "You've checked in to the match!");
+      showSuccess(t('hooks.checkIn.successTitle'), t('hooks.checkIn.successMessage'));
     } catch (error) {
-      showError("Error", "Failed to check in. Please try again.");
+      showError(t('hooks.checkIn.errorTitle'), t('hooks.checkIn.failedCheckIn'));
       console.error("Error checking in to match:", error);
     }
-  }, [currentProfile, checkInToMatch, showSuccess, showError]);
+  }, [currentProfile, checkInToMatch, showSuccess, showError, t]);
 
   const handleCloseMatch = useCallback(async (matchId: string) => {
     if (!currentProfile) {
-      showError("Error", "Please wait for your profile to load.");
+      showError(t('hooks.closeMatch.errorTitle'), t('hooks.closeMatch.waitProfile'));
       return;
     }
 
     Alert.alert(
-      "Close Match",
-      "Are you sure you want to close this match? This action cannot be undone.",
+      t('hooks.closeMatch.title'),
+      t('hooks.closeMatch.confirmMessage'),
       [
         {
-          text: "Close Match",
+          text: t('hooks.closeMatch.closeMatch'),
           style: "destructive",
           onPress: async () => {
             try {
               await closeMatch(matchId);
             } catch (error) {
-              showError("Error", "Failed to close match. Please try again.");
+              showError(t('hooks.closeMatch.errorTitle'), t('hooks.closeMatch.failedClose'));
               console.error("Error closing match:", error);
             }
           },
         },
-        { text: "Cancel", style: "cancel" },
+        { text: t('hooks.closeMatch.cancel'), style: "cancel" },
       ]
     );
-  }, [currentProfile, closeMatch, showError]);
+  }, [currentProfile, closeMatch, showError, t]);
 
   return {
     handleShareGroup,

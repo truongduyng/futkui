@@ -308,8 +308,8 @@ export function useInstantDB() {
       await db.transact([
         // Create the group
         db.tx.groups[groupId].update({
-          name: 'FutKui',
-          description: 'Your personal FutKui assistant for notifications and updates',
+          name: getTranslation('bot.groupName'),
+          description: getTranslation('bot.groupDescription'),
           adminId: botProfileId,
           createdAt: Date.now(),
           shareLink,
