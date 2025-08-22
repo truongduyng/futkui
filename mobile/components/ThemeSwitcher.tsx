@@ -33,8 +33,8 @@ export function ThemeSwitcher({ visible, onClose }: ThemeSwitcherProps) {
       transparent={true}
       presentationStyle="overFullScreen"
     >
-      <View style={styles.overlay}>
-        <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <TouchableOpacity style={styles.overlay} onPress={onClose} activeOpacity={1}>
+        <TouchableOpacity style={[styles.container, { backgroundColor: colors.background }]} activeOpacity={1}>
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.text }]}>{t('explore.theme')}</Text>
             <TouchableOpacity onPress={onClose}>
@@ -71,8 +71,8 @@ export function ThemeSwitcher({ visible, onClose }: ThemeSwitcherProps) {
               </TouchableOpacity>
             ))}
           </View>
-        </View>
-      </View>
+        </TouchableOpacity>
+      </TouchableOpacity>
     </Modal>
   );
 }

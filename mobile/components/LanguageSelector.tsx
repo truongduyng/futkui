@@ -38,8 +38,8 @@ const colors = isDark ? Colors.dark : Colors.light;
       transparent={true}
       presentationStyle="overFullScreen"
     >
-      <View style={styles.overlay}>
-        <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <TouchableOpacity style={styles.overlay} onPress={onClose} activeOpacity={1}>
+        <TouchableOpacity style={[styles.container, { backgroundColor: colors.background }]} activeOpacity={1}>
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.text }]}>{t('explore.language')}</Text>
             <TouchableOpacity onPress={onClose}>
@@ -72,8 +72,8 @@ const colors = isDark ? Colors.dark : Colors.light;
               </TouchableOpacity>
             ))}
           </View>
-        </View>
-      </View>
+        </TouchableOpacity>
+      </TouchableOpacity>
     </Modal>
   );
 }
