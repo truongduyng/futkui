@@ -227,8 +227,9 @@
   },
   "groupOptions": {
     "title": "Tùy chọn nhóm",
-    "shareGroup": "Chia sẻ nhóm",
-    "leaveGroup": "Rời khỏi nhóm"
+    "shareGroup": "Chia sẻ link nhóm với bạn bè",
+    "leaveGroup": "Rời khỏi nhóm",
+    "viewActivities": "Xem hoạt động"
   },
   "hooks": {
     "shareGroup": {

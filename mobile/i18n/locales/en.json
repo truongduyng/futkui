@@ -228,7 +228,8 @@
   "groupOptions": {
     "title": "Group Options",
     "shareGroup": "Share Group",
-    "leaveGroup": "Leave Group"
+    "leaveGroup": "Leave Group",
+    "viewActivities": "View Activities",
   },
   "hooks": {
     "shareGroup": {

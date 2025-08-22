@@ -21,6 +21,7 @@ interface GroupOptionsBottomSheetProps {
   visible: boolean;
   onClose: () => void;
   onShareGroup: () => void;
+  onViewActivities: () => void;
   onLeaveGroup: () => void;
 }
 
@@ -28,6 +29,7 @@ export function GroupOptionsBottomSheet({
   visible,
   onClose,
   onShareGroup,
+  onViewActivities,
   onLeaveGroup,
 }: GroupOptionsBottomSheetProps) {
   const { t } = useTranslation();
@@ -71,6 +73,11 @@ const colors = isDark ? Colors.dark : Colors.light;
     setTimeout(() => onShareGroup(), 100);
   };
 
+  const handleViewActivities = () => {
+    onClose();
+    setTimeout(() => onViewActivities(), 100);
+  };
+
   const handleLeaveGroup = () => {
     onClose();
     setTimeout(() => onLeaveGroup(), 100);
@@ -104,6 +111,24 @@ const colors = isDark ? Colors.dark : Colors.light;
                 <Text style={[styles.title, { color: colors.text }]}>
                   {t('groupOptions.title')}
                 </Text>
+
+                <TouchableOpacity
+                  style={[styles.option, { backgroundColor: colors.background }]}
+                  onPress={handleViewActivities}
+                  activeOpacity={0.6}
+                >
+                  <View style={styles.optionLeft}>
+                    <Ionicons
+                      name="analytics-outline"
+                      size={24}
+                      color={colors.tint}
+                      style={styles.optionIcon}
+                    />
+                    <Text style={[styles.optionText, { color: colors.text }]}>
+                      {t('groupOptions.viewActivities')}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
 
                 <TouchableOpacity
                   style={[styles.option, styles.optionFirst, { backgroundColor: colors.background }]}
