@@ -86,6 +86,37 @@ export const MessageBubble = React.memo(function MessageBubble({
 
   const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "😡"];
 
+  // Dynamic styles based on theme
+  const dynamicStyles = {
+    reactionButton: {
+      ...styles.reactionButton,
+      backgroundColor: isDark ? "rgba(42, 42, 42, 0.9)" : "rgba(255, 255, 255, 0.9)",
+      borderColor: isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.15)",
+    },
+    reactionOptionsContainer: {
+      ...styles.reactionOptionsContainer,
+      backgroundColor: isDark ? "#2A2A2A" : "white",
+      borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+    },
+    messageOptionsContainer: {
+      ...styles.messageOptionsContainer,
+      backgroundColor: isDark ? "#2A2A2A" : "white",
+      borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+    },
+    messageOptionText: {
+      ...styles.messageOptionText,
+      color: isDark ? "#ECEDEE" : "#333",
+    },
+    bottomSheet: {
+      ...styles.bottomSheet,
+      backgroundColor: isDark ? "#2A2A2A" : "white",
+    },
+    bottomSheetHeader: {
+      ...styles.bottomSheetHeader,
+      borderBottomColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+    },
+  };
+
   const formatTime = (date: Date) => {
     return new Date(date).toLocaleTimeString([], {
       hour: "2-digit",
@@ -216,7 +247,7 @@ export const MessageBubble = React.memo(function MessageBubble({
                 styles.bubble,
                 isOwnMessage
                   ? [styles.ownBubble, { backgroundColor: colors.tint }]
-                  : [styles.otherBubble, { backgroundColor: "#F0F0F0" }],
+                  : [styles.otherBubble, { backgroundColor: isDark ? "#2A2A2A" : "#F0F0F0" }],
               ]}
             >
               <MentionText
@@ -254,7 +285,7 @@ export const MessageBubble = React.memo(function MessageBubble({
               {showReactionOptions && onAddReaction && !isOwnMessage && (
                 <View
                   style={[
-                    styles.reactionOptionsContainer,
+                    dynamicStyles.reactionOptionsContainer,
                     {
                       position: "absolute",
                       left: messagePosition.x,
@@ -278,7 +309,7 @@ export const MessageBubble = React.memo(function MessageBubble({
               {showMessageOptions && content && content.trim() && (
                 <View
                   style={[
-                    styles.messageOptionsContainer,
+                    dynamicStyles.messageOptionsContainer,
                     {
                       position: "absolute",
                       left: messagePosition.x,
@@ -291,8 +322,8 @@ export const MessageBubble = React.memo(function MessageBubble({
                     onPress={handleCopyText}
                   >
                     <View style={styles.messageOptionContent}>
-                      <Ionicons name="copy-outline" size={18} color="#666" />
-                      <Text style={styles.messageOptionText}>{t('chat.copyText')}</Text>
+                      <Ionicons name="copy-outline" size={18} color={isDark ? "#999" : "#666"} />
+                      <Text style={dynamicStyles.messageOptionText}>{t('chat.copyText')}</Text>
                     </View>
                   </TouchableOpacity>
                 </View>
@@ -311,7 +342,7 @@ export const MessageBubble = React.memo(function MessageBubble({
             ]}
           >
             <TouchableOpacity
-              style={styles.reactionButton}
+              style={dynamicStyles.reactionButton}
               onPress={() => setShowReactionDetails(true)}
             >
               <View style={styles.reactionEmojis}>
@@ -359,9 +390,9 @@ export const MessageBubble = React.memo(function MessageBubble({
           activeOpacity={1}
           onPress={() => setShowReactionDetails(false)}
         >
-          <View style={styles.bottomSheet}>
+          <View style={dynamicStyles.bottomSheet}>
             <TouchableOpacity activeOpacity={1}>
-              <View style={styles.bottomSheetHeader}>
+              <View style={dynamicStyles.bottomSheetHeader}>
                 <Text style={[styles.bottomSheetTitle, { color: colors.text }]}>
                   {t('chat.reactions')}
                 </Text>
