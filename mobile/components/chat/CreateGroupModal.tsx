@@ -1,6 +1,5 @@
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useInstantDB } from '@/hooks/useInstantDB';
 import { uploadToR2 } from '@/utils/r2Upload';
 import { id } from '@instantdb/react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -40,7 +39,6 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
-  const { instantClient } = useInstantDB();
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();

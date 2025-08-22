@@ -24,7 +24,7 @@ import i18n from '@/i18n';
 
 export default function ExploreScreen() {
   const { t } = useTranslation();
-  const { isDark } = useTheme();
+  const { isDark, themeMode } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
   const { queryAllGroupsOnce, useProfile, instantClient } =
@@ -36,6 +36,7 @@ export default function ExploreScreen() {
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
   const [isPrivacyModalVisible, setIsPrivacyModalVisible] = useState(false);
   const [isTermsModalVisible, setIsTermsModalVisible] = useState(false);
+  const [isThemeSwitcherVisible, setIsThemeSwitcherVisible] = useState(false);
 
   useEffect(() => {
     const fetchGroups = async () => {
@@ -80,6 +81,10 @@ export default function ExploreScreen() {
 
   const handleTerms = () => {
     setIsTermsModalVisible(true);
+  };
+
+  const handleTheme = () => {
+    setIsThemeSwitcherVisible(true);
   };
 
   const handleLanguageSelection = () => {
@@ -296,6 +301,45 @@ export default function ExploreScreen() {
 
             <TouchableOpacity
               style={styles.menuButton}
+              onPress={handleTheme}
+              activeOpacity={0.8}
+            >
+              <View style={styles.menuButtonContent}>
+                <View
+                  style={[
+                    styles.menuIconContainer,
+                    { backgroundColor: "rgba(139, 69, 19, 0.1)" },
+                  ]}
+                >
+                  <Ionicons name="color-palette-outline" size={20} color="#8B4513" />
+                </View>
+                <View style={styles.menuTextContainer}>
+                  <Text
+                    style={[styles.menuButtonTitle, { color: colors.text }]}
+                  >
+                    {t('explore.theme')}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.menuButtonSubtitle,
+                      { color: colors.tabIconDefault },
+                    ]}
+                  >
+                    {themeMode === 'system' ? t('explore.system') : themeMode === 'dark' ? t('explore.dark') : t('explore.light')}
+                  </Text>
+                </View>
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={colors.tabIconDefault}
+              />
+            </TouchableOpacity>
+
+            <View style={[styles.menuSeparator, { backgroundColor: colors.tabIconDefault }]} />
+
+            <TouchableOpacity
+              style={styles.menuButton}
               onPress={handlePrivacy}
               activeOpacity={0.8}
             >
@@ -410,8 +454,6 @@ export default function ExploreScreen() {
           </View>
         </View>
 
-        <ThemeSwitcher />
-
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             {t('explore.communities')}
@@ -525,6 +567,11 @@ export default function ExploreScreen() {
         onClose={() => setIsTermsModalVisible(false)}
         url="https://futkui.com/en/terms"
         title="Terms of Service"
+      />
+
+      <ThemeSwitcher
+        visible={isThemeSwitcherVisible}
+        onClose={() => setIsThemeSwitcherVisible(false)}
       />
     </SafeAreaView>
   );
