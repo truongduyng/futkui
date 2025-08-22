@@ -16,7 +16,7 @@ const LANGUAGES = [
 ];
 
 export function LanguageSelector({ visible, onClose }: LanguageSelectorProps) {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { isDark } = useTheme();
 const colors = isDark ? Colors.dark : Colors.light;
 
@@ -41,9 +41,9 @@ const colors = isDark ? Colors.dark : Colors.light;
       <View style={styles.overlay}>
         <View style={[styles.container, { backgroundColor: colors.background }]}>
           <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>Select Language</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('explore.language')}</Text>
             <TouchableOpacity onPress={onClose}>
-              <Text style={[styles.closeButton, { color: colors.tint }]}>Done</Text>
+              <Text style={[styles.closeButton, { color: colors.tint }]}>{t('explore.done')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -60,7 +60,9 @@ const colors = isDark ? Colors.dark : Colors.light;
                 ]}
                 onPress={() => changeLanguage(language.code)}
               >
-                <Text style={styles.flag}>{language.flag}</Text>
+                <View style={styles.iconContainer}>
+                  <Text style={styles.flag}>{language.flag}</Text>
+                </View>
                 <Text style={[styles.languageName, { color: colors.text }]}>
                   {language.name}
                 </Text>
@@ -120,9 +122,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'transparent',
   },
-  flag: {
-    fontSize: 24,
+  iconContainer: {
+    width: 24,
+    height: 24,
     marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flag: {
+    fontSize: 20,
   },
   languageName: {
     fontSize: 16,

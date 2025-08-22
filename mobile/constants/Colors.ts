@@ -13,6 +13,7 @@ export const Colors = {
   light: {
     text: dark,
     background: '#fff',
+    card: '#f8f9fa',
     tint: primary,
     accent: accent,
     neutral: neutral,
@@ -25,6 +26,7 @@ export const Colors = {
   dark: {
     text: '#ECEDEE',
     background: dark,
+    card: '#2a2a2a',
     tint: primary,
     accent: accent,
     neutral: neutral,

@@ -145,39 +145,52 @@ export function GroupList({
     const isBotGroup = group.admin?.handle === 'fk';
     const unreadCount = getUnreadCount(group.id, membership);
 
+    // Configuration object to reduce if/else statements
+    const groupConfig = React.useMemo(() => {
+      const currentColors = isDark ? Colors.dark : Colors.light;
+
+      if (isBotGroup) {
+        return {
+          itemStyles: [styles.groupItem, { backgroundColor: currentColors.card, borderLeftWidth: 4, borderLeftColor: currentColors.tint }],
+          avatarStyles: [styles.avatarContainer, { backgroundColor: currentColors.tint, borderWidth: 2, borderColor: currentColors.tint }],
+          avatarTextStyles: [styles.avatarText, { fontSize: 24 }],
+          nameStyles: [styles.groupName, { color: currentColors.tint, fontWeight: '700' as const }],
+          messageStyles: [styles.lastMessage, { color: currentColors.tint, fontStyle: 'italic' as const }, unreadCount > 0 && { fontWeight: '600' as const, color: currentColors.text }].filter(Boolean),
+          avatarContent: '🤖',
+          showImage: false
+        };
+      }
+
+      return {
+        itemStyles: [styles.groupItem, { backgroundColor: currentColors.background }],
+        avatarStyles: [styles.avatarContainer, group.avatarUrl && styles.avatarContainerWithImage],
+        avatarTextStyles: [styles.avatarText],
+        nameStyles: [styles.groupName, { color: currentColors.text }],
+        messageStyles: [styles.lastMessage, { color: currentColors.tabIconDefault }, unreadCount > 0 && { fontWeight: '600' as const, color: currentColors.text }].filter(Boolean),
+        avatarContent: group.avatar || group.name.charAt(0).toUpperCase(),
+        showImage: !!group.avatarUrl
+      };
+    }, [isBotGroup, group.avatar, group.name, group.avatarUrl, unreadCount]);
+
     return (
       <TouchableOpacity
-        style={[
-          styles.groupItem,
-          { backgroundColor: colors.background },
-          isBotGroup && styles.botGroupItem
-        ]}
+        style={groupConfig.itemStyles}
         onPress={() => onPress(group)}
       >
-        <View style={[
-          styles.avatarContainer,
-          isBotGroup && styles.botAvatarContainer,
-          group.avatarUrl && !isBotGroup && styles.avatarContainerWithImage
-        ]}>
-          {group.avatarUrl && !isBotGroup ? (
+        <View style={groupConfig.avatarStyles}>
+          {groupConfig.showImage ? (
             <CachedAvatar
-              uri={group.avatarUrl}
+              uri={group.avatarUrl!}
               size={50}
               fallbackComponent={
-                <Text style={[
-                  styles.avatarText,
-                  isBotGroup && styles.botAvatarText
-                ]}>
+                <Text style={groupConfig.avatarTextStyles}>
                   {group.name.charAt(0).toUpperCase()}
                 </Text>
               }
             />
           ) : (
-            <Text style={[
-              styles.avatarText,
-              isBotGroup && styles.botAvatarText
-            ]}>
-              {isBotGroup ? '🤖' : (group.avatar || group.name.charAt(0).toUpperCase())}
+            <Text style={groupConfig.avatarTextStyles}>
+              {groupConfig.avatarContent}
             </Text>
           )}
         </View>
@@ -185,11 +198,7 @@ export function GroupList({
         <View style={styles.groupInfo}>
           <View style={styles.groupHeader}>
             <View style={styles.groupNameContainer}>
-              <Text style={[
-                styles.groupName,
-                { color: colors.text },
-                isBotGroup && styles.botGroupName
-              ]}>
+              <Text style={groupConfig.nameStyles}>
                 {group.name}
               </Text>
             </View>
@@ -204,12 +213,7 @@ export function GroupList({
 
           <View style={styles.bottomRow}>
             {lastMessage && (
-              <Text style={[
-                styles.lastMessage,
-                { color: colors.tabIconDefault },
-                isBotGroup && styles.botLastMessage,
-                unreadCount > 0 && styles.unreadMessageText
-              ]}>
+              <Text style={groupConfig.messageStyles}>
                 {getMessagePreview(lastMessage)}
               </Text>
             )}
@@ -224,7 +228,7 @@ export function GroupList({
         </View>
       </TouchableOpacity>
     );
-  }, [getLastMessage, getUnreadCount, getMessagePreview, formatTime, colors]);
+  }, [getLastMessage, getUnreadCount, colors.tabIconDefault, formatTime, getMessagePreview, isDark]);
 
   const renderGroup = React.useCallback(({ item: group }: { item: Group }) => {
     const membership = memberships?.find(m => m.group?.id === group.id);
@@ -497,28 +501,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
-  // Bot group specific styles
-  botGroupItem: {
-    borderLeftWidth: 4,
-    borderLeftColor: Colors['dark'].tint,
-    backgroundColor: '#F0FDF4',
-  },
-  botAvatarContainer: {
-    backgroundColor: Colors['dark'].tint,
-    borderWidth: 2,
-    borderColor: Colors['dark'].tint,
-  },
-  botAvatarText: {
-    fontSize: 24,
-  },
-  botGroupName: {
-    fontWeight: '700',
-    color: Colors['dark'].tint,
-  },
-  botLastMessage: {
-    fontStyle: 'italic',
-    color: Colors['dark'].tint,
-  },
   // Header right styles
   headerRight: {
     alignItems: 'flex-end',
@@ -545,10 +527,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
     paddingHorizontal: 2,
-  },
-  unreadMessageText: {
-    fontWeight: '600',
-    color: Colors['dark'].text,
   },
   // Join section styles
   joinSection: {

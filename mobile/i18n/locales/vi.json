@@ -128,7 +128,9 @@
     "deletionFailed": "Không thể xóa tài khoản. Vui lòng thử lại.",
     "noCommunitiesYet": "Chưa có cộng đồng nào để giới thiệu.",
     "authError": "Không thể xác thực. Vui lòng thử đăng nhập lại.",
-    "deleteError": "Không thể xóa tài khoản. Vui lòng kiểm tra kết nối và thử lại."
+    "deleteError": "Không thể xóa tài khoản. Vui lòng kiểm tra kết nối và thử lại.",
+    "language": "Ngôn ngữ",
+    "done": "Xong"
   },
   "chat": {
     "typeMessage": "Nhập tin nhắn...",
