@@ -7,7 +7,7 @@ import { useUnreadCount } from '@/contexts/UnreadCountContext';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Animated, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Animated, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/useToast';
 

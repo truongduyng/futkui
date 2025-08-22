@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { registerForPushNotificationsAsync } from '@/utils/notifications';
 import { uploadToR2 } from '@/utils/r2Upload';
