@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import React from 'react';
 import { Text, TextStyle } from 'react-native';
 
@@ -9,11 +10,12 @@ interface MentionTextProps {
 }
 
 export const MentionText = React.memo(function MentionText({ text, style, mentionStyle }: MentionTextProps) {
-  const colors = Colors['light'];
-  
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
+
   // Parse text to find mentions (@username)
   const parts = text.split(/(@\w+)/g);
-  
+
   return (
     <Text style={style}>
       {parts.map((part, index) => {

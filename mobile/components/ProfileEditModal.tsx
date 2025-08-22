@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { uploadToR2 } from '@/utils/r2Upload';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,7 +26,8 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
   const [displayName, setDisplayName] = useState(profile.displayName || '');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const colors = Colors['light'];
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
   const { instantClient } = useInstantDB();
 
   useEffect(() => {

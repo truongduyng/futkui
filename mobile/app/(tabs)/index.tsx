@@ -2,6 +2,7 @@ import { CreateGroupModal } from '@/components/chat/CreateGroupModal';
 import { GroupList } from '@/components/chat/GroupList';
 import { Colors } from '@/constants/Colors';
 import { GroupRefreshProvider } from '@/contexts/GroupRefreshContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useUnreadCount } from '@/contexts/UnreadCountContext';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { useRouter } from 'expo-router';
@@ -12,11 +13,12 @@ import { useToast } from '@/hooks/useToast';
 
 export default function ChatScreen() {
   const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [isJoining, setIsJoining] = useState(false);
   const router = useRouter();
-  const colors = Colors['light'];
   const { showSuccess, showError } = useToast();
 
   const { useGroups, useLastMessages, useProfile, createGroup, queryGroupByShareLink, joinGroup } = useInstantDB();

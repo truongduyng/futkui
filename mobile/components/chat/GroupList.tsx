@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import React from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -67,7 +67,8 @@ export function GroupList({
   isJoining = false
 }: GroupListProps) {
   const { t } = useTranslation();
-  const colors = Colors['light'];
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
   // Helper function to get unread count for a group from the provided data
   const getUnreadCount = React.useCallback((groupId: string, membership?: any) => {
     if (!unreadData?.messages) return 0;
@@ -499,24 +500,24 @@ const styles = StyleSheet.create({
   // Bot group specific styles
   botGroupItem: {
     borderLeftWidth: 4,
-    borderLeftColor: Colors['light'].tint,
+    borderLeftColor: Colors['dark'].tint,
     backgroundColor: '#F0FDF4',
   },
   botAvatarContainer: {
-    backgroundColor: Colors['light'].tint,
+    backgroundColor: Colors['dark'].tint,
     borderWidth: 2,
-    borderColor: Colors['light'].tint,
+    borderColor: Colors['dark'].tint,
   },
   botAvatarText: {
     fontSize: 24,
   },
   botGroupName: {
     fontWeight: '700',
-    color: Colors['light'].tint,
+    color: Colors['dark'].tint,
   },
   botLastMessage: {
     fontStyle: 'italic',
-    color: Colors['light'].tint,
+    color: Colors['dark'].tint,
   },
   // Header right styles
   headerRight: {
@@ -547,7 +548,7 @@ const styles = StyleSheet.create({
   },
   unreadMessageText: {
     fontWeight: '600',
-    color: Colors['light'].text,
+    color: Colors['dark'].text,
   },
   // Join section styles
   joinSection: {

@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useTranslation } from 'react-i18next';
@@ -9,7 +10,8 @@ interface LoadingStatesProps {
 
 export function LoadingStates({ type }: LoadingStatesProps) {
   const { t } = useTranslation();
-  const colors = Colors["light"];
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
 
   const getContent = () => {
     switch (type) {

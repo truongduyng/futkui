@@ -16,7 +16,8 @@ const LANGUAGES = [
 
 export function LanguageSelector({ visible, onClose }: LanguageSelectorProps) {
   const { i18n } = useTranslation();
-  const colors = Colors['light'];
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
 
   const changeLanguage = async (languageCode: string) => {
     try {

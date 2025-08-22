@@ -1,7 +1,9 @@
 import { CachedAvatar } from "@/components/chat/CachedAvatar";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { WebViewModal } from "@/components/WebViewModal";
 import { Colors } from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 import { useInstantDB } from "@/hooks/useInstantDB";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
@@ -22,7 +24,8 @@ import i18n from '@/i18n';
 
 export default function ExploreScreen() {
   const { t } = useTranslation();
-  const colors = Colors["light"];
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
 
   const { queryAllGroupsOnce, useProfile, instantClient } =
     useInstantDB();
@@ -406,6 +409,8 @@ export default function ExploreScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        <ThemeSwitcher />
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>

@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/Colors';
+import { Colors } from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface WebViewModalProps {
   visible: boolean;
@@ -19,7 +20,8 @@ interface WebViewModalProps {
 }
 
 export function WebViewModal({ visible, onClose, url, title }: WebViewModalProps) {
-  const colors = Colors['light'];
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
 
   return (
     <Modal

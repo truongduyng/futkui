@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -23,7 +24,8 @@ export function CreatePollModal({ visible, onClose, onCreatePoll }: CreatePollMo
     { id: '2', text: '' }
   ]);
   const [allowMultiple, setAllowMultiple] = useState(false);
-  const colors = Colors['light'];
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -42,7 +44,7 @@ export function CreatePollModal({ visible, onClose, onCreatePoll }: CreatePollMo
   };
 
   const updateOption = (id: string, text: string) => {
-    setOptions(options.map(option => 
+    setOptions(options.map(option =>
       option.id === id ? { ...option, text } : option
     ));
   };
@@ -64,7 +66,7 @@ export function CreatePollModal({ visible, onClose, onCreatePoll }: CreatePollMo
     const expiresAt = Date.now() + threeDaysInMs;
 
     onCreatePoll(question.trim(), validOptions, allowMultiple, expiresAt);
-    
+
     // Reset form
     setQuestion('');
     setOptions([
@@ -121,7 +123,7 @@ export function CreatePollModal({ visible, onClose, onCreatePoll }: CreatePollMo
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('chat.options')}</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={addOption}
                 disabled={options.length >= 6}
                 style={[

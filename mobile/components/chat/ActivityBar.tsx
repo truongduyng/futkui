@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -36,7 +37,8 @@ interface ActivityBarProps {
 
 export function ActivityBar({ polls, matches, groupId }: ActivityBarProps) {
   const { t } = useTranslation();
-  const colors = Colors["light"];
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
   const router = useRouter();
 
   // Filter active polls (not closed and not expired)

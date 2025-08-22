@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 import React from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
@@ -9,7 +10,8 @@ interface LoadingHeaderProps {
 export const LoadingHeader = React.memo(function LoadingHeader({
   isLoading,
 }: LoadingHeaderProps) {
-  const colors = Colors["light"];
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
 
   if (!isLoading) return null;
 

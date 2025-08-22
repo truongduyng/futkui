@@ -6,6 +6,7 @@ import { LoadingHeader } from "@/components/chat/LoadingHeader";
 import { LoadingStates } from "@/components/chat/LoadingStates";
 import { MessageInput } from "@/components/chat/MessageInput";
 import { Colors } from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 import { useChatData } from "@/hooks/useChatData";
 import { useChatHandlers } from "@/hooks/useChatHandlers";
 import { useChatHeader } from "@/hooks/useChatHeader";
@@ -27,7 +28,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function ChatScreen() {
   const params = useLocalSearchParams<{ groupId: string }>();
   const groupId = params?.groupId;
-  const colors = Colors["light"];
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);

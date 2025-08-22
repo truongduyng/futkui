@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from "@expo/vector-icons";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
@@ -68,7 +69,8 @@ export function MessageInput({
   const [showMentionPicker, setShowMentionPicker] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const inputRef = useRef<TextInput>(null);
-  const colors = Colors["light"];
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
 
   const handleSend = async () => {
     if ((message.trim() || selectedImage) && !disabled && !isSending) {
@@ -79,12 +81,12 @@ export function MessageInput({
       // Store values before clearing state
       const messageToSend = message.trim();
       const imageToSend = selectedImage || undefined;
-      
+
       setIsSending(true);
-      
+
       try {
         await onSendMessage(messageToSend, imageToSend, mentions);
-        
+
         // Clear state only after successful send
         setMessage("");
         setSelectedImage(null);
@@ -250,10 +252,10 @@ export function MessageInput({
           disabled={disabled || isSending}
           activeOpacity={0.6}
         >
-          <Ionicons 
-            name="camera" 
-            size={20} 
-            color={disabled || isSending ? colors.tabIconDefault + "40" : colors.tabIconDefault} 
+          <Ionicons
+            name="camera"
+            size={20}
+            color={disabled || isSending ? colors.tabIconDefault + "40" : colors.tabIconDefault}
           />
         </TouchableOpacity>
 
@@ -289,7 +291,7 @@ export function MessageInput({
 
         <TextInput
           ref={inputRef}
-          style={[styles.textInput, { 
+          style={[styles.textInput, {
             color: colors.text,
             opacity: isSending ? 0.6 : 1
           }]}
@@ -308,13 +310,6 @@ export function MessageInput({
         <TouchableOpacity
           style={[
             styles.sendButton,
-            {
-              backgroundColor:
-                (message.trim() || selectedImage) && !isSending
-                  ? colors.tint
-                  : colors.tabIconDefault,
-              opacity: isSending ? 0.7 : 1,
-            },
           ]}
           onPress={handleSend}
           disabled={!(message.trim() || selectedImage) || disabled || isSending}
@@ -384,6 +379,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginLeft: 8,
     alignSelf: "flex-end",
+    backgroundColor: Colors['dark'].tint,
   },
   sendButtonText: {
     color: "white",

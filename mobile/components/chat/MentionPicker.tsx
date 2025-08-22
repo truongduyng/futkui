@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import React from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -16,13 +17,14 @@ interface MentionPickerProps {
 }
 
 export function MentionPicker({ members, searchText, onSelectMention, visible }: MentionPickerProps) {
-  const colors = Colors['light'];
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
 
   if (!visible || !searchText) return null;
 
   // Filter members based on search text (excluding the @ symbol)
   const query = searchText.toLowerCase().replace('@', '');
-  const filteredMembers = members.filter(member => 
+  const filteredMembers = members.filter(member =>
     member.handle.toLowerCase().includes(query) ||
     (member.displayName && member.displayName.toLowerCase().includes(query))
   ).slice(0, 5); // Limit to 5 suggestions

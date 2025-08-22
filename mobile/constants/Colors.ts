@@ -4,7 +4,7 @@
  */
 
 // Primary color palette
-const primary = '#0a7ea4';
+const primary = '#0A7EA4';
 const accent = '#FF6B00';
 const neutral = '#F5F5F5';
 const dark = '#1C1C1C';
@@ -25,13 +25,13 @@ export const Colors = {
   dark: {
     text: '#ECEDEE',
     background: dark,
-    tint: '#fff',
+    tint: primary,
     accent: accent,
-    neutral: '#2A2A2A',
+    neutral: neutral,
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
-    tabIconSelected: '#fff',
+    tabIconSelected: primary,
     primary: primary,
-    secondary: '#2A2A2A',
+    secondary: neutral,
   },
 };

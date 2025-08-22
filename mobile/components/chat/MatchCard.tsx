@@ -76,7 +76,8 @@ export const MatchCard = React.memo(function MatchCard({
   isGroupAdmin = false,
 }: MatchCardProps) {
   const { t } = useTranslation();
-  const colors = Colors['light'];
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
 
   const matchDateTime = new Date(match.matchDate);
   const isMatchToday = new Date().toDateString() === matchDateTime.toDateString();

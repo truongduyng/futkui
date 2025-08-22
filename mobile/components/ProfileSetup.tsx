@@ -20,7 +20,8 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
   const [displayName, setDisplayName] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const colors = Colors['light'];
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
   const { instantClient } = useInstantDB();
   const { showError } = useToast();
 

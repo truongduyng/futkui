@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import React, { useEffect, useState } from "react";
@@ -60,7 +61,8 @@ export const MessageBubble = React.memo(function MessageBubble({
   onImagePress,
 }: MessageBubbleProps) {
   const { t } = useTranslation();
-  const colors = Colors["light"];
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
   const { showSuccess, showError } = useToast();
   const [showReactionOptions, setShowReactionOptions] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);

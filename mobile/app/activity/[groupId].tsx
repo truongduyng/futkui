@@ -1,6 +1,7 @@
 import { MatchCard } from "@/components/chat/MatchCard";
 import { PollBubble } from "@/components/chat/PollBubble";
 import { Colors } from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 import { useInstantDB } from "@/hooks/useInstantDB";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useMemo } from "react";
@@ -12,11 +13,13 @@ import {
 } from "react-native";
 import { useTranslation } from 'react-i18next';
 
+
 export default function ActivityDetailsScreen() {
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ groupId: string }>();
   const groupId = params?.groupId;
-  const colors = Colors["light"];
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
   const navigation = useNavigation();
 
   const {

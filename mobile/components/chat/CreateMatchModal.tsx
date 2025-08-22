@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useState } from "react";
 import {
@@ -34,7 +35,8 @@ export function CreateMatchModal({
   const [description, setDescription] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  const colors = Colors["light"];
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
 
   const handleCreate = () => {
     if (!description.trim()) {
@@ -139,7 +141,7 @@ export function CreateMatchModal({
             </Text>
             <View style={[styles.pickerContainer]}>
               <DateTimePicker
-                themeVariant="light"
+                themeVariant='dark'
                 value={selectedDate}
                 mode="datetime"
                 onChange={onChange}

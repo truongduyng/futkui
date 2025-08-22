@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
 import {
@@ -30,7 +31,8 @@ export function GroupOptionsBottomSheet({
   onLeaveGroup,
 }: GroupOptionsBottomSheetProps) {
   const { t } = useTranslation();
-  const colors = Colors['light'];
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
   const translateY = useRef(new Animated.Value(screenHeight)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -104,7 +106,7 @@ export function GroupOptionsBottomSheet({
                 </Text>
 
                 <TouchableOpacity
-                  style={[styles.option, styles.optionFirst]}
+                  style={[styles.option, styles.optionFirst, { backgroundColor: colors.background }]}
                   onPress={handleShareGroup}
                   activeOpacity={0.6}
                 >
@@ -122,7 +124,7 @@ export function GroupOptionsBottomSheet({
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.option, styles.optionLast]}
+                  style={[styles.option, styles.optionLast, { backgroundColor: colors.background }]}
                   onPress={handleLeaveGroup}
                   activeOpacity={0.6}
                 >
@@ -203,7 +205,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 18,
     paddingHorizontal: 16,
-    backgroundColor: '#F8F9FA',
     marginBottom: 2,
   },
   optionFirst: {

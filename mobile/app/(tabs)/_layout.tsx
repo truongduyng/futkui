@@ -7,9 +7,13 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { TabIconWithBadge } from '@/components/ui/TabIconWithBadge';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useUnreadCount } from '@/contexts/UnreadCountContext';
 
 export default function TabLayout() {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+  
   let totalUnreadCount = 0;
   try {
     const context = useUnreadCount();
@@ -21,7 +25,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors['light'].tint,
+        tabBarActiveTintColor: colors.tint,
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,

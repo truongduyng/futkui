@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import AntDesign from '@expo/vector-icons/AntDesign';
 // Conditional import for Google Sign-In to avoid module errors in Expo Go
@@ -20,7 +21,8 @@ interface AuthGateProps {
 }
 
 function AuthenticatedContent({ children }: { children: React.ReactNode }) {
-  const colors = Colors['light'];
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
   const { t } = useTranslation();
   const { instantClient, useProfile, ensureUserHasBotGroup } = useInstantDB();
   const { user } = instantClient.useAuth();
@@ -83,7 +85,8 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
 
 export function AuthGate({ children }: AuthGateProps) {
   const [sentEmail, setSentEmail] = useState('');
-  const colors = Colors['light'];
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
   const { t } = useTranslation();
 
   const { instantClient } = useInstantDB();
@@ -209,7 +212,7 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
     try {
       // Dynamically import Google Sign-In
       const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
-      
+
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
       const idToken = userInfo.data?.idToken;

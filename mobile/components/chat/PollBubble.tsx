@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -54,7 +55,8 @@ export const PollBubble = React.memo(function PollBubble({
   showAuthor = true,
 }: PollBubbleProps) {
   const { t } = useTranslation();
-  const colors = Colors['light'];
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
 
   // Calculate vote counts and user votes
   const voteCounts = poll.options.reduce((acc, option) => {

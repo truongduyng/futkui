@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigation } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
@@ -10,7 +11,8 @@ interface UseChatHeaderProps {
 export function useChatHeader({ group }: UseChatHeaderProps) {
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const colors = Colors["light"];
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
   const [showBottomSheet, setShowBottomSheet] = useState(false);
 
   const showOptionsMenu = useCallback(() => {

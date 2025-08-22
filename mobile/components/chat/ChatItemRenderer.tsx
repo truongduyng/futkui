@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 import React, { useCallback } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { MatchCard } from "./MatchCard";
@@ -39,7 +40,8 @@ export function useChatItemRenderer({
   handleCheckIn,
   handleCloseMatch,
 }: ChatItemRendererProps) {
-  const colors = Colors["light"];
+  const { isDark } = useTheme();
+const colors = isDark ? Colors.dark : Colors.light;
 
   const shouldShowTimestamp = useCallback((
     currentMessage: any,
