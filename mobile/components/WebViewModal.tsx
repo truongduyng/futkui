@@ -29,6 +29,7 @@ const colors = isDark ? Colors.dark : Colors.light;
       animationType="slide"
       presentationStyle="pageSheet"
       onRequestClose={onClose}
+      backdropColor={'transparent'}
     >
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <StatusBar barStyle="dark-content" />
@@ -61,6 +62,7 @@ const colors = isDark ? Colors.dark : Colors.light;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginTop: 70,
   },
   header: {
     flexDirection: 'row',

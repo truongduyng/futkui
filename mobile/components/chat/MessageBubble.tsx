@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/useToast';
 import { MentionText } from "./MentionText";
 import { CachedAvatar } from "./CachedAvatar";
+import { WebViewModal } from "../WebViewModal";
 
 interface Reaction {
   id: string;
@@ -74,6 +75,8 @@ export const MessageBubble = React.memo(function MessageBubble({
     height: 0,
   });
   const [imageLoading, setImageLoading] = useState(false);
+  const [webViewUrl, setWebViewUrl] = useState<string | null>(null);
+  const [showWebView, setShowWebView] = useState(false);
 
   // Reset loading state when imageUrl changes
   useEffect(() => {
@@ -185,6 +188,16 @@ export const MessageBubble = React.memo(function MessageBubble({
     setShowMessageOptions(false);
   };
 
+  const handleLinkPress = (url: string) => {
+    setWebViewUrl(url);
+    setShowWebView(true);
+  };
+
+  const handleCloseWebView = () => {
+    setShowWebView(false);
+    setWebViewUrl(null);
+  };
+
   return (
     <>
       <TouchableOpacity
@@ -264,6 +277,7 @@ export const MessageBubble = React.memo(function MessageBubble({
                       }
                     : undefined
                 }
+                onLinkPress={handleLinkPress}
               />
             </TouchableOpacity>
           )}
@@ -443,6 +457,15 @@ export const MessageBubble = React.memo(function MessageBubble({
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* WebView Modal for links */}
+      {webViewUrl && (
+        <WebViewModal
+          visible={showWebView}
+          onClose={handleCloseWebView}
+          url={webViewUrl}
+        />
+      )}
     </>
   );
 });
