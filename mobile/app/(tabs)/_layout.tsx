@@ -13,7 +13,7 @@ import { useUnreadCount } from '@/contexts/UnreadCountContext';
 export default function TabLayout() {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
-  
+
   let totalUnreadCount = 0;
   try {
     const context = useUnreadCount();
