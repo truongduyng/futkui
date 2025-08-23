@@ -22,6 +22,7 @@ export const Colors = {
     tabIconSelected: primary,
     primary: primary,
     secondary: neutral,
+    border: 'rgba(0, 0, 0, 0.1)',
   },
   dark: {
     text: '#ECEDEE',
@@ -35,5 +36,6 @@ export const Colors = {
     tabIconSelected: primary,
     primary: primary,
     secondary: neutral,
+    border: 'rgba(255, 255, 255, 0.15)',
   },
 };

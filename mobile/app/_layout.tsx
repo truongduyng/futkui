@@ -23,7 +23,7 @@ function ThemedApp() {
       background: colors.background,
       card: colors.background,
       text: colors.text,
-      border: colors.neutral,
+      border: colors.border,
     },
   };
 
