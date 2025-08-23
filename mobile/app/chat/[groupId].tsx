@@ -12,7 +12,8 @@ import { useChatHandlers } from "@/hooks/useChatHandlers";
 import { useChatHeader } from "@/hooks/useChatHeader";
 import { useChatScroll } from "@/hooks/useChatScroll";
 import { useInstantDB } from "@/hooks/useInstantDB";
-import { useLocalSearchParams, useNavigation } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
 import {
   FlatList,
@@ -31,6 +32,7 @@ export default function ChatScreen() {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const navigation = useNavigation();
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [messageLimit, setMessageLimit] = useState(200);
@@ -275,6 +277,10 @@ export default function ChatScreen() {
           visible={showBottomSheet}
           onClose={hideOptionsMenu}
           onShareGroup={handleShareGroup}
+          onViewActivities={() => {
+            hideOptionsMenu();
+            router.push(`/activity/${groupId}`);
+          }}
           onLeaveGroup={handleLeaveGroup}
         />
       </View>

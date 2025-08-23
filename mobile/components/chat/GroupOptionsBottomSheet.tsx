@@ -87,9 +87,10 @@ const colors = isDark ? Colors.dark : Colors.light;
     <Modal
       visible={visible}
       transparent
-      animationType="none"
+      animationType="slide"
       statusBarTranslucent
       onRequestClose={onClose}
+      presentationStyle='overFullScreen'
     >
       <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View style={[styles.overlay, { opacity }]}>
