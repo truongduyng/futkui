@@ -310,5 +310,10 @@
   "bot": {
     "groupName": "FutKui",
     "groupDescription": "Your personal FutKui assistant for notifications and updates"
+  },
+  "messagePreview": {
+    "image": "Image",
+    "match": "Match created",
+    "message": "Message"
   }
 }

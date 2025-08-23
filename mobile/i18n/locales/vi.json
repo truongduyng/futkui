@@ -310,5 +310,10 @@
   "bot": {
     "groupName": "FutKui",
     "groupDescription": "Trợ lý cá nhân FutKui của bạn cho thông báo và cập nhật"
+  },
+  "messagePreview": {
+    "image": "Hình ảnh",
+    "match": "Trận đấu mới tạo",
+    "message": "Tin nhắn"
   }
 }

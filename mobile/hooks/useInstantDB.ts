@@ -6,7 +6,7 @@ import { uploadToR2 } from '../utils/r2Upload';
 import { getTranslation } from '../i18n';
 
 const instantClient = init({
-  appId: 'fef46afc-feff-4b78-be85-3c293174c5cc',
+  appId: process.env.EXPO_PUBLIC_INSTANT_APP_ID || 'default-app-id',
   schema,
 });
 

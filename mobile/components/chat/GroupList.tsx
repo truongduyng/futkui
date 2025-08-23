@@ -108,7 +108,7 @@ export function GroupList({
 
     // Handle image messages
     if (message.type === 'image' || message.imageUrl) {
-      return '📷 Image';
+      return `📷 ${t('messagePreview.image')}`;
     }
 
     // Handle text messages with content
@@ -119,12 +119,12 @@ export function GroupList({
 
     // Handle match messages (assuming they would be linked somehow)
     if (message.type === 'match') {
-      return '⚽ Match created';
+      return `⚽ ${t('messagePreview.match')}`;
     }
 
     // Fallback for unknown message types
-    return 'Message';
-  }, []);
+    return t('messagePreview.message');
+  }, [t]);
 
   const formatTime = React.useCallback((timestamp: number) => {
     const now = new Date();
