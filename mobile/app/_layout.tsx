@@ -46,7 +46,7 @@ function ThemedApp() {
         </AuthGate>
       </UnreadCountProvider>
       <StatusBar style={isDark ? "light" : "dark"} />
-      <Toast />
+      <Toast topOffset={80} />
     </NavigationThemeProvider>
   );
 }
