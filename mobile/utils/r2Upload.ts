@@ -34,8 +34,6 @@ export async function uploadToR2(uri: string, filename: string): Promise<string>
 
     const uploadData: UploadResponse = await uploadUrlResponse.json();
 
-    console.log('Upload URL received:', uploadData.uploadUrl);
-
     // Upload file directly to R2 using signed URL
     const uploadResponse = await fetch(uploadData.uploadUrl, {
       method: 'PUT',

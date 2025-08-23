@@ -2,10 +2,8 @@ import { Colors } from "@/constants/Colors";
 import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  Image,
   Modal,
   ScrollView,
   StyleSheet,
@@ -18,6 +16,8 @@ import { useToast } from '@/hooks/useToast';
 import { MentionText } from "./MentionText";
 import { CachedAvatar } from "./CachedAvatar";
 import { WebViewModal } from "../WebViewModal";
+import { MessageImage } from "./MessageImage";
+import { ReactionButton } from "./ReactionButton";
 
 interface Reaction {
   id: string;
@@ -63,39 +63,23 @@ export const MessageBubble = React.memo(function MessageBubble({
 }: MessageBubbleProps) {
   const { t } = useTranslation();
   const { isDark } = useTheme();
-  const colors = isDark ? Colors.dark : Colors.light;
+  const colors = useMemo(() => isDark ? Colors.dark : Colors.light, [isDark]);
   const { showSuccess, showError } = useToast();
+  
+  // Modal states
   const [showReactionOptions, setShowReactionOptions] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
   const [showMessageOptions, setShowMessageOptions] = useState(false);
-  const [messagePosition, setMessagePosition] = useState({
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-  });
-  const [imageLoading, setImageLoading] = useState(false);
-  const [webViewUrl, setWebViewUrl] = useState<string | null>(null);
   const [showWebView, setShowWebView] = useState(false);
+  
+  // Position and content states
+  const [messagePosition, setMessagePosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [webViewUrl, setWebViewUrl] = useState<string | null>(null);
 
-  // Reset loading state when imageUrl changes
-  useEffect(() => {
-    if (imageUrl) {
-      setImageLoading(true);
-    } else {
-      setImageLoading(false);
-    }
-  }, [imageUrl]);
-
-  const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "😡"];
+  const QUICK_REACTIONS = useMemo(() => ["👍", "❤️", "😂", "😮", "😢", "😡"], []);
 
   // Dynamic styles based on theme
-  const dynamicStyles = {
-    reactionButton: {
-      ...styles.reactionButton,
-      backgroundColor: isDark ? "rgba(42, 42, 42, 0.9)" : "rgba(255, 255, 255, 0.9)",
-      borderColor: isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.15)",
-    },
+  const dynamicStyles = useMemo(() => ({
     reactionOptionsContainer: {
       ...styles.reactionOptionsContainer,
       backgroundColor: isDark ? "#2A2A2A" : "white",
@@ -118,85 +102,81 @@ export const MessageBubble = React.memo(function MessageBubble({
       ...styles.bottomSheetHeader,
       borderBottomColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
     },
-  };
+  }), [isDark]);
 
-  const formatTime = (date: Date) => {
+  const formatTime = useCallback((date: Date) => {
     return new Date(date).toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
+  }, []);
 
-  const groupedReactions = reactions.reduce((acc, reaction) => {
-    if (!acc[reaction.emoji]) {
-      acc[reaction.emoji] = [];
-    }
-    acc[reaction.emoji].push(reaction);
-    return acc;
-  }, {} as Record<string, Reaction[]>);
-
-  const handleCopyText = async () => {
-    if (content && content.trim()) {
-      try {
-        await Clipboard.setStringAsync(content);
-        setShowMessageOptions(false);
-        setShowReactionOptions(false);
-        showSuccess("Copied!", "Message copied to clipboard");
-      } catch {
-        showError("Error", "Failed to copy message");
+  const groupedReactions = useMemo(() => {
+    return reactions.reduce((acc, reaction) => {
+      if (!acc[reaction.emoji]) {
+        acc[reaction.emoji] = [];
       }
-    }
-  };
+      acc[reaction.emoji].push(reaction);
+      return acc;
+    }, {} as Record<string, Reaction[]>);
+  }, [reactions]);
 
-  const handleLongPress = (event: any) => {
-    // Get the message bubble position for options menu
+  const hasTextContent = content && content.trim();
+  const hasReactions = Object.keys(groupedReactions).length > 0;
+
+  const handleCopyText = useCallback(async () => {
+    if (!hasTextContent) return;
+    
+    try {
+      await Clipboard.setStringAsync(content!);
+      setShowMessageOptions(false);
+      setShowReactionOptions(false);
+      showSuccess(t('chat.copySuccess'), t('chat.copySuccessMessage'));
+    } catch {
+      showError(t('common.error'), t('chat.copyError'));
+    }
+  }, [content, hasTextContent, showSuccess, showError, t]);
+
+  const handleLongPress = useCallback((event: any) => {
     event.target.measure(
-      (
-        _x: number,
-        _y: number,
-        width: number,
-        height: number,
-        pageX: number,
-        pageY: number,
-      ) => {
+      (_x: number, _y: number, width: number, height: number, pageX: number, pageY: number) => {
         setMessagePosition({ x: pageX, y: pageY, width, height });
 
-        if (content && content.trim()) {
-          // Show both reactions (above) and copy options (below) for text messages
+        if (hasTextContent) {
           if (onAddReaction && !isOwnMessage) {
             setShowReactionOptions(true);
           }
           setShowMessageOptions(true);
         } else if (onAddReaction && !isOwnMessage) {
-          // Show only reactions for non-text messages (like images) from others
           setShowReactionOptions(true);
         }
       },
     );
-  };
+  }, [hasTextContent, onAddReaction, isOwnMessage]);
 
-  const handleAddReaction = (emoji: string) => {
+  const handleAddReaction = useCallback((emoji: string) => {
     if (onAddReaction) {
       onAddReaction(emoji);
       setShowReactionOptions(false);
       setShowMessageOptions(false);
     }
-  };
+  }, [onAddReaction]);
 
-  const handleTapOutside = () => {
+  const handleTapOutside = useCallback(() => {
     setShowReactionOptions(false);
     setShowMessageOptions(false);
-  };
+  }, []);
 
-  const handleLinkPress = (url: string) => {
+  const handleLinkPress = useCallback((url: string) => {
     setWebViewUrl(url);
     setShowWebView(true);
-  };
+  }, []);
 
-  const handleCloseWebView = () => {
+  const handleCloseWebView = useCallback(() => {
     setShowWebView(false);
     setWebViewUrl(null);
-  };
+  }, []);
+
 
   return (
     <>
@@ -205,7 +185,7 @@ export const MessageBubble = React.memo(function MessageBubble({
           styles.container,
           isOwnMessage ? styles.ownMessage : styles.otherMessage,
           !showAuthor && !isOwnMessage && styles.groupedMessage,
-          Object.keys(groupedReactions).length > 0 && { marginBottom: 16 },
+          hasReactions && { marginBottom: 16 },
         ]}
         onPress={handleTapOutside}
         activeOpacity={1}
@@ -228,31 +208,15 @@ export const MessageBubble = React.memo(function MessageBubble({
         <View style={styles.messageContainer}>
           {/* Image without background */}
           {imageUrl && (
-            <TouchableOpacity
-              onPress={() => onImagePress?.(imageUrl)}
+            <MessageImage
+              imageUrl={imageUrl}
+              onImagePress={onImagePress}
               onLongPress={handleLongPress}
-              activeOpacity={0.8}
-              style={styles.imageBubble}
-            >
-              <View style={styles.imageContainer}>
-                <Image
-                  source={{ uri: imageUrl }}
-                  style={styles.messageImage}
-                  resizeMode="cover"
-                  onLoad={() => setImageLoading(false)}
-                  onError={() => setImageLoading(false)}
-                />
-                {imageLoading && (
-                  <View style={styles.imageLoadingOverlay}>
-                    <ActivityIndicator size="small" color={colors.tint} />
-                  </View>
-                )}
-              </View>
-            </TouchableOpacity>
+            />
           )}
 
           {/* Text content with background bubble */}
-          {content && content.trim() && (
+          {hasTextContent && (
             <TouchableOpacity
               onLongPress={handleLongPress}
               activeOpacity={1}
@@ -320,7 +284,7 @@ export const MessageBubble = React.memo(function MessageBubble({
               )}
 
               {/* Message options below message */}
-              {showMessageOptions && content && content.trim() && (
+              {showMessageOptions && hasTextContent && (
                 <View
                   style={[
                     dynamicStyles.messageOptionsContainer,
@@ -346,7 +310,7 @@ export const MessageBubble = React.memo(function MessageBubble({
           </Modal>
         )}
 
-        {Object.keys(groupedReactions).length > 0 && (
+        {hasReactions && (
           <View
             style={[
               styles.reactionsContainer,
@@ -355,32 +319,10 @@ export const MessageBubble = React.memo(function MessageBubble({
                 : styles.reactionsOtherMessage,
             ]}
           >
-            <TouchableOpacity
-              style={dynamicStyles.reactionButton}
+            <ReactionButton
+              groupedReactions={groupedReactions}
               onPress={() => setShowReactionDetails(true)}
-            >
-              <View style={styles.reactionEmojis}>
-                {Object.keys(groupedReactions)
-                  .slice(0, 3)
-                  .map((emoji, index) => (
-                    <Text
-                      key={emoji}
-                      style={[
-                        styles.reactionEmoji,
-                        index > 0 && styles.overlappingEmoji,
-                      ]}
-                    >
-                      {emoji}
-                    </Text>
-                  ))}
-              </View>
-              <Text style={[styles.reactionCount, { color: colors.text }]}>
-                {Object.values(groupedReactions).reduce(
-                  (total, reactionList) => total + reactionList.length,
-                  0,
-                )}
-              </Text>
-            </TouchableOpacity>
+            />
           </View>
         )}
 
@@ -507,14 +449,6 @@ const styles = StyleSheet.create({
     maxWidth: "100%",
     zIndex: 1,
   },
-  imageBubble: {
-    padding: 0,
-    borderRadius: 12,
-    maxWidth: "100%",
-    zIndex: 1,
-    backgroundColor: "transparent",
-    marginBottom: 4,
-  },
   ownBubble: {
     borderBottomRightRadius: 4,
   },
@@ -524,28 +458,6 @@ const styles = StyleSheet.create({
   messageText: {
     fontSize: 16,
     lineHeight: 20,
-  },
-  imageContainer: {
-    position: "relative",
-    width: 200,
-    height: 150,
-  },
-  messageImage: {
-    width: 200,
-    height: 150,
-    borderRadius: 12,
-    marginBottom: 4,
-  },
-  imageLoadingOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.1)",
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
   },
   ownMessageText: {
     color: "white",
@@ -571,43 +483,6 @@ const styles = StyleSheet.create({
   },
   reactionsOtherMessage: {
     right: 8,
-  },
-  reactionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    borderRadius: 10,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    marginLeft: 2,
-    borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.15)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-    zIndex: 1,
-  },
-  reactionEmojis: {
-    flexDirection: "row",
-    marginRight: 2,
-    alignItems: "center",
-  },
-  reactionEmoji: {
-    fontSize: 10,
-    height: 12,
-    textAlign: "center",
-    lineHeight: 12,
-  },
-  overlappingEmoji: {
-    marginLeft: -4,
-  },
-  reactionCount: {
-    fontSize: 9,
-    fontWeight: "600",
-    minWidth: 10,
-    textAlign: "center",
   },
   reactionModalOverlay: {
     flex: 1,

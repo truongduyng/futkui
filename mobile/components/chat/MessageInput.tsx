@@ -134,8 +134,6 @@ export function MessageInput({
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
-        allowsEditing: true,
-        aspect: [4, 3],
         quality: 0.9, // Use higher quality initially, we'll compress it ourselves
       });
 
