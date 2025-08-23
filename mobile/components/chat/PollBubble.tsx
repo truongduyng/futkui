@@ -124,9 +124,14 @@ const colors = isDark ? Colors.dark : Colors.light;
       <View
         style={[
           styles.pollBubble,
+          styles.cardStyle,
           isOwnMessage
             ? [styles.ownBubble, { backgroundColor: colors.tint }]
-            : [styles.otherBubble, { backgroundColor: "#F0F0F0" }],
+            : [styles.otherBubble, { backgroundColor: isDark ? '#2C2C2E' : '#F2F2F7' }],
+          {
+            shadowColor: isDark ? '#000' : '#000',
+            elevation: isDark ? 8 : 4,
+          }
         ]}
       >
         <View style={styles.pollHeader}>
@@ -312,9 +317,19 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   pollBubble: {
-    borderRadius: 18,
-    padding: 16,
+    borderRadius: 16,
+    padding: 20,
     minWidth: 280,
+    margin: 4,
+  },
+  cardStyle: {
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
   },
   ownBubble: {
     borderBottomRightRadius: 4,

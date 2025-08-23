@@ -127,8 +127,8 @@ const colors = isDark ? Colors.dark : Colors.light;
 
   const getRsvpButtonStyle = (response: 'yes' | 'no' | 'maybe') => {
     const isSelected = userRsvp?.response === response;
-    let backgroundColor = '#D1D5DB';
-    let borderColor = '#D1D5DB';
+    let backgroundColor = isDark ? '#3A3A3C' : '#E5E7EB';
+    let borderColor = isDark ? '#3A3A3C' : '#E5E7EB';
     let textColor = colors.text;
 
     if (isSelected) {
@@ -173,9 +173,14 @@ const colors = isDark ? Colors.dark : Colors.light;
       <View
         style={[
           styles.matchCard,
+          styles.cardStyle,
           isOwnMessage
             ? [styles.ownBubble, { backgroundColor: colors.tint }]
-            : [styles.otherBubble, { backgroundColor: "#F0F0F0" }],
+            : [styles.otherBubble, { backgroundColor: isDark ? '#2C2C2E' : '#F2F2F7' }],
+          {
+            shadowColor: isDark ? '#000' : '#000',
+            elevation: isDark ? 8 : 4,
+          }
         ]}
       >
         {/* Header */}
@@ -388,9 +393,19 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   matchCard: {
-    borderRadius: 18,
-    padding: 16,
+    borderRadius: 16,
+    padding: 20,
     minWidth: 300,
+    margin: 4,
+  },
+  cardStyle: {
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
   },
   ownBubble: {
     borderBottomRightRadius: 4,
