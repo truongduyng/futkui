@@ -242,7 +242,7 @@ export function MessageInput({
       )}
 
       <View
-        style={[styles.inputContainer, { backgroundColor: colors.background }]}
+        style={[styles.inputContainer, { backgroundColor: colors.card }]}
       >
         <TouchableOpacity
           style={styles.imageButton}
