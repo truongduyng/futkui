@@ -162,7 +162,7 @@ export function GroupList({
       }
 
       return {
-        itemStyles: [styles.groupItem, { backgroundColor: currentColors.background }],
+        itemStyles: [styles.groupItem, { backgroundColor: currentColors.card }],
         avatarStyles: [styles.avatarContainer, group.avatarUrl && styles.avatarContainerWithImage],
         avatarTextStyles: [styles.avatarText],
         nameStyles: [styles.groupName, { color: currentColors.text }],
@@ -255,7 +255,7 @@ export function GroupList({
             <View style={[
               styles.inputContainer,
               {
-                backgroundColor: colors.background,
+                backgroundColor: colors.card,
                 borderColor: shareLink ? colors.tint : colors.tabIconDefault,
               }
             ]}>
