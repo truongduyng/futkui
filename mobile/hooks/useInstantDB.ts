@@ -357,6 +357,44 @@ export function useInstantDB() {
     }
   }, [createBotGroup]);
 
+  // Function to ensure bot is a member of an existing group
+  const ensureBotInGroup = useCallback(async (groupId: string) => {
+    try {
+      const botProfileId = await ensureBotProfile();
+      
+      // Check if bot is already a member of this group
+      const existingMembership = await db.queryOnce({
+        memberships: {
+          $: {
+            where: {
+              "group.id": groupId,
+              "profile.id": botProfileId
+            }
+          }
+        }
+      });
+
+      if (!existingMembership.data.memberships || existingMembership.data.memberships.length === 0) {
+        // Bot is not a member, add them
+        const botMembershipId = id();
+        await db.transact([
+          db.tx.memberships[botMembershipId].update({
+            createdAt: Date.now(),
+            role: 'member',
+            profileGroupKey: `${botProfileId}_${groupId}`,
+          }).link({
+            group: groupId,
+            profile: botProfileId
+          }),
+        ]);
+        console.log(`Added @fk bot to group ${groupId}`);
+      }
+    } catch (error) {
+      console.error('Error ensuring bot in group:', error);
+      // Don't throw to prevent breaking the app
+    }
+  }, [db, ensureBotProfile]);
+
   // Profile management functions are now handled in ProfileSetup component
 
   // Mutation functions
@@ -371,6 +409,10 @@ export function useInstantDB() {
       const shareLink = `futkui-chat://group/${Math.random().toString(36).substring(2, 15)}`;
       const groupId = id();
       const membershipId = id();
+      const botMembershipId = id();
+
+      // Ensure bot profile exists and get its ID
+      const botProfileId = await ensureBotProfile();
 
       const result = await db.transact([
         db.tx.groups[groupId].update({
@@ -392,11 +434,20 @@ export function useInstantDB() {
           group: groupId,
           profile: groupData.adminId
         }),
+        // Add bot as member to every group
+        db.tx.memberships[botMembershipId].update({
+          createdAt: Date.now(),
+          role: 'member',
+          profileGroupKey: `${botProfileId}_${groupId}`,
+        }).link({
+          group: groupId,
+          profile: botProfileId
+        }),
       ]);
 
       return result;
     },
-    [db]
+    [db, ensureBotProfile]
   );
 
   const sendMessage = useCallback(
@@ -1034,6 +1085,7 @@ export function useInstantDB() {
     joinGroup,
     leaveGroup,
     ensureUserHasBotGroup,
+    ensureBotInGroup,
     getBotProfile,
     markMessagesAsRead,
     updatePushToken,
