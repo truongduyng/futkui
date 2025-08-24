@@ -1,20 +1,20 @@
 import { ActivityBar } from "@/components/chat/ActivityBar";
 import { useChatItemRenderer } from "@/components/chat/ChatItemRenderer";
-import { GroupOptionsBottomSheet } from "@/components/chat/GroupOptionsBottomSheet";
 import { ImageModal } from "@/components/chat/ImageModal";
 import { LoadingHeader } from "@/components/chat/LoadingHeader";
 import { LoadingStates } from "@/components/chat/LoadingStates";
 import { MessageInput } from "@/components/chat/MessageInput";
 import { Colors } from "@/constants/Colors";
 import { useTheme } from '@/contexts/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 import { useChatData } from "@/hooks/useChatData";
 import { useChatHandlers } from "@/hooks/useChatHandlers";
-import { useChatHeader } from "@/hooks/useChatHeader";
 import { useChatScroll } from "@/hooks/useChatScroll";
 import { useInstantDB } from "@/hooks/useInstantDB";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -34,6 +34,7 @@ export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [messageLimit, setMessageLimit] = useState(200);
 
@@ -101,8 +102,6 @@ export default function ChatScreen() {
 
   // Event handlers
   const {
-    handleShareGroup,
-    handleLeaveGroup,
     handleSendMessage,
     handleSendPoll,
     handleCreateMatch,
@@ -134,15 +133,22 @@ export default function ChatScreen() {
     setSelectedImageUrl,
   });
 
-  // Header management
-  const { showOptionsMenu, showBottomSheet, hideOptionsMenu } = useChatHeader({ group });
-
   useEffect(() => {
     if (group) {
       navigation.setOptions({
+        title: group.name,
+        headerBackTitle: t('common.back'),
+        headerShown: true,
+        headerStyle: {
+          backgroundColor: colors.background,
+        },
+        headerTintColor: colors.tint,
+        headerTitleStyle: {
+          color: colors.text,
+        },
         headerRight: () => (
           <TouchableOpacity
-            onPress={showOptionsMenu}
+            onPress={() => router.push(`/chat/${groupId}/profile`)}
             style={{
               minWidth: 44,
               minHeight: 44,
@@ -151,12 +157,12 @@ export default function ChatScreen() {
             }}
             activeOpacity={0.7}
           >
-            <Text style={{ color: colors.tint, fontSize: 24, fontWeight: '700' }}>⋯</Text>
+            <Ionicons name="information-circle-outline" size={22} color={colors.tint} />
           </TouchableOpacity>
         ),
       });
     }
-  }, [group, showOptionsMenu, colors, navigation]);
+  }, [group, colors, navigation, router, groupId, t]);
 
   // Chat item rendering
   const { renderChatItem, keyExtractor } = useChatItemRenderer({
@@ -274,16 +280,6 @@ export default function ChatScreen() {
           onClose={() => setSelectedImageUrl(null)}
         />
 
-        <GroupOptionsBottomSheet
-          visible={showBottomSheet}
-          onClose={hideOptionsMenu}
-          onShareGroup={handleShareGroup}
-          onViewActivities={() => {
-            hideOptionsMenu();
-            router.push(`/activity/${groupId}`);
-          }}
-          onLeaveGroup={handleLeaveGroup}
-        />
       </View>
   );
 }
@@ -320,3 +316,4 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
+
