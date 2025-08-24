@@ -61,7 +61,7 @@ const _schema = i.schema({
       displayName: i.string().optional(),
       handle: i.string().unique().indexed(),
       pushToken: i.string().optional(),
-      avatarUrl: i.string().optional(),
+      avatarUrl: i.string(),
     }),
     reactions: i.entity({
       createdAt: i.number(),

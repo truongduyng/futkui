@@ -3,6 +3,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { AvatarStack } from './AvatarStack';
 
 interface PollOption {
   id: string;
@@ -16,6 +17,7 @@ interface Vote {
     id: string;
     handle: string;
     displayName?: string;
+    avatarUrl: string;
   };
 }
 
@@ -42,6 +44,7 @@ interface PollBubbleProps {
   };
   createdAt: Date;
   showAuthor?: boolean;
+  totalMembers: number;
 }
 
 export const PollBubble = React.memo(function PollBubble({
@@ -53,6 +56,7 @@ export const PollBubble = React.memo(function PollBubble({
   author,
   createdAt,
   showAuthor = true,
+  totalMembers,
 }: PollBubbleProps) {
   const { t } = useTranslation();
   const { isDark } = useTheme();
@@ -64,7 +68,7 @@ const colors = isDark ? Colors.dark : Colors.light;
     return acc;
   }, {} as Record<string, number>);
 
-  const totalVotes = poll.votes.length;
+  const totalVotes = totalMembers;
   const userVotes = poll.votes.filter(vote => vote.user.id === currentUserId).map(vote => vote.optionId);
 
   const formatTime = (date: Date) => {
@@ -179,6 +183,7 @@ const colors = isDark ? Colors.dark : Colors.light;
             const percentage = getVotePercentage(option.id);
             const isVoted = userVotes.includes(option.id);
             const isDisabled = isExpired;
+            const optionVoters = poll.votes.filter(vote => vote.optionId === option.id).map(vote => vote.user);
 
             return (
               <TouchableOpacity
@@ -261,6 +266,17 @@ const colors = isDark ? Colors.dark : Colors.light;
                           backgroundColor: isOwnMessage ? 'white' : colors.tint,
                         },
                       ]}
+                    />
+                  </View>
+                )}
+                {optionVoters.length > 0 && (
+                  <View style={styles.voterAvatars}>
+                    <AvatarStack
+                      users={optionVoters}
+                      maxVisible={5}
+                      avatarSize={25}
+                      overlap={8}
+                      showCount={true}
                     />
                   </View>
                 )}
@@ -453,6 +469,10 @@ const styles = StyleSheet.create({
   progressFill: {
     height: '100%',
     borderRadius: 1,
+  },
+  voterAvatars: {
+    marginTop: 8,
+    paddingLeft: 2,
   },
   pollFooter: {
     flexDirection: 'row',

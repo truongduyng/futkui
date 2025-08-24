@@ -17,6 +17,7 @@ interface ChatItemRendererProps {
     id: string;
     adminId: string;
   };
+  totalMembers: number;
   stableHandleVote: (pollId: string, optionId: string, votes: any[], allowMultiple: boolean) => void;
   stableHandleClosePoll: (pollId: string) => void;
   stableHandleReaction: (messageId: string, emoji: string, reactions: any[]) => void;
@@ -31,6 +32,7 @@ export function useChatItemRenderer({
   chatItems,
   currentProfile,
   group,
+  totalMembers,
   stableHandleVote,
   stableHandleClosePoll,
   stableHandleReaction,
@@ -105,6 +107,7 @@ const colors = isDark ? Colors.dark : Colors.light;
             author={message.author}
             createdAt={new Date(message.createdAt)}
             showAuthor={showAuthor}
+            totalMembers={totalMembers}
           />
         ) : message.type === 'match' && message.match ? (
           <MatchCard
@@ -155,6 +158,7 @@ const colors = isDark ? Colors.dark : Colors.light;
     chatItems,
     currentProfile?.id,
     group?.adminId,
+    totalMembers,
     shouldShowTimestamp,
     colors.tabIconDefault,
     stableHandleVote,

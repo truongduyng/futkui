@@ -43,6 +43,15 @@ const colors = isDark ? Colors.dark : Colors.light;
   const matches = matchesData?.matches || [];
   const currentProfile = profileData?.profiles?.[0];
 
+  // Extract members for poll calculations
+  const members = group?.memberships
+    ?.map((membership) => ({
+      id: membership.profile?.id || "",
+      handle: membership.profile?.handle || "",
+      displayName: membership.profile?.displayName,
+    }))
+    .filter((member) => member.id && member.handle) || [];
+
   // Get polls from messages
   const polls = useMemo(() => {
     const messageList = messagesData?.messages || [];
@@ -196,6 +205,7 @@ const colors = isDark ? Colors.dark : Colors.light;
                 author={poll.message?.author}
                 createdAt={new Date(poll.message?.createdAt || Date.now())}
                 showAuthor={!isOwnPoll}
+                totalMembers={members.length}
               />
             );
           })}

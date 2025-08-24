@@ -163,6 +163,7 @@ export default function ChatScreen() {
     chatItems: messages,
     currentProfile,
     group,
+    totalMembers: members.length,
     stableHandleVote: (pollId, optionId, votes, allowMultiple) =>
       handleVote(pollId, optionId, votes, allowMultiple),
     stableHandleClosePoll: (pollId) => handleClosePoll(pollId),
