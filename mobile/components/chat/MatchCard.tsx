@@ -603,11 +603,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   rsvpCountEmoji: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
   },
   rsvpCountText: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: '500',
   },
   messageFooter: {
