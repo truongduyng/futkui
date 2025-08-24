@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { AvatarStack } from './AvatarStack';
 
 interface RsvpData {
   id: string;
@@ -12,6 +13,7 @@ interface RsvpData {
     id: string;
     handle: string;
     displayName?: string;
+    avatarUrl: string;
   };
 }
 
@@ -22,6 +24,7 @@ interface CheckInData {
     id: string;
     handle: string;
     displayName?: string;
+    avatarUrl: string;
   };
 }
 
@@ -332,35 +335,66 @@ const colors = isDark ? Colors.dark : Colors.light;
             )}
           </View>
           <View style={styles.rsvpCounts}>
-            {Object.entries(rsvpCounts).map(([response, count]) => (
-              <View key={response} style={styles.rsvpCount}>
-                <Text style={[
-                  styles.rsvpCountEmoji,
-                  { color: isOwnMessage ? 'white' : colors.text }
-                ]}>
-                  {response === 'yes' ? '✓' : response === 'no' ? '✗' : '?'}
-                </Text>
-                <Text style={[
-                  styles.rsvpCountText,
-                  isOwnMessage ? styles.ownText : { color: colors.tabIconDefault }
-                ]}>
-                  {count}
-                </Text>
-              </View>
-            ))}
+            {(['yes', 'no', 'maybe'] as const).map((response) => {
+              const count = rsvpCounts[response] || 0;
+              const responseUsers = match.rsvps.filter(rsvp => rsvp.response === response).map(rsvp => rsvp.user);
+
+              if (count === 0) return null;
+
+              return (
+                <View key={response} style={styles.rsvpCountSection}>
+                  <View style={styles.rsvpCount}>
+                    <Text style={[
+                      styles.rsvpCountEmoji,
+                      { color: isOwnMessage ? 'white' : colors.text }
+                    ]}>
+                      {response === 'yes' ? '✓' : response === 'no' ? '✗' : '?'}
+                    </Text>
+                    <Text style={[
+                      styles.rsvpCountText,
+                      isOwnMessage ? styles.ownText : { color: colors.tabIconDefault }
+                    ]}>
+                      {count}
+                    </Text>
+                  </View>
+                  {responseUsers.length > 0 && (
+                    <View style={styles.rsvpAvatars}>
+                      <AvatarStack
+                        users={responseUsers}
+                        maxVisible={3}
+                        avatarSize={25}
+                        overlap={6}
+                        showCount={true}
+                      />
+                    </View>
+                  )}
+                </View>
+              );
+            })}
             {match.checkIns.length > 0 && (
-              <View style={styles.rsvpCount}>
-                <Ionicons
-                  name="checkmark-circle"
-                  size={12}
-                  color={isOwnMessage ? 'white' : colors.text}
-                />
-                <Text style={[
-                  styles.rsvpCountText,
-                  isOwnMessage ? styles.ownText : { color: colors.tabIconDefault }
-                ]}>
-                  {match.checkIns.length} {t('chat.checkedInCount')}
-                </Text>
+              <View style={styles.rsvpCountSection}>
+                <View style={styles.rsvpCount}>
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={12}
+                    color={isOwnMessage ? 'white' : colors.text}
+                  />
+                  <Text style={[
+                    styles.rsvpCountText,
+                    isOwnMessage ? styles.ownText : { color: colors.tabIconDefault }
+                  ]}>
+                    {match.checkIns.length} {t('chat.checkedInCount')}
+                  </Text>
+                </View>
+                <View style={styles.rsvpAvatars}>
+                  <AvatarStack
+                    users={match.checkIns.map(checkIn => checkIn.user)}
+                    maxVisible={3}
+                    avatarSize={20}
+                    overlap={6}
+                    showCount={true}
+                  />
+                </View>
               </View>
             )}
           </View>
@@ -556,10 +590,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
+  rsvpCountSection: {
+    alignItems: 'center',
+    gap: 6,
+  },
   rsvpCount: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+  },
+  rsvpAvatars: {
+    alignItems: 'center',
   },
   rsvpCountEmoji: {
     fontSize: 12,
