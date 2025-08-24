@@ -593,6 +593,16 @@ export function useInstantDB() {
     [db]
   );
 
+  const removeMember = useCallback(
+    async (membershipId: string) => {
+      const result = await db.transact([
+        db.tx.memberships[membershipId].delete(),
+      ]);
+      return result;
+    },
+    [db]
+  );
+
   const sendPoll = useCallback(
     async (pollData: {
       groupId: string;
@@ -1084,6 +1094,7 @@ export function useInstantDB() {
     removeReaction,
     joinGroup,
     leaveGroup,
+    removeMember,
     ensureUserHasBotGroup,
     ensureBotInGroup,
     getBotProfile,

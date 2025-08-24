@@ -23,6 +23,7 @@ interface Member {
   displayName?: string;
   avatarUrl?: string;
   role?: string;
+  membershipId?: string;
 }
 
 export default function GroupProfileScreen() {
@@ -34,7 +35,7 @@ export default function GroupProfileScreen() {
   const navigation = useNavigation();
   const { t } = useTranslation();
 
-  const { useGroup, useUserMembership, useMessages, leaveGroup } =
+  const { useGroup, useUserMembership, useMessages, leaveGroup, removeMember } =
     useInstantDB();
 
   const { data: groupData } = useGroup(groupId || "");
@@ -52,8 +53,11 @@ export default function GroupProfileScreen() {
         displayName: membership.profile?.displayName,
         avatarUrl: membership.profile?.avatarUrl,
         role: membership.role,
+        membershipId: membership.id,
       }))
       .filter((member) => member.id && member.handle) || [];
+
+  const isCurrentUserAdmin = userMembership?.profile?.id === group?.adminId;
 
   const handleShareGroup = useCallback(async () => {
     if (group?.shareLink) {
@@ -130,6 +134,30 @@ export default function GroupProfileScreen() {
       ]
     );
   };
+
+  const handleRemoveMember = useCallback((member: Member) => {
+    Alert.alert(
+      t('groupProfile.removeMember'),
+      t('groupProfile.removeMemberConfirm', { memberName: member.displayName || member.handle }),
+      [
+        { text: t('common.cancel'), style: "cancel" },
+        {
+          text: t('groupProfile.remove'),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              if (member.membershipId) {
+                await removeMember(member.membershipId);
+              }
+            } catch (error) {
+              console.error("Error removing member:", error);
+              Alert.alert(t('common.error'), t('groupProfile.failedToRemoveMember'));
+            }
+          },
+        },
+      ]
+    );
+  }, [removeMember, t]);
 
   if (!group) {
     return (
@@ -274,74 +302,93 @@ export default function GroupProfileScreen() {
             {t('groupProfile.members')}
           </Text>
           <View style={[styles.membersList, { backgroundColor: colors.card }]}>
-            {members.map((member, index) => (
-              <View
-                key={member.id}
-                style={[
-                  styles.memberRow,
-                  index === members.length - 1 && styles.memberRowLast,
-                  { borderBottomColor: colors.border },
-                ]}
-              >
-                <View style={styles.memberInfo}>
-                  <View
-                    style={[
-                      styles.memberAvatar,
-                      { backgroundColor: colors.background },
-                    ]}
-                  >
-                    {member.avatarUrl ? (
-                      <Image
-                        source={{ uri: member.avatarUrl }}
-                        style={styles.memberAvatarImage}
-                      />
-                    ) : (
-                      <Text
-                        style={[
-                          styles.memberAvatarText,
-                          { color: colors.tint },
-                        ]}
-                      >
-                        {(member.displayName || member.handle)
-                          .charAt(0)
-                          .toUpperCase()}
-                      </Text>
-                    )}
-                  </View>
-                  <View style={styles.memberDetails}>
-                    <View style={styles.memberNameRow}>
-                      <Text style={[styles.memberName, { color: colors.text }]}>
-                        {member.displayName || member.handle}
-                      </Text>
-                      {member.id === group.adminId && (
-                        <View
+            {members.map((member, index) => {
+              const canRemoveMember = isCurrentUserAdmin && 
+                member.id !== group.adminId && 
+                member.id !== userMembership?.profile?.id;
+
+              return (
+                <View
+                  key={member.id}
+                  style={[
+                    styles.memberRow,
+                    index === members.length - 1 && styles.memberRowLast,
+                    { borderBottomColor: colors.border },
+                  ]}
+                >
+                  <View style={styles.memberInfo}>
+                    <View
+                      style={[
+                        styles.memberAvatar,
+                        { backgroundColor: colors.background },
+                      ]}
+                    >
+                      {member.avatarUrl ? (
+                        <Image
+                          source={{ uri: member.avatarUrl }}
+                          style={styles.memberAvatarImage}
+                        />
+                      ) : (
+                        <Text
                           style={[
-                            styles.adminBadge,
-                            { backgroundColor: colors.tint + "20" },
+                            styles.memberAvatarText,
+                            { color: colors.tint },
                           ]}
                         >
-                          <Text
-                            style={[styles.adminText, { color: colors.tint }]}
-                          >
-                            {t('groupProfile.admin')}
-                          </Text>
-                        </View>
+                          {(member.displayName || member.handle)
+                            .charAt(0)
+                            .toUpperCase()}
+                        </Text>
                       )}
                     </View>
-                    {member.displayName && (
-                      <Text
-                        style={[
-                          styles.memberHandle,
-                          { color: colors.tabIconDefault },
-                        ]}
+                    <View style={styles.memberDetails}>
+                      <View style={styles.memberNameRow}>
+                        <Text style={[styles.memberName, { color: colors.text }]}>
+                          {member.displayName || member.handle}
+                        </Text>
+                        {member.id === group.adminId && (
+                          <View
+                            style={[
+                              styles.adminBadge,
+                              { backgroundColor: colors.tint + "20" },
+                            ]}
+                          >
+                            <Text
+                              style={[styles.adminText, { color: colors.tint }]}
+                            >
+                              {t('groupProfile.admin')}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                      {member.displayName && (
+                        <Text
+                          style={[
+                            styles.memberHandle,
+                            { color: colors.tabIconDefault },
+                          ]}
+                        >
+                          @{member.handle}
+                        </Text>
+                      )}
+                    </View>
+                    {canRemoveMember && (
+                      <TouchableOpacity
+                        onPress={() => handleRemoveMember(member)}
+                        style={styles.removeMemberButton}
+                        activeOpacity={0.7}
                       >
-                        @{member.handle}
-                      </Text>
+                        <Ionicons
+                          name="remove-circle-outline"
+                          size={24}
+                          color="#FF3B30"
+                        />
+                      </TouchableOpacity>
                     )}
                   </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         </View>
 
@@ -488,6 +535,10 @@ const styles = StyleSheet.create({
   },
   memberHandle: {
     fontSize: 14,
+  },
+  removeMemberButton: {
+    padding: 8,
+    marginLeft: 8,
   },
   actionsList: {
     marginHorizontal: 20,
