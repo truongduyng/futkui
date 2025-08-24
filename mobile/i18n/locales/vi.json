@@ -241,6 +241,24 @@
     "leaveGroup": "Rời khỏi nhóm",
     "viewActivities": "Xem hoạt động"
   },
+  "groupProfile": {
+    "groupNotFound": "Không tìm thấy nhóm",
+    "shareLinkCopied": "Đã sao chép liên kết chia sẻ",
+    "shareLinkCopiedMessage": "Liên kết mời nhóm đã được sao chép vào clipboard!",
+    "failedToCopyLink": "Không thể sao chép liên kết chia sẻ",
+    "memberCount": "{{count}} thành viên",
+    "recentActivities": "Hoạt động gần đây",
+    "poll": "Cuộc khảo sát",
+    "match": "Trận đấu",
+    "message": "Tin nhắn",
+    "viewAllActivities": "Xem tất cả hoạt động",
+    "members": "Thành viên",
+    "admin": "Quản trị",
+    "leaveGroup": "Rời nhóm",
+    "leaveGroupConfirm": "Bạn có chắc chắn muốn rời khỏi nhóm này?",
+    "leave": "Rời",
+    "failedToLeaveGroup": "Không thể rời nhóm"
+  },
   "hooks": {
     "shareGroup": {
       "copied": "Đã sao chép!",

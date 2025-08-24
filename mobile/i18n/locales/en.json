@@ -241,6 +241,25 @@
     "leaveGroup": "Leave Group",
     "viewActivities": "View Activities"
   },
+  "groupProfile": {
+    "groupNotFound": "Group not found",
+    "shareLinkCopied": "Share Link Copied",
+    "shareLinkCopiedMessage": "The group invite link has been copied to your clipboard!",
+    "failedToCopyLink": "Failed to copy share link",
+    "memberCount": "{{count}} member",
+    "memberCount_other": "{{count}} members",
+    "recentActivities": "Recent Activities",
+    "poll": "Poll",
+    "match": "Match",
+    "message": "Message",
+    "viewAllActivities": "View All Activities",
+    "members": "Members",
+    "admin": "Admin",
+    "leaveGroup": "Leave Group",
+    "leaveGroupConfirm": "Are you sure you want to leave this group?",
+    "leave": "Leave",
+    "failedToLeaveGroup": "Failed to leave group"
+  },
   "hooks": {
     "shareGroup": {
       "copied": "Copied!",

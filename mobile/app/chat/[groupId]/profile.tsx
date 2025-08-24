@@ -15,6 +15,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import * as Clipboard from "expo-clipboard";
 import React, { useEffect, useCallback } from "react";
+import { useTranslation } from 'react-i18next';
 
 interface Member {
   id: string;
@@ -31,6 +32,7 @@ export default function GroupProfileScreen() {
   const colors = isDark ? Colors.dark : Colors.light;
   const router = useRouter();
   const navigation = useNavigation();
+  const { t } = useTranslation();
 
   const { useGroup, useUserMembership, useMessages, leaveGroup } =
     useInstantDB();
@@ -58,15 +60,15 @@ export default function GroupProfileScreen() {
       try {
         await Clipboard.setStringAsync(group.shareLink);
         Alert.alert(
-          "Share Link Copied",
-          "The group invite link has been copied to your clipboard!",
+          t('groupProfile.shareLinkCopied'),
+          t('groupProfile.shareLinkCopiedMessage'),
         );
       } catch (error) {
         console.error("Copy error:", error);
-        Alert.alert("Error", "Failed to copy share link");
+        Alert.alert(t('common.error'), t('groupProfile.failedToCopyLink'));
       }
     }
-  }, [group?.shareLink]);
+  }, [group?.shareLink, t]);
 
   // Get recent activities (polls, matches, messages)
   const recentActivities =
@@ -105,24 +107,28 @@ export default function GroupProfileScreen() {
   }, [group?.name, navigation, colors, handleShareGroup]);
 
   const handleLeaveGroup = () => {
-    Alert.alert("Leave Group", "Are you sure you want to leave this group?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Leave",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            if (userMembership?.id) {
-              await leaveGroup(userMembership.id);
-              router.back();
+    Alert.alert(
+      t('groupProfile.leaveGroup'),
+      t('groupProfile.leaveGroupConfirm'),
+      [
+        { text: t('common.cancel'), style: "cancel" },
+        {
+          text: t('groupProfile.leave'),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              if (userMembership?.id) {
+                await leaveGroup(userMembership.id);
+                router.back();
+              }
+            } catch (error) {
+              console.error("Error leaving group:", error);
+              Alert.alert(t('common.error'), t('groupProfile.failedToLeaveGroup'));
             }
-          } catch (error) {
-            console.error("Error leaving group:", error);
-            Alert.alert("Error", "Failed to leave group");
-          }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   if (!group) {
@@ -135,7 +141,7 @@ export default function GroupProfileScreen() {
         ]}
       >
         <Text style={[styles.errorText, { color: colors.text }]}>
-          Group not found
+          {t('groupProfile.groupNotFound')}
         </Text>
       </View>
     );
@@ -172,7 +178,7 @@ export default function GroupProfileScreen() {
             </Text>
           )}
           <Text style={[styles.memberCount, { color: colors.tabIconDefault }]}>
-            {members.length} {members.length === 1 ? "member" : "members"}
+            {t('groupProfile.memberCount', { count: members.length })}
           </Text>
         </View>
 
@@ -180,7 +186,7 @@ export default function GroupProfileScreen() {
         {recentActivities.length > 0 && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              Recent Activities
+              {t('groupProfile.recentActivities')}
             </Text>
             <View
               style={[styles.activitiesList, { backgroundColor: colors.card }]}
@@ -219,10 +225,10 @@ export default function GroupProfileScreen() {
                         style={[styles.activityTitle, { color: colors.text }]}
                       >
                         {isPoll
-                          ? activity.poll?.question || "Poll"
+                          ? activity.poll?.question || t('groupProfile.poll')
                           : isMatch
-                          ? activity.match?.title || "Match"
-                          : "Message"}
+                          ? activity.match?.title || t('groupProfile.match')
+                          : t('groupProfile.message')}
                       </Text>
                       <Text
                         style={[
@@ -249,7 +255,7 @@ export default function GroupProfileScreen() {
                     style={styles.optionIcon}
                   />
                   <Text style={[styles.optionText, { color: colors.text }]}>
-                    View All Activities
+                    {t('groupProfile.viewAllActivities')}
                   </Text>
                 </View>
                 <Ionicons
@@ -265,7 +271,7 @@ export default function GroupProfileScreen() {
         {/* Members Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Members
+            {t('groupProfile.members')}
           </Text>
           <View style={[styles.membersList, { backgroundColor: colors.card }]}>
             {members.map((member, index) => (
@@ -317,7 +323,7 @@ export default function GroupProfileScreen() {
                           <Text
                             style={[styles.adminText, { color: colors.tint }]}
                           >
-                            Admin
+                            {t('groupProfile.admin')}
                           </Text>
                         </View>
                       )}
@@ -355,7 +361,7 @@ export default function GroupProfileScreen() {
                   style={styles.optionIcon}
                 />
                 <Text style={[styles.optionText, { color: "#FF3B30" }]}>
-                  Leave Group
+                  {t('groupProfile.leaveGroup')}
                 </Text>
               </View>
             </TouchableOpacity>
