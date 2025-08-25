@@ -44,11 +44,17 @@ FutKui is a React Native group chat app built with Expo and InstantDB for real-t
 - `hooks/useInstantDB.ts`: Central hub for database operations and custom hooks
 
 **Mobile App Structure:**
-- `app/_layout.tsx`: Root layout with theme provider
-- `app/(tabs)/`: Tab-based navigation (chat.tsx, explore.tsx)
-- `app/chat/[groupId].tsx`: Individual chat screen
-- `components/AuthGate.tsx`: Authentication wrapper with magic code flow
-- `components/chat/`: Chat-specific components (GroupList, MessageBubble, MessageInput, CreateGroupModal)
+- `mobile/app/_layout.tsx`: Root layout with theme provider and authentication
+- `mobile/app/(tabs)/`: Tab-based navigation with index.tsx (chat) and explore.tsx
+- `mobile/app/chat/[groupId].tsx`: Individual chat screen with real-time messaging
+- `mobile/app/chat/[groupId]/profile.tsx`: Group profile and settings screen
+- `mobile/app/activity/[groupId].tsx`: Activity screen for matches and polls
+- `mobile/components/AuthGate.tsx`: Authentication wrapper with magic code flow
+- `mobile/components/chat/`: Chat-specific components (GroupList, MessageBubble, MessageInput, CreateGroupModal, etc.)
+- `mobile/components/ui/`: Reusable UI components (IconSymbol, TabBarBackground)
+- `mobile/contexts/`: React contexts for theme, group refresh, and unread counts
+- `mobile/hooks/`: Custom hooks including the main `useInstantDB.ts`
+- `mobile/i18n/`: Internationalization setup with English and Vietnamese locales
 
 **Backend/Landing Structure:**
 - `be_landing/app.js`: Main Fastify application entry point
@@ -96,13 +102,18 @@ The app uses magic code authentication but automatically creates random profile 
 
 ## Important Implementation Notes
 
-- InstantDB app ID is hardcoded in `hooks/useInstantDB.ts`
+- InstantDB app ID is configured via `EXPO_PUBLIC_INSTANT_APP_ID` environment variable in `mobile/hooks/useInstantDB.ts`
 - Dates are stored as Unix timestamps (milliseconds) using `Date.now()`
-- All database entities use UUIDs generated via `id()` function
+- All database entities use UUIDs generated via `id()` function from InstantDB
 - Authentication state is managed through InstantDB's `useAuth()` hook
-- Profile creation is automatically triggered in AuthGate component
-- Groups use unique share links for joining functionality
+- Profile creation is automatically triggered in AuthGate component after successful authentication
+- Groups use unique share links (`futkui-chat://group/[id]`) for joining functionality
 - Message reactions are stored as separate entities linked to messages and users
+- Bot functionality is built-in with handle `fk` - automatically added to all groups
+- Image uploads use R2 storage via `utils/r2Upload.ts`
+- Push notifications are handled via `utils/notifications.ts`
+- The app supports polls, matches/activities, check-ins, and RSVPs as special message types
+- Internationalization (i18n) supports English and Vietnamese languages
 
 You are an expert developer who writes full-stack apps in InstantDB. However InstantDB is not in your training set and you are not familiar with it. Before you write ANY code you read ALL of .claude/instant-rules.md to understand how to use InstantDB in your code. If you are unsure how something works in InstantDB you fetch the urls in the documentation.
 
