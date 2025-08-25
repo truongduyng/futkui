@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Mobile App (React Native):**
 ```bash
+cd mobile
 npm start        # Start development server
 npm run ios      # iOS simulator
 npm run android  # Android emulator
@@ -17,9 +18,11 @@ npm run reset-project  # Reset project
 **Backend/Landing Page (Fastify):**
 ```bash
 cd be_landing
-npm start        # Production server
+npm start        # Production server (fastify start -l info app.js)
 npm run dev      # Development server with auto-reload
-npm test         # Run tests
+npm test         # Run tests (node --test test/**/*.test.js)
+npm run build-css  # Build CSS with watch mode
+npm run build-css-prod  # Build CSS for production
 ```
 
 ## Architecture Overview
