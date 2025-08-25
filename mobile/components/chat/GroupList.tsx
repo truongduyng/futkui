@@ -385,6 +385,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingHorizontal: 16,
+    paddingBottom: 100, // Add bottom padding to prevent tab bar overlap
   },
   emptyListContainer: {
     flex: 1,
