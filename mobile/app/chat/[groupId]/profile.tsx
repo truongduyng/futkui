@@ -16,6 +16,7 @@ import { useNavigation } from "@react-navigation/native";
 import * as Clipboard from "expo-clipboard";
 import React, { useEffect, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
+import { useToast } from "@/hooks/useToast";
 import { EditGroupModal } from '@/components/chat/EditGroupModal';
 
 interface Member {
@@ -35,6 +36,7 @@ export default function GroupProfileScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { t } = useTranslation();
+  const { showSuccess, showError } = useToast();
 
   const { useGroup, useUserMembership, useMessages, leaveGroup, removeMember, updateGroup } =
     useInstantDB();
@@ -66,16 +68,16 @@ export default function GroupProfileScreen() {
     if (group?.shareLink) {
       try {
         await Clipboard.setStringAsync(group.shareLink);
-        Alert.alert(
+        showSuccess(
           t('groupProfile.shareLinkCopied'),
-          t('groupProfile.shareLinkCopiedMessage'),
+          t('groupProfile.shareLinkCopiedMessage')
         );
       } catch (error) {
         console.error("Copy error:", error);
-        Alert.alert(t('common.error'), t('groupProfile.failedToCopyLink'));
+        showError(t('common.error'), t('groupProfile.failedToCopyLink'));
       }
     }
-  }, [group?.shareLink, t]);
+  }, [group?.shareLink, t, showSuccess, showError]);
 
   // Get recent activities (polls, matches, messages)
   const recentActivities =
