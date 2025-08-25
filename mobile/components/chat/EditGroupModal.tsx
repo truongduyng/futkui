@@ -3,7 +3,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { uploadToR2 } from '@/utils/r2Upload';
 import { id } from '@instantdb/react-native';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Alert,
   Image,
@@ -17,12 +17,17 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-interface CreateGroupModalProps {
+interface EditGroupModalProps {
   visible: boolean;
   onClose: () => void;
-  onCreateGroup: (groupData: { name: string; description: string; avatarUrl: string; sports: string[] }) => void;
+  onUpdateGroup: (groupData: { name: string; description: string; avatarUrl: string; sports: string[] }) => void;
+  initialData: {
+    name: string;
+    description: string;
+    avatarUrl: string;
+    sports?: string[];
+  };
 }
-
 
 const SPORTS_OPTIONS = [
   { emoji: '⚽', nameKey: 'sports.football' },
@@ -30,7 +35,7 @@ const SPORTS_OPTIONS = [
   { emoji: '🏸', nameKey: 'sports.badminton' },
 ];
 
-export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGroupModalProps) {
+export function EditGroupModal({ visible, onClose, onUpdateGroup, initialData }: EditGroupModalProps) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -39,6 +44,16 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
+
+  // Initialize form with existing data
+  useEffect(() => {
+    if (visible && initialData) {
+      setName(initialData.name || '');
+      setDescription(initialData.description || '');
+      setSelectedImage(initialData.avatarUrl || null);
+      setSelectedSports(initialData.sports || []);
+    }
+  }, [visible, initialData]);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -59,7 +74,7 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
     }
   };
 
-  const handleCreate = async () => {
+  const handleUpdate = async () => {
     if (!name.trim()) {
       Alert.alert(t('common.error'), t('createGroup.errorName'));
       return;
@@ -83,25 +98,24 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
     setIsSubmitting(true);
 
     try {
-      // Upload image
-      const fileName = `group-avatar-${id()}-${Date.now()}.jpg`;
-      const avatarUrl = await uploadToR2(selectedImage, fileName);
+      let avatarUrl = selectedImage;
 
-      onCreateGroup({
+      // Only upload if it's a new local image (starts with file://)
+      if (selectedImage.startsWith('file://')) {
+        const fileName = `group-avatar-${id()}-${Date.now()}.jpg`;
+        avatarUrl = await uploadToR2(selectedImage, fileName);
+      }
+
+      onUpdateGroup({
         name: name.trim(),
         description: description.trim(),
         avatarUrl,
         sports: selectedSports,
       });
 
-      // Reset form
-      setName('');
-      setDescription('');
-      setSelectedImage(null);
-      setSelectedSports([]);
       onClose();
     } catch (error) {
-      console.error('Error uploading group image:', error);
+      console.error('Error updating group:', error);
       Alert.alert(t('common.error'), t('createGroup.failedUpload'));
     } finally {
       setIsSubmitting(false);
@@ -109,10 +123,11 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
   };
 
   const handleCancel = () => {
-    setName('');
-    setDescription('');
-    setSelectedImage(null);
-    setSelectedSports([]);
+    // Reset to initial values
+    setName(initialData.name || '');
+    setDescription(initialData.description || '');
+    setSelectedImage(initialData.avatarUrl || null);
+    setSelectedSports(initialData.sports || []);
     onClose();
   };
 
@@ -135,10 +150,10 @@ export function CreateGroupModal({ visible, onClose, onCreateGroup }: CreateGrou
           <TouchableOpacity onPress={handleCancel}>
             <Text style={[styles.cancelButton, { color: colors.tint }]}>{t('common.cancel')}</Text>
           </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.text }]}>{t('createGroup.title')}</Text>
-          <TouchableOpacity onPress={handleCreate} disabled={isSubmitting}>
+          <Text style={[styles.title, { color: colors.text }]}>{t('groupProfile.editGroup')}</Text>
+          <TouchableOpacity onPress={handleUpdate} disabled={isSubmitting}>
             <Text style={[styles.createButton, { color: colors.tint }]}>
-              {isSubmitting ? t('common.creating') : t('common.create')}
+              {isSubmitting ? t('common.saving') : t('common.save')}
             </Text>
           </TouchableOpacity>
         </View>

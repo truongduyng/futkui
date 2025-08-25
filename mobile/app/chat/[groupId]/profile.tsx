@@ -16,6 +16,7 @@ import { useNavigation } from "@react-navigation/native";
 import * as Clipboard from "expo-clipboard";
 import React, { useEffect, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
+import { EditGroupModal } from '@/components/chat/EditGroupModal';
 
 interface Member {
   id: string;
@@ -35,7 +36,7 @@ export default function GroupProfileScreen() {
   const navigation = useNavigation();
   const { t } = useTranslation();
 
-  const { useGroup, useUserMembership, useMessages, leaveGroup, removeMember } =
+  const { useGroup, useUserMembership, useMessages, leaveGroup, removeMember, updateGroup } =
     useInstantDB();
 
   const { data: groupData } = useGroup(groupId || "");
@@ -58,6 +59,8 @@ export default function GroupProfileScreen() {
       .filter((member) => member.id && member.handle) || [];
 
   const isCurrentUserAdmin = userMembership?.profile?.id === group?.adminId;
+
+  const [showEditModal, setShowEditModal] = React.useState(false);
 
   const handleShareGroup = useCallback(async () => {
     if (group?.shareLink) {
@@ -159,6 +162,18 @@ export default function GroupProfileScreen() {
     );
   }, [removeMember, t]);
 
+  const handleUpdateGroup = useCallback(async (groupData: { name: string; description: string; avatarUrl: string; sports: string[] }) => {
+    if (!groupId) return;
+
+    try {
+      await updateGroup(groupId, groupData);
+      setShowEditModal(false);
+    } catch (error) {
+      console.error('Error updating group:', error);
+      Alert.alert(t('common.error'), t('groupProfile.failedToUpdateGroup'));
+    }
+  }, [groupId, updateGroup, t]);
+
   if (!group) {
     return (
       <View
@@ -192,9 +207,20 @@ export default function GroupProfileScreen() {
               <Ionicons name="people" size={40} color={colors.tabIconDefault} />
             )}
           </View>
-          <Text style={[styles.groupName, { color: colors.text }]}>
-            {group.name}
-          </Text>
+          <View style={styles.groupNameContainer}>
+            <Text style={[styles.groupName, { color: colors.text }]}>
+              {group.name}
+            </Text>
+            {isCurrentUserAdmin && (
+              <TouchableOpacity
+                onPress={() => setShowEditModal(true)}
+                style={[styles.editButton, { backgroundColor: colors.card }]}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="create-outline" size={16} color={colors.tint} />
+              </TouchableOpacity>
+            )}
+          </View>
           {group.description && (
             <Text
               style={[
@@ -303,8 +329,8 @@ export default function GroupProfileScreen() {
           </Text>
           <View style={[styles.membersList, { backgroundColor: colors.card }]}>
             {members.map((member, index) => {
-              const canRemoveMember = isCurrentUserAdmin && 
-                member.id !== group.adminId && 
+              const canRemoveMember = isCurrentUserAdmin &&
+                member.id !== group.adminId &&
                 member.id !== userMembership?.profile?.id;
 
               return (
@@ -415,6 +441,21 @@ export default function GroupProfileScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Edit Group Modal */}
+      {isCurrentUserAdmin && (
+        <EditGroupModal
+          visible={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onUpdateGroup={handleUpdateGroup}
+          initialData={{
+            name: group.name || '',
+            description: group.description || '',
+            avatarUrl: group.avatarUrl || '',
+            sports: group.sports || [],
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -452,11 +493,25 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
   },
+  groupNameContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+    marginLeft: 32,
+  },
   groupName: {
     fontSize: 28,
     fontWeight: "700",
-    marginBottom: 8,
     textAlign: "center",
+  },
+  editButton: {
+    marginLeft: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
   },
   groupDescription: {
     fontSize: 16,

@@ -886,6 +886,26 @@ export function useInstantDB() {
     [db]
   );
 
+  const updateGroup = useCallback(
+    async (groupId: string, groupData: {
+      name: string;
+      description: string;
+      avatarUrl: string;
+      sports: string[];
+    }) => {
+      const result = await db.transact([
+        db.tx.groups[groupId].update({
+          name: groupData.name,
+          description: groupData.description,
+          avatarUrl: groupData.avatarUrl,
+          sports: groupData.sports,
+        }),
+      ]);
+      return result;
+    },
+    [db]
+  );
+
   const useUnreadCount = (groupId: string, lastReadMessageAt: number | undefined) => {
     if (!groupId) {
       return { data: { messages: [] }, isLoading: false, error: null };
@@ -1100,5 +1120,6 @@ export function useInstantDB() {
     getBotProfile,
     markMessagesAsRead,
     updatePushToken,
+    updateGroup,
   };
 }
