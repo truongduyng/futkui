@@ -13,8 +13,10 @@ import { useChatScroll } from "@/hooks/useChatScroll";
 import { useInstantDB } from "@/hooks/useInstantDB";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
+import * as Clipboard from "expo-clipboard";
+import { useToast } from "@/hooks/useToast";
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -35,6 +37,7 @@ export default function ChatScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { t } = useTranslation();
+  const { showSuccess, showError } = useToast();
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [messageLimit, setMessageLimit] = useState(200);
 
@@ -65,6 +68,22 @@ export default function ChatScreen() {
   const currentProfile = profileData?.profiles?.[0];
   const userMembership = membershipData?.memberships?.[0];
   const group = groupData?.groups?.[0];
+
+  // Share handler
+  const handleShareGroup = useCallback(async () => {
+    if (group?.shareLink) {
+      try {
+        await Clipboard.setStringAsync(group.shareLink);
+        showSuccess(
+          t('groupProfile.shareLinkCopied'),
+          t('groupProfile.shareLinkCopiedMessage')
+        );
+      } catch (error) {
+        console.error('Error copying share link:', error);
+        showError(t('common.error'), t('groupProfile.shareError'));
+      }
+    }
+  }, [group?.shareLink, t, showSuccess, showError]);
 
   // Process chat data
   const { messages, polls, matches, hasMoreMessages } = useChatData({
@@ -147,22 +166,36 @@ export default function ChatScreen() {
           color: colors.text,
         },
         headerRight: () => (
-          <TouchableOpacity
-            onPress={() => router.push(`/chat/${groupId}/profile`)}
-            style={{
-              minWidth: 44,
-              minHeight: 44,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="information-circle-outline" size={22} color={colors.tint} />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity
+              onPress={handleShareGroup}
+              style={{
+                minWidth: 44,
+                minHeight: 44,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="share-outline" size={22} color={colors.tint} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push(`/chat/${groupId}/profile`)}
+              style={{
+                minWidth: 44,
+                minHeight: 44,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="information-circle-outline" size={22} color={colors.tint} />
+            </TouchableOpacity>
+          </View>
         ),
       });
     }
-  }, [group, colors, navigation, router, groupId, t]);
+  }, [group, colors, navigation, router, groupId, t, handleShareGroup]);
 
   // Chat item rendering
   const { renderChatItem, keyExtractor } = useChatItemRenderer({
