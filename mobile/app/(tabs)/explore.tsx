@@ -32,8 +32,11 @@ export default function ExploreScreen() {
 
   const [allGroups, setAllGroups] = useState<any[]>([]);
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
-  const [isPrivacyModalVisible, setIsPrivacyModalVisible] = useState(false);
-  const [isTermsModalVisible, setIsTermsModalVisible] = useState(false);
+  const [webViewModal, setWebViewModal] = useState<{visible: boolean; url: string; title: string}>({
+    visible: false,
+    url: '',
+    title: ''
+  });
   const [isThemeSwitcherVisible, setIsThemeSwitcherVisible] = useState(false);
   const [isLanguageSelectorVisible, setIsLanguageSelectorVisible] = useState(false);
 
@@ -75,11 +78,19 @@ export default function ExploreScreen() {
   };
 
   const handlePrivacy = () => {
-    setIsPrivacyModalVisible(true);
+    setWebViewModal({
+      visible: true,
+      url: 'https://futkui.com/en/privacy',
+      title: 'Privacy Policy'
+    });
   };
 
   const handleTerms = () => {
-    setIsTermsModalVisible(true);
+    setWebViewModal({
+      visible: true,
+      url: 'https://futkui.com/en/terms',
+      title: 'Terms of Service'
+    });
   };
 
   const handleTheme = () => {
@@ -513,17 +524,10 @@ export default function ExploreScreen() {
       )}
 
       <WebViewModal
-        visible={isPrivacyModalVisible}
-        onClose={() => setIsPrivacyModalVisible(false)}
-        url="https://futkui.com/en/privacy"
-        title="Privacy Policy"
-      />
-
-      <WebViewModal
-        visible={isTermsModalVisible}
-        onClose={() => setIsTermsModalVisible(false)}
-        url="https://futkui.com/en/terms"
-        title="Terms of Service"
+        visible={webViewModal.visible}
+        onClose={() => setWebViewModal({visible: false, url: '', title: ''})}
+        url={webViewModal.url}
+        title={webViewModal.title}
       />
 
       <ThemeSwitcher
