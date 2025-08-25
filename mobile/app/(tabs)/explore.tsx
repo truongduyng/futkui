@@ -55,7 +55,7 @@ export default function ExploreScreen() {
 
   // Show newest groups for showcase (filtered from 10 newest from DB)
   const showcaseGroups = allGroups.filter(
-    (group: any) => group && group.id && group.admin?.handle !== "fk", // Filter out bot groups
+    (group: any) => group && group.id && group.creator?.handle !== "fk", // Filter out bot groups
   );
 
 

@@ -227,8 +227,8 @@ export default function ChatScreen() {
       }))
       .sort((a: any, b: any) => {
         // Pin bot group (admin.handle === 'fk') to the top
-        const aIsBot = a.admin?.handle === 'fk';
-        const bIsBot = b.admin?.handle === 'fk';
+        const aIsBot = a.creator?.handle === 'fk';
+        const bIsBot = b.creator?.handle === 'fk';
 
         if (aIsBot && !bIsBot) return -1;
         if (!aIsBot && bIsBot) return 1;
