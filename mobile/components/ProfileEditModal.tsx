@@ -16,6 +16,7 @@ interface ProfileEditModalProps {
     handle: string;
     displayName?: string;
     avatarUrl?: string;
+    email?: string;
   };
   onProfileUpdated: () => void;
 }
@@ -175,6 +176,11 @@ const colors = isDark ? Colors.dark : Colors.light;
                 <Text style={[styles.imageHint, { color: colors.tabIconDefault }]}>
                   {t('profile.tapChangePhoto')}
                 </Text>
+                {profile.email && (
+                  <Text style={[styles.emailText, { color: colors.tabIconDefault }]}>
+                    {profile.email}
+                  </Text>
+                )}
               </View>
 
               <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('profile.username')}</Text>
@@ -326,5 +332,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  emailText: {
+    fontSize: 16,
+    marginTop: 8,
+    textAlign: 'center',
   },
 });

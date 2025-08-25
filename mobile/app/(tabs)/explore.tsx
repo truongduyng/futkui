@@ -501,7 +501,10 @@ export default function ExploreScreen() {
         <ProfileEditModal
           visible={isProfileModalVisible}
           onClose={() => setIsProfileModalVisible(false)}
-          profile={currentProfile}
+          profile={{
+            ...currentProfile,
+            email: user?.email
+          }}
           onProfileUpdated={() => {
             // The profile will automatically update via InstantDB's real-time updates
             setIsProfileModalVisible(false);
