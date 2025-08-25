@@ -74,7 +74,7 @@ const rules = {
       "isGroupMember",
       "auth.id in data.ref('group.memberships.profile.user.id')",
       "isGroupAdmin",
-      "auth.id in data.ref('group.admin.user.id')",
+      "auth.id in data.ref('group.creator.user.id')",
     ],
     allow: {
       view: "true",
@@ -145,7 +145,7 @@ const rules = {
       "isAuthenticated",
       "auth.id != null",
       "isAdmin",
-      "auth.id in data.ref('admin.id')",
+      "auth.id in data.ref('creator.user.id')",
     ],
     allow: {
       view: "true",
@@ -161,7 +161,7 @@ const rules = {
       "isOwner",
       "auth.id in data.ref('profile.user.id')",
       "isGroupAdmin",
-      "auth.id in data.ref('group.admin.user.id')",
+      "auth.id in data.ref('group.creator.user.id')",
     ],
     allow: {
       view: "true",

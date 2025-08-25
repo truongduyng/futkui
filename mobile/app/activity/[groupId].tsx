@@ -27,6 +27,7 @@ const colors = isDark ? Colors.dark : Colors.light;
     useMessages,
     useMatches,
     useProfile,
+    useUserMembership,
     vote,
     closePoll,
     rsvpToMatch,
@@ -38,10 +39,12 @@ const colors = isDark ? Colors.dark : Colors.light;
   const { data: messagesData } = useMessages(groupId || "", 1000);
   const { data: matchesData } = useMatches(groupId || "");
   const { data: profileData } = useProfile();
+  const { data: membershipData } = useUserMembership(groupId || "");
 
   const group = groupData?.groups?.[0];
   const matches = matchesData?.matches || [];
   const currentProfile = profileData?.profiles?.[0];
+  const userMembership = membershipData?.memberships?.[0];
 
   // Extract members for poll calculations
   const members = group?.memberships
@@ -227,7 +230,7 @@ const colors = isDark ? Colors.dark : Colors.light;
           {upcomingMatches.map((match) => {
             const isOwnMatch = match.creator?.id === currentProfile?.id;
             const isCreator = match.creator?.id === currentProfile?.id;
-            const isGroupAdmin = group?.adminId === currentProfile?.id;
+            const isGroupAdmin = userMembership?.role === "admin";
 
             return (
               <MatchCard

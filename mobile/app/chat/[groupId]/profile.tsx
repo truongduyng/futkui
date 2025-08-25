@@ -58,7 +58,7 @@ export default function GroupProfileScreen() {
       }))
       .filter((member) => member.id && member.handle) || [];
 
-  const isCurrentUserAdmin = userMembership?.profile?.id === group?.adminId;
+  const isCurrentUserAdmin = userMembership?.role === "admin";
 
   const [showEditModal, setShowEditModal] = React.useState(false);
 
@@ -207,7 +207,7 @@ export default function GroupProfileScreen() {
               <Ionicons name="people" size={40} color={colors.tabIconDefault} />
             )}
           </View>
-          <View style={styles.groupNameContainer}>
+          <View style={[styles.groupNameContainer, isCurrentUserAdmin && styles.groupNameContainerWithEdit]}>
             <Text style={[styles.groupName, { color: colors.text }]}>
               {group.name}
             </Text>
@@ -330,7 +330,7 @@ export default function GroupProfileScreen() {
           <View style={[styles.membersList, { backgroundColor: colors.card }]}>
             {members.map((member, index) => {
               const canRemoveMember = isCurrentUserAdmin &&
-                member.id !== group.adminId &&
+                member.role !== "admin" &&
                 member.id !== userMembership?.profile?.id;
 
               return (
@@ -372,7 +372,7 @@ export default function GroupProfileScreen() {
                         <Text style={[styles.memberName, { color: colors.text }]}>
                           {member.displayName || member.handle}
                         </Text>
-                        {member.id === group.adminId && (
+                        {member.role === "admin" && (
                           <View
                             style={[
                               styles.adminBadge,
@@ -498,6 +498,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
+  },
+  groupNameContainerWithEdit: {
     marginLeft: 32,
   },
   groupName: {

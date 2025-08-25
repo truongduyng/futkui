@@ -27,7 +27,7 @@ export function useInstantDB() {
         $: { where: { "user.id": user.id } },
         memberships: {
           group: {
-            admin: {},
+            creator: {},
             messages: {},
           },
         },
@@ -63,7 +63,7 @@ export function useInstantDB() {
   const useAllGroups = () => {
     return db.useQuery({
       groups: {
-        admin: {},
+        creator: {},
         memberships: {
           profile: {
             user: {},
@@ -81,7 +81,7 @@ export function useInstantDB() {
     return db.useQuery({
       groups: {
         $: { where: { id: groupId } },
-        admin: {},
+        creator: {},
         memberships: {
           profile: {},
         },
@@ -285,11 +285,11 @@ export function useInstantDB() {
           $: {
             where: {
               "profile.id": userProfileId,
-              "group.admin.handle": BOT_HANDLE
+              "group.creator.handle": BOT_HANDLE
             }
           },
           group: {
-            admin: {}
+            creator: {}
           }
         }
       });
@@ -310,10 +310,10 @@ export function useInstantDB() {
         db.tx.groups[groupId].update({
           name: getTranslation('bot.groupName'),
           description: getTranslation('bot.groupDescription'),
-          adminId: botProfileId,
+          creatorId: botProfileId,
           createdAt: Date.now(),
           shareLink,
-        }).link({ admin: botProfileId }),
+        }).link({ creator: botProfileId }),
 
         // Add bot as admin member
         db.tx.memberships[botMembershipId].update({
@@ -404,7 +404,7 @@ export function useInstantDB() {
       description: string;
       avatarUrl: string;
       sports: string[];
-      adminId: string;
+      creatorId: string;
     }) => {
       const shareLink = `futkui-chat://group/${Math.random().toString(36).substring(2, 15)}`;
       const groupId = id();
@@ -418,21 +418,21 @@ export function useInstantDB() {
         db.tx.groups[groupId].update({
           name: groupData.name,
           description: groupData.description,
-          adminId: groupData.adminId,
+          creatorId: groupData.creatorId,
           createdAt: Date.now(),
           shareLink,
           avatarUrl: groupData.avatarUrl,
           sports: groupData.sports,
         }).link({
-          admin: groupData.adminId
+          creator: groupData.creatorId
         }),
         db.tx.memberships[membershipId].update({
           createdAt: Date.now(),
           role: 'admin',
-          profileGroupKey: `${groupData.adminId}_${groupId}`,
+          profileGroupKey: `${groupData.creatorId}_${groupId}`,
         }).link({
           group: groupId,
-          profile: groupData.adminId
+          profile: groupData.creatorId
         }),
         // Add bot as member to every group
         db.tx.memberships[botMembershipId].update({
@@ -933,7 +933,7 @@ export function useInstantDB() {
           order: { serverCreatedAt: 'desc' },
           limit: 10
         },
-        admin: {},
+        creator: {},
         memberships: {
           profile: {
             user: {},
@@ -951,7 +951,7 @@ export function useInstantDB() {
     return await db.queryOnce({
       groups: {
         $: { where: { shareLink: shareLink } },
-        admin: {},
+        creator: {},
         memberships: {
           profile: {
             user: {},
@@ -971,7 +971,7 @@ export function useInstantDB() {
         $: { where: { "user.id": userId } },
         memberships: {
           group: {
-            admin: {},
+            creator: {},
             messages: {},
           },
         },

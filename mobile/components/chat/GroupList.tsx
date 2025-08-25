@@ -13,9 +13,9 @@ interface Group {
   avatar: string;
   createdAt: number;
   shareLink: string;
-  adminId: string;
+  creatorId: string;
   avatarUrl?: string;
-  admin?: {
+  creator?: {
     id: string;
     handle: string;
     displayName?: string;
@@ -142,7 +142,7 @@ export function GroupList({
 
   const GroupItem = React.useCallback(function GroupItem({ group, membership, onPress }: { group: Group; membership?: any; onPress: (group: Group) => void }) {
     const lastMessage = getLastMessage(group);
-    const isBotGroup = group.admin?.handle === 'fk';
+    const isBotGroup = group.creator?.handle === 'fk';
     const unreadCount = getUnreadCount(group.id, membership);
 
     // Configuration object to reduce if/else statements

@@ -7,6 +7,10 @@ const _schema = i.schema({
   // Take a look at this schema, and if everything looks good,
   // run `push schema` again to enforce the types.
   entities: {
+    $files: i.entity({
+      path: i.string().unique().indexed(),
+      url: i.string(),
+    }),
     $users: i.entity({
       email: i.string().unique().indexed().optional(),
     }),
@@ -15,13 +19,13 @@ const _schema = i.schema({
       location: i.string().optional(),
     }),
     groups: i.entity({
-      adminId: i.string(),
+      avatarUrl: i.string().optional(),
       createdAt: i.number(),
+      creatorId: i.string(),
       description: i.string(),
       name: i.string(),
       shareLink: i.string().unique(),
       sports: i.json().optional(),
-      avatarUrl: i.string().optional(),
     }),
     matches: i.entity({
       closedAt: i.number().optional(),
@@ -57,11 +61,11 @@ const _schema = i.schema({
       question: i.string(),
     }),
     profiles: i.entity({
+      avatarUrl: i.string().optional(),
       createdAt: i.number(),
       displayName: i.string().optional(),
       handle: i.string().unique().indexed(),
       pushToken: i.string().optional(),
-      avatarUrl: i.string(),
     }),
     reactions: i.entity({
       createdAt: i.number(),
@@ -91,16 +95,16 @@ const _schema = i.schema({
         label: "checkIns",
       },
     },
-    groupsAdmin: {
+    groupsCreator: {
       forward: {
         on: "groups",
         has: "one",
-        label: "admin",
+        label: "creator",
       },
       reverse: {
         on: "profiles",
         has: "many",
-        label: "adminGroups",
+        label: "creatorGroups",
       },
     },
     groupsMemberships: {

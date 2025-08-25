@@ -152,7 +152,7 @@ export default function ChatScreen() {
     try {
       await createGroup({
         ...groupData,
-        adminId: currentProfile.id, // Use profile ID as admin ID
+        creatorId: currentProfile.id, // Use profile ID as creator ID
       });
     } catch (error) {
       showError(t('common.error'), t('groups.failedCreateGroup'));

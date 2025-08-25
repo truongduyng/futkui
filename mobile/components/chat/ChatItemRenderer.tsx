@@ -15,7 +15,10 @@ interface ChatItemRendererProps {
   };
   group?: {
     id: string;
-    adminId: string;
+    creatorId: string;
+  };
+  userMembership?: {
+    role?: string;
   };
   totalMembers: number;
   stableHandleVote: (pollId: string, optionId: string, votes: any[], allowMultiple: boolean) => void;
@@ -31,7 +34,7 @@ interface ChatItemRendererProps {
 export function useChatItemRenderer({
   chatItems,
   currentProfile,
-  group,
+  userMembership,
   totalMembers,
   stableHandleVote,
   stableHandleClosePoll,
@@ -121,7 +124,7 @@ const colors = isDark ? Colors.dark : Colors.light;
             createdAt={new Date(message.createdAt)}
             showAuthor={showAuthor}
             isCreator={message.match?.creator?.id === currentProfile?.id}
-            isGroupAdmin={group?.adminId === currentProfile?.id}
+            isGroupAdmin={userMembership?.role === "admin"}
           />
         ) : (
           <MessageBubble
@@ -157,7 +160,7 @@ const colors = isDark ? Colors.dark : Colors.light;
   }, [
     chatItems,
     currentProfile?.id,
-    group?.adminId,
+    userMembership,
     totalMembers,
     shouldShowTimestamp,
     colors.tabIconDefault,
