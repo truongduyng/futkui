@@ -165,7 +165,7 @@ const rules = {
     ],
     allow: {
       view: "true",
-      create: "isAuthenticated",
+      create: "isAuthenticated && data.ref('group.name') != 'FutKui'",
       delete: "isOwner || isGroupAdmin",
       update: "isOwner || isGroupAdmin",
     },

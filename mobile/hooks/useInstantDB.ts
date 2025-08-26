@@ -361,7 +361,7 @@ export function useInstantDB() {
   const ensureBotInGroup = useCallback(async (groupId: string) => {
     try {
       const botProfileId = await ensureBotProfile();
-      
+
       // Check if bot is already a member of this group
       const existingMembership = await db.queryOnce({
         memberships: {
