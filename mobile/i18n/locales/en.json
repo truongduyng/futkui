@@ -118,6 +118,8 @@
     "menu": "Menu",
     "communities": "Communities",
     "communitiesDescription": "Most recent clubs on the platform",
+    "about": "About",
+    "aboutDescription": "App info, privacy & terms",
     "privacy": "Privacy",
     "termsOfService": "Terms of Service",
     "theme": "Theme",
@@ -380,5 +382,30 @@
       "impersonation": "Impersonation",
       "other": "Other"
     }
+  },
+  "about": {
+    "version": "Version",
+    "description": "Connect and play sports with local communities",
+    "rateApp": "Rate App",
+    "rateAppDescription": "Leave a review on the App Store",
+    "sendFeedback": "Send Feedback",
+    "sendFeedbackDescription": "Share your thoughts with us",
+    "website": "Website",
+    "legal": "Legal",
+    "madeWith": "Made with",
+    "byTeam": "by the FutKui team",
+    "allRightsReserved": "All rights reserved.",
+    "rateError": "Unable to open rating. Please try again later.",
+    "emailError": "Unable to open email app. Please contact hello@futkui.com directly."
+  },
+  "feedback": {
+    "title": "Send Feedback",
+    "messagePlaceholder": "Tell us what you think, what you'd like to see improved, or any issues you've encountered...",
+    "submit": "Send Feedback",
+    "submitting": "Sending...",
+    "success": "Feedback Sent",
+    "successMessage": "Thank you for your feedback! We'll review it and get back to you if needed.",
+    "error": "Feedback Error",
+    "errorMessage": "Please enter your feedback message"
   }
 }

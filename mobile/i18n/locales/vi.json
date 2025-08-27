@@ -118,6 +118,8 @@
     "menu": "Menu",
     "communities": "Cộng đồng",
     "communitiesDescription": "Các câu lạc bộ mới nhất trên nền tảng",
+    "about": "Giới thiệu",
+    "aboutDescription": "Thông tin ứng dụng, quyền riêng tư & điều khoản",
     "privacy": "Quyền riêng tư",
     "termsOfService": "Điều khoản dịch vụ",
     "theme": "Giao diện",
@@ -379,5 +381,30 @@
       "impersonation": "Mạo danh",
       "other": "Khác"
     }
+  },
+  "about": {
+    "version": "Phiên bản",
+    "description": "Chat nhóm câu lạc bộ thể thao",
+    "rateApp": "Đánh giá ứng dụng",
+    "rateAppDescription": "Để lại đánh giá trên App Store",
+    "sendFeedback": "Gửi phản hồi",
+    "sendFeedbackDescription": "Chia sẻ ý kiến của bạn với chúng tôi",
+    "website": "Trang web",
+    "legal": "Pháp lý",
+    "madeWith": "Được tạo với",
+    "byTeam": "bởi đội ngũ FutKui",
+    "allRightsReserved": "Bảo lưu mọi quyền.",
+    "rateError": "Không thể mở đánh giá. Vui lòng thử lại sau.",
+    "emailError": "Không thể mở ứng dụng email. Vui lòng liên hệ hello@futkui.com trực tiếp."
+  },
+  "feedback": {
+    "title": "Gửi phản hồi",
+    "messagePlaceholder": "Cho chúng tôi biết bạn nghĩ gì, bạn muốn cải thiện điều gì, hoặc bất kỳ vấn đề nào bạn gặp phải...",
+    "submit": "Gửi phản hồi",
+    "submitting": "Đang gửi...",
+    "success": "Đã gửi phản hồi",
+    "successMessage": "Cảm ơn bạn đã gửi phản hồi! Chúng tôi sẽ xem xét và liên hệ lại nếu cần.",
+    "error": "Lỗi phản hồi",
+    "errorMessage": "Vui lòng nhập tin nhắn phản hồi"
   }
 }

@@ -9,9 +9,11 @@ import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import Toast from 'react-native-toast-message';
 import '@/i18n';
+import { useTranslation } from 'react-i18next';
 
 
 function ThemedApp() {
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
@@ -39,6 +41,14 @@ function ThemedApp() {
                 headerShown: true,
                 title: 'Chat',
                 presentation: 'card'
+              }}
+            />
+            <Stack.Screen
+              name="about"
+              options={{
+                title: t('explore.about'),
+                presentation: 'modal',
+                headerShown: true
               }}
             />
             <Stack.Screen name="+not-found" />

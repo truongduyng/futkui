@@ -2,11 +2,11 @@ import { CachedAvatar } from "@/components/chat/CachedAvatar";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
-import { WebViewModal } from "@/components/WebViewModal";
 import { Colors } from "@/constants/Colors";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useInstantDB } from "@/hooks/useInstantDB";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -32,11 +32,6 @@ export default function ExploreScreen() {
 
   const [allGroups, setAllGroups] = useState<any[]>([]);
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
-  const [webViewModal, setWebViewModal] = useState<{visible: boolean; url: string; title: string}>({
-    visible: false,
-    url: '',
-    title: ''
-  });
   const [isThemeSwitcherVisible, setIsThemeSwitcherVisible] = useState(false);
   const [isLanguageSelectorVisible, setIsLanguageSelectorVisible] = useState(false);
 
@@ -77,20 +72,8 @@ export default function ExploreScreen() {
     setIsProfileModalVisible(true);
   };
 
-  const handlePrivacy = () => {
-    setWebViewModal({
-      visible: true,
-      url: 'https://futkui.com/en/privacy',
-      title: 'Privacy Policy'
-    });
-  };
-
-  const handleTerms = () => {
-    setWebViewModal({
-      visible: true,
-      url: 'https://futkui.com/en/terms',
-      title: 'Terms of Service'
-    });
+  const handleAbout = () => {
+    router.push('/about');
   };
 
   const handleTheme = () => {
@@ -305,58 +288,31 @@ export default function ExploreScreen() {
 
             <TouchableOpacity
               style={styles.menuButton}
-              onPress={handlePrivacy}
+              onPress={handleAbout}
               activeOpacity={0.8}
             >
               <View style={styles.menuButtonContent}>
                 <View
                   style={[
                     styles.menuIconContainer,
-                    { backgroundColor: "rgba(74, 144, 226, 0.1)" },
+                    { backgroundColor: "rgba(96, 125, 139, 0.1)" },
                   ]}
                 >
-                  <Ionicons name="shield-outline" size={20} color="#4A90E2" />
+                  <Ionicons name="information-circle-outline" size={20} color="#607D8B" />
                 </View>
                 <View style={styles.menuTextContainer}>
                   <Text
                     style={[styles.menuButtonTitle, { color: colors.text }]}
                   >
-                    {t('explore.privacy')}
+                    {t('explore.about')}
                   </Text>
-                </View>
-              </View>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={colors.tabIconDefault}
-              />
-            </TouchableOpacity>
-
-            <View style={[styles.menuSeparator, { backgroundColor: colors.tabIconDefault }]} />
-
-            <TouchableOpacity
-              style={styles.menuButton}
-              onPress={handleTerms}
-              activeOpacity={0.8}
-            >
-              <View style={styles.menuButtonContent}>
-                <View
-                  style={[
-                    styles.menuIconContainer,
-                    { backgroundColor: "rgba(156, 39, 176, 0.1)" },
-                  ]}
-                >
-                  <Ionicons
-                    name="document-text-outline"
-                    size={20}
-                    color="#9C27B0"
-                  />
-                </View>
-                <View style={styles.menuTextContainer}>
                   <Text
-                    style={[styles.menuButtonTitle, { color: colors.text }]}
+                    style={[
+                      styles.menuButtonSubtitle,
+                      { color: colors.tabIconDefault },
+                    ]}
                   >
-                    {t('explore.termsOfService')}
+                    {t('explore.aboutDescription')}
                   </Text>
                 </View>
               </View>
@@ -523,12 +479,6 @@ export default function ExploreScreen() {
         />
       )}
 
-      <WebViewModal
-        visible={webViewModal.visible}
-        onClose={() => setWebViewModal({visible: false, url: '', title: ''})}
-        url={webViewModal.url}
-        title={webViewModal.title}
-      />
 
       <ThemeSwitcher
         visible={isThemeSwitcherVisible}
