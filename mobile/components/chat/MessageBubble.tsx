@@ -18,6 +18,7 @@ import { CachedAvatar } from "./CachedAvatar";
 import { WebViewModal } from "../WebViewModal";
 import { MessageImage } from "./MessageImage";
 import { ReactionButton } from "./ReactionButton";
+import { ReportModal } from "./ReportModal";
 
 interface Reaction {
   id: string;
@@ -47,6 +48,8 @@ interface MessageBubbleProps {
   showAuthor?: boolean;
   imageUrl?: string;
   onImagePress?: (imageUrl: string) => void;
+  messageId?: string;
+  onReportMessage?: (messageId: string, reason: string, description: string) => void;
 }
 
 export const MessageBubble = React.memo(function MessageBubble({
@@ -60,6 +63,8 @@ export const MessageBubble = React.memo(function MessageBubble({
   showAuthor = true,
   imageUrl,
   onImagePress,
+  messageId,
+  onReportMessage,
 }: MessageBubbleProps) {
   const { t } = useTranslation();
   const { isDark } = useTheme();
@@ -71,6 +76,7 @@ export const MessageBubble = React.memo(function MessageBubble({
   const [showReactionDetails, setShowReactionDetails] = useState(false);
   const [showMessageOptions, setShowMessageOptions] = useState(false);
   const [showWebView, setShowWebView] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   
   // Position and content states
   const [messagePosition, setMessagePosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
@@ -175,6 +181,23 @@ export const MessageBubble = React.memo(function MessageBubble({
   const handleCloseWebView = useCallback(() => {
     setShowWebView(false);
     setWebViewUrl(null);
+  }, []);
+
+  const handleReportMessage = useCallback((reason: string, description: string) => {
+    if (messageId && onReportMessage) {
+      onReportMessage(messageId, reason, description);
+    }
+    setShowMessageOptions(false);
+    setShowReportModal(false);
+  }, [messageId, onReportMessage]);
+
+  const handleShowReport = useCallback(() => {
+    // Close message options first, then open report modal with a small delay
+    setShowMessageOptions(false);
+    setShowReactionOptions(false);
+    setTimeout(() => {
+      setShowReportModal(true);
+    }, 100);
   }, []);
 
 
@@ -304,6 +327,18 @@ export const MessageBubble = React.memo(function MessageBubble({
                       <Text style={dynamicStyles.messageOptionText}>{t('chat.copyText')}</Text>
                     </View>
                   </TouchableOpacity>
+                  
+                  {!isOwnMessage && onReportMessage && messageId && (
+                    <TouchableOpacity
+                      style={styles.messageOptionButton}
+                      onPress={handleShowReport}
+                    >
+                      <View style={styles.messageOptionContent}>
+                        <Ionicons name="flag-outline" size={18} color={isDark ? "#999" : "#666"} />
+                        <Text style={dynamicStyles.messageOptionText}>{t('report.reportMessage')}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
                 </View>
               )}
             </TouchableOpacity>
@@ -408,6 +443,15 @@ export const MessageBubble = React.memo(function MessageBubble({
           url={webViewUrl}
         />
       )}
+
+      {/* Report Modal */}
+      <ReportModal
+        isVisible={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        onSubmit={handleReportMessage}
+        type="message"
+        targetName={author?.handle || t('chat.unknown')}
+      />
     </>
   );
 });

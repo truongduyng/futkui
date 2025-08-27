@@ -11,7 +11,8 @@
     "verifying": "Verifying...",
     "success": "Success",
     "back": "Back",
-    "join": "Join"
+    "join": "Join",
+    "optional": "optional"
   },
   "auth": {
     "welcome": "Welcome to FutKui",
@@ -351,5 +352,33 @@
     "image": "Image",
     "match": "Match created",
     "message": "Message"
+  },
+  "report": {
+    "reportMessage": "Report",
+    "reportUser": "Report",
+    "reporting": "Reporting",
+    "reason": "Reason for Report",
+    "description": "Additional Details",
+    "descriptionPlaceholder": "Provide additional context (optional)...",
+    "selectReason": "Please select a reason for reporting",
+    "submit": "Submit Report",
+    "submitting": "Submitting...",
+    "cancel": "Cancel",
+    "success": "Report Submitted",
+    "submitted": "Thank you for reporting. We will review this shortly.",
+    "error": "Report Error",
+    "submitError": "Failed to submit report. Please try again.",
+    "reasons": {
+      "spam": "Spam",
+      "harassment": "Harassment or Bullying",
+      "inappropriate_content": "Inappropriate Content",
+      "hate_speech": "Hate Speech",
+      "violence": "Violence or Threats",
+      "misinformation": "Misinformation",
+      "fake_profile": "Fake Profile",
+      "inappropriate_behavior": "Inappropriate Behavior",
+      "impersonation": "Impersonation",
+      "other": "Other"
+    }
   }
 }

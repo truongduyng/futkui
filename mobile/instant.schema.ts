@@ -81,6 +81,16 @@ const _schema = i.schema({
       createdAt: i.number(),
       optionId: i.string(),
     }),
+    reports: i.entity({
+      reason: i.string(),
+      description: i.string().optional(),
+      type: i.string(), // "message" or "user"
+      targetId: i.string(), // ID of the message or user being reported
+      status: i.string().optional(), // "pending", "reviewed", "resolved", "dismissed"
+      createdAt: i.number(),
+      resolvedAt: i.number().optional(),
+      adminNotes: i.string().optional(),
+    }),
   },
   links: {
     checkInsUser: {
@@ -310,6 +320,42 @@ const _schema = i.schema({
         on: "profiles",
         has: "many",
         label: "votes",
+      },
+    },
+    reportsReporter: {
+      forward: {
+        on: "reports",
+        has: "one",
+        label: "reporter",
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "reports",
+      },
+    },
+    reportsMessage: {
+      forward: {
+        on: "reports",
+        has: "one",
+        label: "message",
+      },
+      reverse: {
+        on: "messages",
+        has: "many",
+        label: "reports",
+      },
+    },
+    reportsReportedUser: {
+      forward: {
+        on: "reports",
+        has: "one",
+        label: "reportedUser",
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "userReports",
       },
     },
   },

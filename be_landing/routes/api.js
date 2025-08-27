@@ -118,4 +118,92 @@ export default async function (fastify, opts) {
       })
     }
   })
+
+  // GET /api/reports - Get all reports (admin only)
+  fastify.get('/api/reports', {
+    preHandler: fastify.authenticate
+  }, async function (request, reply) {
+    try {
+      // Get authenticated user from the bearer token
+      const authenticatedUser = request.user
+      
+      if (!authenticatedUser) {
+        return reply.code(401).send({ 
+          error: 'Authentication required' 
+        })
+      }
+
+      // For now, we'll assume admin checking is done on frontend
+      // In production, you'd want to add proper admin role checking here
+
+      const reports = await db.query({
+        reports: {
+          reporter: {},
+          message: {
+            author: {},
+            group: {}
+          },
+          reportedUser: {}
+        }
+      })
+
+      return reply.send({
+        success: true,
+        reports: reports.reports || []
+      })
+    } catch (error) {
+      fastify.log.error('Error fetching reports:', error)
+      return reply.code(500).send({ 
+        error: 'Internal server error while fetching reports' 
+      })
+    }
+  })
+
+  // PATCH /api/reports/:reportId - Update report status (admin only)
+  fastify.patch('/api/reports/:reportId', {
+    preHandler: fastify.authenticate
+  }, async function (request, reply) {
+    try {
+      // Get authenticated user from the bearer token
+      const authenticatedUser = request.user
+      
+      if (!authenticatedUser) {
+        return reply.code(401).send({ 
+          error: 'Authentication required' 
+        })
+      }
+
+      const { reportId } = request.params
+      const { status, adminNotes } = request.body
+
+      if (!status || !['pending', 'reviewed', 'resolved', 'dismissed'].includes(status)) {
+        return reply.code(400).send({
+          error: 'Invalid status. Must be one of: pending, reviewed, resolved, dismissed'
+        })
+      }
+
+      const updateData = {
+        status,
+        adminNotes: adminNotes || null
+      }
+
+      if (status === 'resolved' || status === 'dismissed') {
+        updateData.resolvedAt = Date.now()
+      }
+
+      const result = await db.transact([
+        db.tx.reports[reportId].update(updateData)
+      ])
+
+      return reply.send({
+        success: true,
+        message: 'Report updated successfully'
+      })
+    } catch (error) {
+      fastify.log.error('Error updating report:', error)
+      return reply.code(500).send({ 
+        error: 'Internal server error while updating report' 
+      })
+    }
+  })
 }

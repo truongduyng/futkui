@@ -17,6 +17,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
 import * as Clipboard from "expo-clipboard";
 import { useToast } from "@/hooks/useToast";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -40,6 +41,7 @@ export default function ChatScreen() {
   const { showSuccess, showError } = useToast();
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [messageLimit, setMessageLimit] = useState(200);
+  const [reportedMessageIds, setReportedMessageIds] = useState<Set<string>>(new Set());
 
   const {
     useGroup,
@@ -57,6 +59,7 @@ export default function ChatScreen() {
     addReaction,
     leaveGroup,
     markMessagesAsRead,
+    reportMessage,
   } = useInstantDB();
 
   // Data queries
@@ -86,11 +89,14 @@ export default function ChatScreen() {
   }, [group?.shareLink, t, showSuccess, showError]);
 
   // Process chat data
-  const { messages, polls, matches, hasMoreMessages } = useChatData({
+  const { messages: allMessages, polls, matches, hasMoreMessages } = useChatData({
     messagesData,
     groupId: groupId || "",
     messageLimit,
   });
+
+  // Filter out reported messages for the current user
+  const messages = allMessages.filter((message: any) => !reportedMessageIds.has(message.id));
 
   // Extract members for mentions
   const members = group?.memberships
@@ -118,6 +124,64 @@ export default function ChatScreen() {
     setMessageLimit,
     groupId: groupId || "",
   });
+
+  // Load reported messages from AsyncStorage
+  useEffect(() => {
+    const loadReportedMessages = async () => {
+      if (!currentProfile?.id || !groupId) return;
+      
+      try {
+        const storageKey = `reportedMessages_${currentProfile.id}_${groupId}`;
+        const stored = await AsyncStorage.getItem(storageKey);
+        if (stored) {
+          const reportedIds = JSON.parse(stored);
+          setReportedMessageIds(new Set(reportedIds));
+        }
+      } catch (error) {
+        console.error('Error loading reported messages:', error);
+      }
+    };
+
+    loadReportedMessages();
+  }, [currentProfile?.id, groupId]);
+
+  // Save reported messages to AsyncStorage
+  const saveReportedMessage = useCallback(async (messageId: string) => {
+    if (!currentProfile?.id || !groupId) return;
+
+    try {
+      const newReportedIds = new Set([...reportedMessageIds, messageId]);
+      setReportedMessageIds(newReportedIds);
+      
+      const storageKey = `reportedMessages_${currentProfile.id}_${groupId}`;
+      await AsyncStorage.setItem(storageKey, JSON.stringify([...newReportedIds]));
+    } catch (error) {
+      console.error('Error saving reported message:', error);
+    }
+  }, [currentProfile?.id, groupId, reportedMessageIds]);
+
+  // Report handler
+  const handleReportMessage = useCallback(async (messageId: string, reason: string, description: string) => {
+    if (!currentProfile?.id) {
+      showError(t('hooks.sendMessage.errorTitle'), t('hooks.sendMessage.waitProfile'));
+      return;
+    }
+
+    try {
+      await reportMessage({
+        messageId,
+        reason,
+        description,
+        reporterId: currentProfile.id,
+      });
+      
+      // Hide the reported message for the reporter
+      await saveReportedMessage(messageId);
+    } catch (error) {
+      console.error('Failed to report message:', error);
+      showError(t('report.error'), t('report.submitError'));
+    }
+  }, [currentProfile?.id, reportMessage, saveReportedMessage, showError, t]);
 
   // Event handlers
   const {
@@ -215,6 +279,7 @@ export default function ChatScreen() {
     handleRsvp,
     handleCheckIn,
     handleCloseMatch,
+    handleReportMessage,
   });
 
   // Reset limit when group changes

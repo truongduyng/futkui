@@ -11,7 +11,8 @@
     "verifying": "Đang xác minh...",
     "success": "Thành công",
     "back": "Quay lại",
-    "join": "Tham gia"
+    "join": "Tham gia",
+    "optional": "tùy chọn"
   },
   "auth": {
     "welcome": "Chào mừng đến với FutKui",
@@ -350,5 +351,33 @@
     "image": "Hình ảnh",
     "match": "Trận đấu mới tạo",
     "message": "Tin nhắn"
+  },
+  "report": {
+    "reportMessage": "Báo cáo tin nhắn",
+    "reportUser": "Báo cáo người dùng",
+    "reporting": "Đang báo cáo",
+    "reason": "Lý do báo cáo",
+    "description": "Chi tiết bổ sung",
+    "descriptionPlaceholder": "Cung cấp thông tin bổ sung (tùy chọn)...",
+    "selectReason": "Vui lòng chọn lý do báo cáo",
+    "submit": "Gửi báo cáo",
+    "submitting": "Đang gửi...",
+    "cancel": "Hủy",
+    "success": "Đã gửi báo cáo",
+    "submitted": "Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét sớm.",
+    "error": "Lỗi báo cáo",
+    "submitError": "Không thể gửi báo cáo. Vui lòng thử lại.",
+    "reasons": {
+      "spam": "Spam",
+      "harassment": "Quấy rối hoặc bắt nạt",
+      "inappropriate_content": "Nội dung không phù hợp",
+      "hate_speech": "Phát ngôn thù hận",
+      "violence": "Bạo lực hoặc đe dọa",
+      "misinformation": "Thông tin sai lệch",
+      "fake_profile": "Hồ sơ giả",
+      "inappropriate_behavior": "Hành vi không phù hợp",
+      "impersonation": "Mạo danh",
+      "other": "Khác"
+    }
   }
 }

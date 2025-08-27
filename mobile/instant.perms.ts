@@ -174,6 +174,22 @@ const rules = {
       update: "isOwner || isGroupAdmin",
     },
   },
+  reports: {
+    bind: [
+      "isAuthenticated",
+      "auth.id != null",
+      "isReporter",
+      "auth.id in data.ref('reporter.user.id')",
+      "isAdmin",
+      "auth.id in data.ref('$files.path') && 'admin' in data.ref('$files.path')",
+    ],
+    allow: {
+      view: "isAdmin",
+      create: "isAuthenticated",
+      delete: "isReporter || isAdmin",
+      update: "isAdmin",
+    },
+  },
 } satisfies InstantRules;
 
 export default rules;

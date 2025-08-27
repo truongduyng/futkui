@@ -40,6 +40,7 @@ interface UseChatHandlersProps {
   setIsNearBottom: (value: boolean) => void;
   setShowScrollToBottom: (value: boolean) => void;
   setSelectedImageUrl: (url: string | null) => void;
+  handleReportMessage?: (messageId: string, reason: string, description: string) => void;
 }
 
 export function useChatHandlers({
@@ -60,6 +61,7 @@ export function useChatHandlers({
   setIsNearBottom,
   setShowScrollToBottom,
   setSelectedImageUrl,
+  handleReportMessage,
 }: UseChatHandlersProps) {
   const router = useRouter();
   const { t } = useTranslation();
@@ -356,5 +358,6 @@ export function useChatHandlers({
     handleRsvp,
     handleCheckIn,
     handleCloseMatch,
+    handleReportMessage,
   };
 }

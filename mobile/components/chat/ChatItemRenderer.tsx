@@ -29,6 +29,7 @@ interface ChatItemRendererProps {
   handleRsvp: (matchId: string, response: 'yes' | 'no' | 'maybe') => void;
   handleCheckIn: (matchId: string) => void;
   handleCloseMatch: (matchId: string) => void;
+  handleReportMessage?: (messageId: string, reason: string, description: string) => void;
 }
 
 export function useChatItemRenderer({
@@ -44,6 +45,7 @@ export function useChatItemRenderer({
   handleRsvp,
   handleCheckIn,
   handleCloseMatch,
+  handleReportMessage,
 }: ChatItemRendererProps) {
   const { isDark } = useTheme();
 const colors = isDark ? Colors.dark : Colors.light;
@@ -139,6 +141,8 @@ const colors = isDark ? Colors.dark : Colors.light;
             showAuthor={showAuthor}
             imageUrl={resolvedImageUrl}
             onImagePress={handleImagePress}
+            messageId={message.id}
+            onReportMessage={handleReportMessage}
           />
         )}
         {showTimestamp && (
@@ -171,7 +175,8 @@ const colors = isDark ? Colors.dark : Colors.light;
     handleImagePress,
     handleRsvp,
     handleCheckIn,
-    handleCloseMatch
+    handleCloseMatch,
+    handleReportMessage
   ]);
 
   const keyExtractor = useCallback((item: any) => item.id, []);

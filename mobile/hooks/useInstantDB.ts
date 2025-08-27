@@ -906,6 +906,56 @@ export function useInstantDB() {
     [db]
   );
 
+  const reportMessage = useCallback(
+    async (reportData: {
+      messageId: string;
+      reason: string;
+      description?: string;
+      reporterId: string;
+    }) => {
+      const result = await db.transact([
+        db.tx.reports[id()].update({
+          reason: reportData.reason,
+          description: reportData.description,
+          type: 'message',
+          targetId: reportData.messageId,
+          status: 'pending',
+          createdAt: Date.now(),
+        }).link({
+          reporter: reportData.reporterId,
+          message: reportData.messageId,
+        }),
+      ]);
+      return result;
+    },
+    [db]
+  );
+
+  const reportUser = useCallback(
+    async (reportData: {
+      userId: string;
+      reason: string;
+      description?: string;
+      reporterId: string;
+    }) => {
+      const result = await db.transact([
+        db.tx.reports[id()].update({
+          reason: reportData.reason,
+          description: reportData.description,
+          type: 'user',
+          targetId: reportData.userId,
+          status: 'pending',
+          createdAt: Date.now(),
+        }).link({
+          reporter: reportData.reporterId,
+          reportedUser: reportData.userId,
+        }),
+      ]);
+      return result;
+    },
+    [db]
+  );
+
   const useUnreadCount = (groupId: string, lastReadMessageAt: number | undefined) => {
     if (!groupId) {
       return { data: { messages: [] }, isLoading: false, error: null };
@@ -1121,5 +1171,7 @@ export function useInstantDB() {
     markMessagesAsRead,
     updatePushToken,
     updateGroup,
+    reportMessage,
+    reportUser,
   };
 }
