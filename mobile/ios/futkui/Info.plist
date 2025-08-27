@@ -58,9 +58,9 @@
     <key>NSMicrophoneUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your microphone</string>
     <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to save photos to your photo library.</string>
+    <string>$(PRODUCT_NAME) needs permission to save photos from group chats to your library. For example, save a shared group photo or screenshot.</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to save images to your photo library.</string>
+    <string>$(PRODUCT_NAME) needs photo access to set profile pictures, share images in chats, and save photos from conversations. For example, upload a profile photo or share pictures with friends.</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
