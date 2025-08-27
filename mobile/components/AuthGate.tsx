@@ -10,6 +10,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ProfileSetup } from './ProfileSetup';
+import { WebViewModal } from './WebViewModal';
 
 // Helper function to detect if running in Expo Go
 const isRunningInExpoGo = () => {
@@ -130,6 +131,7 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
   const [isLoading, setIsLoading] = useState(false);
   const [isAppleSignInAvailable, setIsAppleSignInAvailable] = useState(false);
   const [showGoogleSignIn, setShowGoogleSignIn] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   useEffect(() => {
     const checkAppleSignInAvailability = async () => {
@@ -236,12 +238,16 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
     }
   };
 
+  const handlePrivacyPress = () => {
+    setShowPrivacyModal(true);
+  };
+
   return (
     <>
       <Text style={[styles.title, { color: colors.text }]}>{t('auth.welcome')}</Text>
-      <Text style={[styles.subtitle, { color: colors.text }]}>
+      {/* <Text style={[styles.subtitle, { color: colors.text }]}>
         {t('auth.chooseMethod')}
-      </Text>
+      </Text> */}
 
       {showGoogleSignIn && (
         <TouchableOpacity
@@ -292,6 +298,20 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
           {isLoading ? t('common.sending') : t('auth.sendCode')}
         </Text>
       </TouchableOpacity>
+
+      <Text style={[styles.privacyText, { color: colors.tabIconDefault }]}>
+        {t('auth.privacyAccept')}{' '}
+        <Text style={[styles.privacyLink, { color: colors.tint }]} onPress={handlePrivacyPress}>
+          {t('auth.privacyPolicy')}
+        </Text>
+      </Text>
+
+      <WebViewModal
+        visible={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        url="https://futkui.com/privacy"
+        title="Privacy Policy"
+      />
     </>
   );
 }
@@ -373,9 +393,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 28,
     textAlign: 'center',
   },
   subtitle: {
@@ -448,5 +468,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 16,
     opacity: 0.7,
+  },
+  privacyText: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 8,
+    opacity: 0.6,
+  },
+  privacyLink: {
+    textDecorationLine: 'underline',
   },
 });

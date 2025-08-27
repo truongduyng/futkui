@@ -29,7 +29,9 @@
     "failedSendCode": "Không thể gửi mã. Vui lòng thử lại.",
     "failedAppleSignIn": "Không thể đăng nhập bằng Apple. Vui lòng thử lại.",
     "failedGoogleSignIn": "Không thể đăng nhập bằng Google. Vui lòng thử lại.",
-    "settingUpProfile": "Đang thiết lập hồ sơ của bạn..."
+    "settingUpProfile": "Đang thiết lập hồ sơ của bạn...",
+    "privacyAccept": "Bằng cách đăng nhập, bạn chấp nhận",
+    "privacyPolicy": "Chính sách quyền riêng tư"
   },
   "groups": {
     "errorLoading": "Lỗi tải nhóm:",

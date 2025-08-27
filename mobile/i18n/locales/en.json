@@ -29,7 +29,9 @@
     "failedSendCode": "Failed to send code. Please try again.",
     "failedAppleSignIn": "Failed to sign in with Apple. Please try again.",
     "failedGoogleSignIn": "Failed to sign in with Google. Please try again.",
-    "settingUpProfile": "Setting up your profile..."
+    "settingUpProfile": "Setting up your profile...",
+    "privacyAccept": "By logging in, you accept our",
+    "privacyPolicy": "Privacy Policy"
   },
   "groups": {
     "errorLoading": "Error loading groups:",
