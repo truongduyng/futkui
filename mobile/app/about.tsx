@@ -178,14 +178,9 @@ export default function AboutScreen() {
             </TouchableOpacity>
 
             <View style={[styles.menuSeparator, { backgroundColor: colors.tabIconDefault }]} />
-          </View>
-        </View>
 
-        {/* Legal Section */}
-        <View style={styles.section}>
-          <View style={[styles.menuContainer, { backgroundColor: colors.background }]}>
             <TouchableOpacity
-              style={[styles.menuButton, styles.menuButtonFirst]}
+              style={styles.menuButton}
               onPress={handlePrivacy}
               activeOpacity={0.8}
             >
