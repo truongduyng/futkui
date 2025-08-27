@@ -100,6 +100,11 @@ export const MessageBubble = React.memo(function MessageBubble({
       ...styles.messageOptionText,
       color: isDark ? "#ECEDEE" : "#333",
     },
+    reportOptionText: {
+      ...styles.messageOptionText,
+      color: "#FF4444",
+      fontWeight: "bold" as const,
+    },
     bottomSheet: {
       ...styles.bottomSheet,
       backgroundColor: isDark ? "#2A2A2A" : "white",
@@ -330,12 +335,12 @@ export const MessageBubble = React.memo(function MessageBubble({
                   
                   {!isOwnMessage && onReportMessage && messageId && (
                     <TouchableOpacity
-                      style={styles.messageOptionButton}
+                      style={styles.reportOptionButton}
                       onPress={handleShowReport}
                     >
                       <View style={styles.messageOptionContent}>
-                        <Ionicons name="flag-outline" size={18} color={isDark ? "#999" : "#666"} />
-                        <Text style={dynamicStyles.messageOptionText}>{t('report.reportMessage')}</Text>
+                        <Ionicons name="flag" size={18} color="#FF4444" />
+                        <Text style={dynamicStyles.reportOptionText}>{t('report.reportMessage')}</Text>
                       </View>
                     </TouchableOpacity>
                   )}
@@ -574,6 +579,11 @@ const styles = StyleSheet.create({
     borderColor: "rgba(0, 0, 0, 0.1)",
   },
   messageOptionButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    borderRadius: 8,
+  },
+  reportOptionButton: {
     paddingVertical: 12,
     paddingHorizontal: 4,
     borderRadius: 8,

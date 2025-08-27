@@ -353,8 +353,8 @@
     "message": "Tin nhắn"
   },
   "report": {
-    "reportMessage": "Báo cáo tin nhắn",
-    "reportUser": "Báo cáo người dùng",
+    "reportMessage": "Báo cáo",
+    "reportUser": "Báo cáo",
     "reporting": "Đang báo cáo",
     "reason": "Lý do báo cáo",
     "description": "Chi tiết bổ sung",
