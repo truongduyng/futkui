@@ -33,7 +33,7 @@ interface Reaction {
 
 interface MessageBubbleProps {
   content?: string;
-  author?: {
+  author: {
     id: string;
     handle: string;
     displayName?: string;
@@ -70,14 +70,14 @@ export const MessageBubble = React.memo(function MessageBubble({
   const { isDark } = useTheme();
   const colors = useMemo(() => isDark ? Colors.dark : Colors.light, [isDark]);
   const { showSuccess, showError } = useToast();
-  
+
   // Modal states
   const [showReactionOptions, setShowReactionOptions] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
   const [showMessageOptions, setShowMessageOptions] = useState(false);
   const [showWebView, setShowWebView] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
-  
+
   // Position and content states
   const [messagePosition, setMessagePosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [webViewUrl, setWebViewUrl] = useState<string | null>(null);
@@ -137,7 +137,7 @@ export const MessageBubble = React.memo(function MessageBubble({
 
   const handleCopyText = useCallback(async () => {
     if (!hasTextContent) return;
-    
+
     try {
       await Clipboard.setStringAsync(content!);
       setShowMessageOptions(false);
@@ -228,7 +228,7 @@ export const MessageBubble = React.memo(function MessageBubble({
               />
             )}
             <Text style={[styles.authorName, { color: colors.text }]}>
-              {author?.handle || t('chat.unknown')}
+              {author?.displayName || author?.handle || t('chat.unknown')}
             </Text>
           </View>
         )}
@@ -332,7 +332,7 @@ export const MessageBubble = React.memo(function MessageBubble({
                       <Text style={dynamicStyles.messageOptionText}>{t('chat.copyText')}</Text>
                     </View>
                   </TouchableOpacity>
-                  
+
                   {!isOwnMessage && onReportMessage && messageId && (
                     <TouchableOpacity
                       style={styles.reportOptionButton}
