@@ -47,8 +47,9 @@ function ThemedApp() {
               name="about"
               options={{
                 title: t('explore.about'),
-                presentation: 'modal',
-                headerShown: true
+                presentation: 'card',
+                headerShown: true,
+                headerBackTitle: t('explore.menu'),
               }}
             />
             <Stack.Screen name="+not-found" />
