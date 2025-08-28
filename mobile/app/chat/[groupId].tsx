@@ -71,9 +71,16 @@ export default function ChatScreen() {
   const currentProfile = profileData?.profiles?.[0];
   const userMembership = membershipData?.memberships?.[0];
   const group = groupData?.groups?.[0];
+  const isBotGroup = group?.creator?.handle === 'fk';
 
   // Share handler
   const handleShareGroup = useCallback(async () => {
+    // Prevent sharing bot groups
+    if (isBotGroup) {
+      showError(t('common.error'), t('groupProfile.cannotShareBotGroup'));
+      return;
+    }
+
     if (group?.shareLink) {
       try {
         await Clipboard.setStringAsync(group.shareLink);
@@ -86,7 +93,7 @@ export default function ChatScreen() {
         showError(t('common.error'), t('groupProfile.shareError'));
       }
     }
-  }, [group?.shareLink, t, showSuccess, showError]);
+  }, [group?.shareLink, isBotGroup, t, showSuccess, showError]);
 
   // Process chat data
   const { messages: allMessages, polls, matches, hasMoreMessages } = useChatData({
@@ -231,18 +238,20 @@ export default function ChatScreen() {
         },
         headerRight: () => (
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity
-              onPress={handleShareGroup}
-              style={{
-                minWidth: 44,
-                minHeight: 44,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="share-outline" size={22} color={colors.tint} />
-            </TouchableOpacity>
+            {!isBotGroup && (
+              <TouchableOpacity
+                onPress={handleShareGroup}
+                style={{
+                  minWidth: 44,
+                  minHeight: 44,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="share-outline" size={22} color={colors.tint} />
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               onPress={() => router.push(`/chat/${groupId}/profile`)}
               style={{
@@ -259,7 +268,7 @@ export default function ChatScreen() {
         ),
       });
     }
-  }, [group, colors, navigation, router, groupId, t, handleShareGroup]);
+  }, [group, colors, navigation, router, groupId, t, handleShareGroup, isBotGroup]);
 
   // Chat item rendering
   const { renderChatItem, keyExtractor } = useChatItemRenderer({

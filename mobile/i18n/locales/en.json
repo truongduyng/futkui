@@ -270,7 +270,9 @@
     "leaveGroup": "Leave Group",
     "leaveGroupConfirm": "Are you sure you want to leave this group?",
     "leave": "Leave",
-    "failedToLeaveGroup": "Failed to leave group"
+    "failedToLeaveGroup": "Failed to leave group",
+    "cannotShareBotGroup": "Cannot share bot groups",
+    "cannotLeaveBotGroup": "Cannot leave your personal bot assistant"
   },
   "hooks": {
     "shareGroup": {

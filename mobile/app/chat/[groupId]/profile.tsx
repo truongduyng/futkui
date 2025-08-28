@@ -61,10 +61,16 @@ export default function GroupProfileScreen() {
       .filter((member) => member.id && member.handle) || [];
 
   const isCurrentUserAdmin = userMembership?.role === "admin";
+  const isBotGroup = group?.creator?.handle === 'fk';
 
   const [showEditModal, setShowEditModal] = React.useState(false);
 
   const handleShareGroup = useCallback(async () => {
+    // Prevent sharing bot groups
+    if (isBotGroup) {
+      showError(t('common.error'), t('groupProfile.cannotShareBotGroup'));
+      return;
+    }
     if (group?.shareLink) {
       try {
         await Clipboard.setStringAsync(group.shareLink);
@@ -77,7 +83,7 @@ export default function GroupProfileScreen() {
         showError(t('common.error'), t('groupProfile.failedToCopyLink'));
       }
     }
-  }, [group?.shareLink, t, showSuccess, showError]);
+  }, [group?.shareLink, isBotGroup, t, showSuccess, showError]);
 
   // Get recent activities (polls, matches, messages)
   const recentActivities =
@@ -98,24 +104,32 @@ export default function GroupProfileScreen() {
       navigation.setOptions({
         title: group.name,
         headerRight: () => (
-          <TouchableOpacity
-            onPress={handleShareGroup}
-            style={{
-              minWidth: 44,
-              minHeight: 44,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="share-outline" size={20} color={colors.tint} />
-          </TouchableOpacity>
+          !isBotGroup ? (
+            <TouchableOpacity
+              onPress={handleShareGroup}
+              style={{
+                minWidth: 44,
+                minHeight: 44,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="share-outline" size={20} color={colors.tint} />
+            </TouchableOpacity>
+          ) : null
         ),
       });
     }
-  }, [group?.name, navigation, colors, handleShareGroup]);
+  }, [group?.name, navigation, colors, handleShareGroup, isBotGroup]);
 
   const handleLeaveGroup = () => {
+    // Prevent leaving bot groups
+    if (isBotGroup) {
+      showError(t('common.error'), t('groupProfile.cannotLeaveBotGroup'));
+      return;
+    }
+
     Alert.alert(
       t('groupProfile.leaveGroup'),
       t('groupProfile.leaveGroupConfirm'),
@@ -420,28 +434,30 @@ export default function GroupProfileScreen() {
           </View>
         </View>
 
-        {/* Danger Zone */}
-        <View style={styles.section}>
-          <View style={[styles.dangerZone, { backgroundColor: "#FF3B3010" }]}>
-            <TouchableOpacity
-              style={styles.option}
-              onPress={handleLeaveGroup}
-              activeOpacity={0.6}
-            >
-              <View style={styles.optionLeft}>
-                <Ionicons
-                  name="exit-outline"
-                  size={24}
-                  color="#FF3B30"
-                  style={styles.optionIcon}
-                />
-                <Text style={[styles.optionText, { color: "#FF3B30" }]}>
-                  {t('groupProfile.leaveGroup')}
-                </Text>
-              </View>
-            </TouchableOpacity>
+        {/* Danger Zone - Hide for bot groups */}
+        {!isBotGroup && (
+          <View style={styles.section}>
+            <View style={[styles.dangerZone, { backgroundColor: "#FF3B3010" }]}>
+              <TouchableOpacity
+                style={styles.option}
+                onPress={handleLeaveGroup}
+                activeOpacity={0.6}
+              >
+                <View style={styles.optionLeft}>
+                  <Ionicons
+                    name="exit-outline"
+                    size={24}
+                    color="#FF3B30"
+                    style={styles.optionIcon}
+                  />
+                  <Text style={[styles.optionText, { color: "#FF3B30" }]}>
+                    {t('groupProfile.leaveGroup')}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        )}
       </ScrollView>
 
       {/* Edit Group Modal */}

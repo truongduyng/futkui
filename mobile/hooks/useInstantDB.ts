@@ -310,6 +310,7 @@ export function useInstantDB() {
         db.tx.groups[groupId].update({
           name: getTranslation('bot.groupName'),
           description: getTranslation('bot.groupDescription'),
+          avatarUrl: 'https://futkui.com/public/images/logo-fk.jpg',
           creatorId: botProfileId,
           createdAt: Date.now(),
           shareLink,

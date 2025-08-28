@@ -156,8 +156,8 @@ export function GroupList({
           avatarTextStyles: [styles.avatarText, { fontSize: 24 }],
           nameStyles: [styles.groupName, { color: currentColors.tint, fontWeight: '700' as const }],
           messageStyles: [styles.lastMessage, { color: currentColors.tint, fontStyle: 'italic' as const }, unreadCount > 0 && { fontWeight: '600' as const, color: currentColors.text }].filter(Boolean),
-          avatarContent: '🤖',
-          showImage: false
+          avatarContent: group.avatarUrl,
+          showImage: !!group.avatarUrl
         };
       }
 
