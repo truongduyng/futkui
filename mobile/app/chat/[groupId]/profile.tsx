@@ -142,7 +142,8 @@ export default function GroupProfileScreen() {
             try {
               if (userMembership?.id) {
                 await leaveGroup(userMembership.id);
-                router.back();
+                // Navigate back to the main group list instead of group chat
+                router.push('/(tabs)');
               }
             } catch (error) {
               console.error("Error leaving group:", error);
