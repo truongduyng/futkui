@@ -135,7 +135,7 @@
     "deleteAccountConfirm": "Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your data.",
     "accountDeleted": "Your account has been successfully deleted.",
     "deletionFailed": "Failed to delete account. Please try again.",
-    "noCommunitiesYet": "No communities to showcase at the moment.",
+    "noCommunitiesYet": "No clubs to showcase at the moment.",
     "authError": "Unable to authenticate. Please try logging in again.",
     "deleteError": "Unable to delete account. Please check your connection and try again.",
     "language": "Language",

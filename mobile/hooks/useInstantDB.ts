@@ -981,8 +981,9 @@ export function useInstantDB() {
     return await db.queryOnce({
       groups: {
         $: {
+          where: { "creator.handle": { $ne: 'fk' } as any }, // Filter out bot groups at DB level
           order: { serverCreatedAt: 'desc' },
-          limit: 10
+          limit: 7
         },
         creator: {},
         memberships: {

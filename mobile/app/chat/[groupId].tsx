@@ -136,7 +136,7 @@ export default function ChatScreen() {
   useEffect(() => {
     const loadReportedMessages = async () => {
       if (!currentProfile?.id || !groupId) return;
-      
+
       try {
         const storageKey = `reportedMessages_${currentProfile.id}_${groupId}`;
         const stored = await AsyncStorage.getItem(storageKey);
@@ -159,7 +159,7 @@ export default function ChatScreen() {
     try {
       const newReportedIds = new Set([...reportedMessageIds, messageId]);
       setReportedMessageIds(newReportedIds);
-      
+
       const storageKey = `reportedMessages_${currentProfile.id}_${groupId}`;
       await AsyncStorage.setItem(storageKey, JSON.stringify([...newReportedIds]));
     } catch (error) {
@@ -181,7 +181,7 @@ export default function ChatScreen() {
         description,
         reporterId: currentProfile.id,
       });
-      
+
       // Hide the reported message for the reporter
       await saveReportedMessage(messageId);
     } catch (error) {

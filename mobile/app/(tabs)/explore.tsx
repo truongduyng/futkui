@@ -51,11 +51,10 @@ export default function ExploreScreen() {
   }, [queryAllGroupsOnce]);
   const currentProfile = profileData?.profiles?.[0];
 
-  // Show newest groups for showcase (filtered from 10 newest from DB)
+  // Show newest groups for showcase (bot groups already filtered at DB level)
   const showcaseGroups = allGroups.filter(
-    (group: any) => group && group.id && group.creator?.handle !== "fk", // Filter out bot groups
+    (group: any) => group && group.id
   );
-
 
   const handleSignOut = async () => {
     Alert.alert(t('explore.signOut'), t('explore.signOutConfirm'), [
@@ -588,7 +587,6 @@ const styles = StyleSheet.create({
   sectionDescription: {
     fontSize: 14,
     marginBottom: 16,
-    paddingHorizontal: 16,
     fontStyle: "italic",
   },
   emptyText: {
