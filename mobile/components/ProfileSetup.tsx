@@ -5,10 +5,11 @@ import { registerForPushNotificationsAsync } from '@/utils/notifications';
 import { uploadToR2 } from '@/utils/r2Upload';
 import { id } from '@instantdb/react-native';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/useToast';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface ProfileSetupProps {
   userId: string;
@@ -21,10 +22,108 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
   const [displayName, setDisplayName] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAutoCreating, setIsAutoCreating] = useState(false);
   const { isDark } = useTheme();
 const colors = isDark ? Colors.dark : Colors.light;
   const { instantClient } = useInstantDB();
   const { showError } = useToast();
+
+  // Check for Apple Sign-In data and auto-create profile if available
+  useEffect(() => {
+    const checkAppleUserInfo = async () => {
+      try {
+        const appleUserInfoStr = await AsyncStorage.getItem('appleUserInfo');
+        if (appleUserInfoStr) {
+          const appleUserInfo = JSON.parse(appleUserInfoStr);
+          
+          // Clear the stored data
+          await AsyncStorage.removeItem('appleUserInfo');
+          
+          // Auto-create profile with Apple data
+          await autoCreateProfileFromApple(appleUserInfo);
+        }
+      } catch (error) {
+        console.error('Error checking Apple user info:', error);
+      }
+    };
+
+    checkAppleUserInfo();
+  }, [userId]);
+
+  const autoCreateProfileFromApple = async (appleUserInfo: any) => {
+    setIsAutoCreating(true);
+    
+    try {
+      // Generate a display name from Apple's fullName
+      let generatedDisplayName = '';
+      const fullName = appleUserInfo.fullName;
+      
+      if (fullName?.givenName && fullName?.familyName) {
+        generatedDisplayName = `${fullName.givenName} ${fullName.familyName}`.trim();
+      } else if (fullName?.givenName) {
+        generatedDisplayName = fullName.givenName;
+      } else if (fullName?.familyName) {
+        generatedDisplayName = fullName.familyName;
+      } else if (appleUserInfo.email) {
+        // Extract name from email if no name provided
+        const emailName = appleUserInfo.email.split('@')[0];
+        generatedDisplayName = emailName.replace(/[^a-zA-Z0-9]/g, ' ').trim();
+      }
+
+      // Generate a unique handle from display name or email
+      let baseHandle = '';
+      if (generatedDisplayName) {
+        baseHandle = generatedDisplayName.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 15);
+      } else if (appleUserInfo.email) {
+        baseHandle = appleUserInfo.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 15);
+      }
+      
+      if (!baseHandle) {
+        baseHandle = 'user';
+      }
+
+      // Find an available handle
+      let finalHandle = baseHandle;
+      let handleCounter = 1;
+      let isHandleTaken = true;
+
+      while (isHandleTaken) {
+        const existingProfile = await instantClient.queryOnce({
+          profiles: {
+            $: { where: { handle: finalHandle } }
+          }
+        });
+
+        if (!existingProfile.data.profiles || existingProfile.data.profiles.length === 0) {
+          isHandleTaken = false;
+        } else {
+          finalHandle = `${baseHandle}${handleCounter}`;
+          handleCounter++;
+        }
+      }
+
+      // Get push notification token
+      const pushToken = await registerForPushNotificationsAsync();
+
+      // Create profile without requiring photo
+      const profileId = id();
+      const profileTransaction = instantClient.tx.profiles[profileId].update({
+        handle: finalHandle,
+        displayName: generatedDisplayName || 'Apple User',
+        createdAt: Date.now(),
+        pushToken: pushToken || undefined,
+        // No avatarUrl - user can add photo later if desired
+      }).link({ user: userId });
+
+      await instantClient.transact([profileTransaction]);
+
+      onProfileCreated();
+    } catch (error) {
+      console.error('Error auto-creating profile from Apple:', error);
+      // Fall back to manual profile setup
+      setIsAutoCreating(false);
+    }
+  };
 
   const isValidHandle = (handle: string) => {
     return /^[a-zA-Z0-9_]{3,20}$/.test(handle);
@@ -65,10 +164,11 @@ const colors = isDark ? Colors.dark : Colors.light;
       return;
     }
 
-    if (!selectedImage) {
-      showError(t('common.error'), t('profile.errorPhoto'));
-      return;
-    }
+    // Photo is optional for Apple Sign-In users - they already provided their identity
+    // if (!selectedImage) {
+    //   showError(t('common.error'), t('profile.errorPhoto'));
+    //   return;
+    // }
 
     setIsSubmitting(true);
 
@@ -90,15 +190,17 @@ const colors = isDark ? Colors.dark : Colors.light;
       const profileId = id();
       let avatarUrl = null;
 
-      // Upload image (required)
-      try {
-        const fileName = `avatar-${profileId}-${Date.now()}.jpg`;
-        avatarUrl = await uploadToR2(selectedImage, fileName);
-      } catch (error) {
-        console.error('Error uploading avatar:', error);
-        showError(t('common.error'), t('profile.failedUploadPhoto'));
-        setIsSubmitting(false);
-        return;
+      // Upload image if provided
+      if (selectedImage) {
+        try {
+          const fileName = `avatar-${profileId}-${Date.now()}.jpg`;
+          avatarUrl = await uploadToR2(selectedImage, fileName);
+        } catch (error) {
+          console.error('Error uploading avatar:', error);
+          showError(t('common.error'), t('profile.failedUploadPhoto'));
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       // Get push notification token
@@ -110,7 +212,7 @@ const colors = isDark ? Colors.dark : Colors.light;
         displayName: displayName.trim(),
         createdAt: Date.now(),
         pushToken: pushToken || undefined,
-        avatarUrl: avatarUrl,
+        avatarUrl: avatarUrl || undefined,
       }).link({ user: userId });
 
       await instantClient.transact([profileTransaction]);
@@ -123,6 +225,20 @@ const colors = isDark ? Colors.dark : Colors.light;
       setIsSubmitting(false);
     }
   };
+
+  // Show loading screen while auto-creating profile from Apple Sign-In
+  if (isAutoCreating) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.loadingContainer}>
+          <Text style={[styles.title, { color: colors.text }]}>{t('profile.settingUpProfile')}</Text>
+          <Text style={[styles.subtitle, { color: colors.text }]}>
+            {t('profile.usingAppleInfo')}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -210,6 +326,12 @@ const colors = isDark ? Colors.dark : Colors.light;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   keyboardAvoidingView: {
     flex: 1,

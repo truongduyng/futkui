@@ -199,6 +199,23 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
           idToken: credential.identityToken,
           nonce,
         });
+
+        // Store Apple-provided user info for automatic profile creation
+        if (credential.fullName || credential.email) {
+          const appleUserInfo = {
+            fullName: credential.fullName,
+            email: credential.email,
+            authMethod: 'apple'
+          };
+          
+          // Store in AsyncStorage to use during profile creation
+          try {
+            const AsyncStorage = await import('@react-native-async-storage/async-storage');
+            await AsyncStorage.default.setItem('appleUserInfo', JSON.stringify(appleUserInfo));
+          } catch (storageError) {
+            console.warn('Failed to store Apple user info:', storageError);
+          }
+        }
       }
     } catch (error: any) {
       if (error.code === 'ERR_CANCELED') {
