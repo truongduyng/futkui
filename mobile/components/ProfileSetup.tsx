@@ -1,15 +1,26 @@
-import { Colors } from '@/constants/Colors';
-import { useTheme } from '@/contexts/ThemeContext';
-import { useInstantDB } from '@/hooks/useInstantDB';
-import { registerForPushNotificationsAsync } from '@/utils/notifications';
-import { uploadToR2 } from '@/utils/r2Upload';
-import { id } from '@instantdb/react-native';
-import * as ImagePicker from 'expo-image-picker';
-import React, { useState, useEffect } from 'react';
-import { Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useToast } from '@/hooks/useToast';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Colors } from "@/constants/Colors";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useInstantDB } from "@/hooks/useInstantDB";
+import { registerForPushNotificationsAsync } from "@/utils/notifications";
+import { uploadToR2 } from "@/utils/r2Upload";
+import { id } from "@instantdb/react-native";
+import * as ImagePicker from "expo-image-picker";
+import React, { useState, useEffect } from "react";
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useTranslation } from "react-i18next";
+import { useToast } from "@/hooks/useToast";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface ProfileSetupProps {
   userId: string;
@@ -18,112 +29,50 @@ interface ProfileSetupProps {
 
 export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
   const { t } = useTranslation();
-  const [handle, setHandle] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [handle, setHandle] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAutoCreating, setIsAutoCreating] = useState(false);
   const { isDark } = useTheme();
-const colors = isDark ? Colors.dark : Colors.light;
+  const colors = isDark ? Colors.dark : Colors.light;
   const { instantClient } = useInstantDB();
   const { showError } = useToast();
 
-  // Check for Apple Sign-In data and auto-create profile if available
+
+  // Check for Apple Sign-In data and prefill display name if available
   useEffect(() => {
     const checkAppleUserInfo = async () => {
       try {
-        const appleUserInfoStr = await AsyncStorage.getItem('appleUserInfo');
+        const appleUserInfoStr = await AsyncStorage.getItem("appleUserInfo");
         if (appleUserInfoStr) {
           const appleUserInfo = JSON.parse(appleUserInfoStr);
-          
+
           // Clear the stored data
-          await AsyncStorage.removeItem('appleUserInfo');
-          
-          // Auto-create profile with Apple data
-          await autoCreateProfileFromApple(appleUserInfo);
+          await AsyncStorage.removeItem("appleUserInfo");
+
+          // Prefill display name if we have Apple name data
+          const fullName = appleUserInfo.fullName;
+          let prefillName = "";
+
+          if (fullName?.givenName && fullName?.familyName) {
+            prefillName = `${fullName.givenName} ${fullName.familyName}`.trim();
+          } else if (fullName?.givenName) {
+            prefillName = fullName.givenName;
+          } else if (fullName?.familyName) {
+            prefillName = fullName.familyName;
+          }
+
+          if (prefillName) {
+            setDisplayName(prefillName);
+          }
         }
       } catch (error) {
-        console.error('Error checking Apple user info:', error);
+        console.error("Error checking Apple user info:", error);
       }
     };
 
     checkAppleUserInfo();
-  }, [userId]);
-
-  const autoCreateProfileFromApple = async (appleUserInfo: any) => {
-    setIsAutoCreating(true);
-    
-    try {
-      // Generate a display name from Apple's fullName
-      let generatedDisplayName = '';
-      const fullName = appleUserInfo.fullName;
-      
-      if (fullName?.givenName && fullName?.familyName) {
-        generatedDisplayName = `${fullName.givenName} ${fullName.familyName}`.trim();
-      } else if (fullName?.givenName) {
-        generatedDisplayName = fullName.givenName;
-      } else if (fullName?.familyName) {
-        generatedDisplayName = fullName.familyName;
-      } else if (appleUserInfo.email) {
-        // Extract name from email if no name provided
-        const emailName = appleUserInfo.email.split('@')[0];
-        generatedDisplayName = emailName.replace(/[^a-zA-Z0-9]/g, ' ').trim();
-      }
-
-      // Generate a unique handle from display name or email
-      let baseHandle = '';
-      if (generatedDisplayName) {
-        baseHandle = generatedDisplayName.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 15);
-      } else if (appleUserInfo.email) {
-        baseHandle = appleUserInfo.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 15);
-      }
-      
-      if (!baseHandle) {
-        baseHandle = 'user';
-      }
-
-      // Find an available handle
-      let finalHandle = baseHandle;
-      let handleCounter = 1;
-      let isHandleTaken = true;
-
-      while (isHandleTaken) {
-        const existingProfile = await instantClient.queryOnce({
-          profiles: {
-            $: { where: { handle: finalHandle } }
-          }
-        });
-
-        if (!existingProfile.data.profiles || existingProfile.data.profiles.length === 0) {
-          isHandleTaken = false;
-        } else {
-          finalHandle = `${baseHandle}${handleCounter}`;
-          handleCounter++;
-        }
-      }
-
-      // Get push notification token
-      const pushToken = await registerForPushNotificationsAsync();
-
-      // Create profile without requiring photo
-      const profileId = id();
-      const profileTransaction = instantClient.tx.profiles[profileId].update({
-        handle: finalHandle,
-        displayName: generatedDisplayName || 'Apple User',
-        createdAt: Date.now(),
-        pushToken: pushToken || undefined,
-        // No avatarUrl - user can add photo later if desired
-      }).link({ user: userId });
-
-      await instantClient.transact([profileTransaction]);
-
-      onProfileCreated();
-    } catch (error) {
-      console.error('Error auto-creating profile from Apple:', error);
-      // Fall back to manual profile setup
-      setIsAutoCreating(false);
-    }
-  };
+  }, []);
 
   const isValidHandle = (handle: string) => {
     return /^[a-zA-Z0-9_]{3,20}$/.test(handle);
@@ -131,8 +80,11 @@ const colors = isDark ? Colors.dark : Colors.light;
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      showError(t('profile.permissionRequired'), t('profile.permissionMessage'));
+    if (status !== "granted") {
+      showError(
+        t("profile.permissionRequired"),
+        t("profile.permissionMessage"),
+      );
       return;
     }
 
@@ -150,17 +102,17 @@ const colors = isDark ? Colors.dark : Colors.light;
 
   const handleSubmit = async () => {
     if (!handle.trim()) {
-      showError(t('common.error'), t('profile.errorHandle'));
+      showError(t("common.error"), t("profile.errorHandle"));
       return;
     }
 
     if (!isValidHandle(handle)) {
-      showError(t('common.error'), t('profile.errorHandleFormat'));
+      showError(t("common.error"), t("profile.errorHandleFormat"));
       return;
     }
 
     if (!displayName.trim()) {
-      showError(t('common.error'), t('profile.errorDisplayName'));
+      showError(t("common.error"), t("profile.errorDisplayName"));
       return;
     }
 
@@ -176,12 +128,15 @@ const colors = isDark ? Colors.dark : Colors.light;
       // Check if handle is already taken
       const existingProfile = await instantClient.queryOnce({
         profiles: {
-          $: { where: { handle: handle.toLowerCase() } }
-        }
+          $: { where: { handle: handle.toLowerCase() } },
+        },
       });
 
-      if (existingProfile.data.profiles && existingProfile.data.profiles.length > 0) {
-        showError(t('common.error'), t('profile.handleTaken'));
+      if (
+        existingProfile.data.profiles &&
+        existingProfile.data.profiles.length > 0
+      ) {
+        showError(t("common.error"), t("profile.handleTaken"));
         setIsSubmitting(false);
         return;
       }
@@ -196,8 +151,8 @@ const colors = isDark ? Colors.dark : Colors.light;
           const fileName = `avatar-${profileId}-${Date.now()}.jpg`;
           avatarUrl = await uploadToR2(selectedImage, fileName);
         } catch (error) {
-          console.error('Error uploading avatar:', error);
-          showError(t('common.error'), t('profile.failedUploadPhoto'));
+          console.error("Error uploading avatar:", error);
+          showError(t("common.error"), t("profile.failedUploadPhoto"));
           setIsSubmitting(false);
           return;
         }
@@ -207,45 +162,36 @@ const colors = isDark ? Colors.dark : Colors.light;
       const pushToken = await registerForPushNotificationsAsync();
 
       // Create profile
-      const profileTransaction = instantClient.tx.profiles[profileId].update({
-        handle: handle.toLowerCase(),
-        displayName: displayName.trim(),
-        createdAt: Date.now(),
-        pushToken: pushToken || undefined,
-        avatarUrl: avatarUrl || undefined,
-      }).link({ user: userId });
+      const profileTransaction = instantClient.tx.profiles[profileId]
+        .update({
+          handle: handle.toLowerCase(),
+          displayName: displayName.trim(),
+          createdAt: Date.now(),
+          pushToken: pushToken || undefined,
+          avatarUrl: avatarUrl || undefined,
+        })
+        .link({ user: userId });
 
       await instantClient.transact([profileTransaction]);
 
       onProfileCreated();
     } catch (error) {
-      console.error('Error creating profile:', error);
-      showError(t('common.error'), t('profile.failedCreateProfile'));
+      console.error("Error creating profile:", error);
+      showError(t("common.error"), t("profile.failedCreateProfile"));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Show loading screen while auto-creating profile from Apple Sign-In
-  if (isAutoCreating) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.loadingContainer}>
-          <Text style={[styles.title, { color: colors.text }]}>{t('profile.settingUpProfile')}</Text>
-          <Text style={[styles.subtitle, { color: colors.text }]}>
-            {t('profile.usingAppleInfo')}
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -253,35 +199,57 @@ const colors = isDark ? Colors.dark : Colors.light;
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.content}>
-            <Text style={[styles.title, { color: colors.text }]}>{t('profile.setupProfile')}</Text>
+            <Text style={[styles.title, { color: colors.text }]}>
+              {t("profile.setupProfile")}
+            </Text>
             <Text style={[styles.subtitle, { color: colors.text }]}>
-              {t('profile.setupSubtitle')}
+              {t("profile.setupSubtitle")}
             </Text>
 
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('profile.profilePhoto')}</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {t("profile.profilePhoto")}
+            </Text>
 
             <View style={styles.imagePickerSection}>
               <TouchableOpacity onPress={pickImage} activeOpacity={0.7}>
                 {selectedImage ? (
-                  <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
+                  <Image
+                    source={{ uri: selectedImage }}
+                    style={styles.selectedImage}
+                  />
                 ) : (
-                  <View style={[styles.imagePlaceholder, { borderColor: colors.icon }]}>
-                    <Text style={[styles.placeholderText, { color: colors.tabIconDefault }]}>
-                      {t('profile.tapSelectPhoto')}
+                  <View
+                    style={[
+                      styles.imagePlaceholder,
+                      { borderColor: colors.icon },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.placeholderText,
+                        { color: colors.tabIconDefault },
+                      ]}
+                    >
+                      {t("profile.tapSelectPhoto")}
                     </Text>
                   </View>
                 )}
               </TouchableOpacity>
             </View>
 
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('profile.username')}</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {t("profile.username")}
+            </Text>
             <TextInput
-              style={[styles.input, {
-                borderColor: colors.icon,
-                color: colors.text,
-                backgroundColor: colors.background
-              }]}
-              placeholder={t('profile.placeholderHandle')}
+              style={[
+                styles.input,
+                {
+                  borderColor: colors.icon,
+                  color: colors.text,
+                  backgroundColor: colors.background,
+                },
+              ]}
+              placeholder={t("profile.placeholderHandle")}
               placeholderTextColor={colors.tabIconDefault}
               value={handle}
               onChangeText={setHandle}
@@ -290,17 +258,22 @@ const colors = isDark ? Colors.dark : Colors.light;
               maxLength={20}
             />
             <Text style={[styles.inputHint, { color: colors.tabIconDefault }]}>
-              {t('profile.handleHint')}
+              {t("profile.handleHint")}
             </Text>
 
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('profile.displayName')}</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {t("profile.displayName")}
+            </Text>
             <TextInput
-              style={[styles.input, {
-                borderColor: colors.icon,
-                color: colors.text,
-                backgroundColor: colors.background
-              }]}
-              placeholder={t('profile.placeholderDisplayName')}
+              style={[
+                styles.input,
+                {
+                  borderColor: colors.icon,
+                  color: colors.text,
+                  backgroundColor: colors.background,
+                },
+              ]}
+              placeholder={t("profile.placeholderDisplayName")}
               placeholderTextColor={colors.tabIconDefault}
               value={displayName}
               onChangeText={setDisplayName}
@@ -313,7 +286,9 @@ const colors = isDark ? Colors.dark : Colors.light;
               disabled={isSubmitting}
             >
               <Text style={styles.buttonText}>
-                {isSubmitting ? t('profile.creatingProfile') : t('profile.createProfile')}
+                {isSubmitting
+                  ? t("profile.creatingProfile")
+                  : t("profile.createProfile")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -327,45 +302,39 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
   keyboardAvoidingView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   content: {
-    width: '100%',
+    width: "100%",
     maxWidth: 400,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
     marginBottom: 22,
-    textAlign: 'center',
+    textAlign: "center",
     opacity: 0.8,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 12,
     marginTop: 4,
   },
   imagePickerSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 16,
   },
   selectedImage: {
@@ -379,17 +348,17 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     borderWidth: 2,
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 12,
   },
   placeholderText: {
     fontSize: 12,
-    textAlign: 'center',
+    textAlign: "center",
   },
   input: {
-    width: '100%',
+    width: "100%",
     height: 48,
     borderWidth: 1,
     borderRadius: 8,
@@ -403,16 +372,16 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   button: {
-    width: '100%',
+    width: "100%",
     height: 48,
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 24,
   },
   buttonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

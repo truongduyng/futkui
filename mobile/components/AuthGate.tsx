@@ -262,7 +262,7 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
   return (
     <>
       <Image
-        source={require('../assets/images/ios-light.png')}
+        source={require('../assets/images/splash-icon.png')}
         style={styles.logo}
         resizeMode="contain"
       />
