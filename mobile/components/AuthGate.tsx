@@ -7,15 +7,11 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import Constants from 'expo-constants';
 import * as Crypto from 'expo-crypto';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Image, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ProfileSetup } from './ProfileSetup';
 import { WebViewModal } from './WebViewModal';
 
-// Helper function to detect if running in Expo Go
-const isRunningInExpoGo = () => {
-  return Constants.appOwnership === 'expo' || Constants.executionEnvironment === 'storeClient';
-};
 
 interface AuthGateProps {
   children: React.ReactNode;
@@ -113,7 +109,10 @@ export function AuthGate({ children }: AuthGateProps) {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <View style={styles.authContainer}>
         {!sentEmail ? (
           <EmailStep onSendEmail={setSentEmail} colors={colors} instantClient={instantClient} />
@@ -121,7 +120,7 @@ export function AuthGate({ children }: AuthGateProps) {
           <CodeStep sentEmail={sentEmail} onBack={() => setSentEmail('')} colors={colors} instantClient={instantClient} />
         )}
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -129,36 +128,19 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isAppleSignInAvailable, setIsAppleSignInAvailable] = useState(false);
-  const [showGoogleSignIn, setShowGoogleSignIn] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   useEffect(() => {
-    const checkAppleSignInAvailability = async () => {
-      if (Platform.OS === 'ios') {
-        const isAvailable = await AppleAuthentication.isAvailableAsync();
-        setIsAppleSignInAvailable(isAvailable);
-      }
-    };
-    checkAppleSignInAvailability();
-
-    // Check if we should show Google Sign-In (skip in Expo Go)
-    const shouldShowGoogle = !isRunningInExpoGo();
-    setShowGoogleSignIn(shouldShowGoogle);
-
-    // Configure Google Sign-In only if not in Expo Go
-    if (shouldShowGoogle) {
-      try {
-        // Dynamically import Google Sign-In to avoid module errors in Expo Go
-        import('@react-native-google-signin/google-signin').then(({ GoogleSignin }) => {
-          GoogleSignin.configure({
-            iosClientId: '47888129307-u4k28pevnbqrtbit67ce0lhgm497s2vu.apps.googleusercontent.com', // Replace with your actual iOS client ID
-          });
+    // Configure Google Sign-In
+    try {
+      // Dynamically import Google Sign-In
+      import('@react-native-google-signin/google-signin').then(({ GoogleSignin }) => {
+        GoogleSignin.configure({
+          iosClientId: '47888129307-u4k28pevnbqrtbit67ce0lhgm497s2vu.apps.googleusercontent.com'
         });
-      } catch (error) {
-        console.warn('Google Sign-In not available:', error);
-        setShowGoogleSignIn(false);
-      }
+      });
+    } catch (error) {
+      console.warn('Google Sign-In not available:', error);
     }
   }, []);
 
@@ -232,6 +214,7 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
       // Dynamically import Google Sign-In
       const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
 
+      // Check if Google Play services are available (Android)
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
       const idToken = userInfo.data?.idToken;
@@ -241,8 +224,11 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
         return;
       }
 
+      // Use correct client name for Android
+      const clientName = Platform.OS === 'android' ? 'google-android-dev' : 'google-ios';
+
       await instantClient.auth.signInWithIdToken({
-        clientName: 'google-ios', // Replace with your InstantDB OAuth client name
+        clientName,
         idToken,
       });
     } catch (error: any) {
@@ -271,19 +257,17 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
         {t('auth.chooseMethod')}
       </Text> */}
 
-      {showGoogleSignIn && (
-        <TouchableOpacity
-          style={styles.googleButton}
-          onPress={handleGoogleSignIn}
-        >
-          <View style={styles.googleButtonContent}>
-            <AntDesign name="google" size={16} style={styles.googleIcon} />
-            <Text style={styles.googleButtonText}>{t('auth.signInGoogle')}</Text>
-          </View>
-        </TouchableOpacity>
-      )}
+      <TouchableOpacity
+        style={styles.googleButton}
+        onPress={handleGoogleSignIn}
+      >
+        <View style={styles.googleButtonContent}>
+          <AntDesign name="google" size={16} style={styles.googleIcon} />
+          <Text style={styles.googleButtonText}>{t('auth.signInGoogle')}</Text>
+        </View>
+      </TouchableOpacity>
 
-      {isAppleSignInAvailable && (
+      {Platform.OS === 'ios' && (
         <AppleAuthentication.AppleAuthenticationButton
           buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
           buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
@@ -293,9 +277,8 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
         />
       )}
 
-      {(showGoogleSignIn || isAppleSignInAvailable) && (
-        <Text style={[styles.orText, { color: colors.text }]}>or</Text>
-      )}
+
+      <Text style={[styles.orText, { color: colors.text }]}>or</Text>
 
       <TextInput
         style={[styles.input, {
