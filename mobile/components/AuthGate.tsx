@@ -4,7 +4,6 @@ import { useInstantDB } from '@/hooks/useInstantDB';
 import AntDesign from '@expo/vector-icons/AntDesign';
 // Conditional import for Google Sign-In to avoid module errors in Expo Go
 import * as AppleAuthentication from 'expo-apple-authentication';
-import Constants from 'expo-constants';
 import * as Crypto from 'expo-crypto';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -136,7 +135,8 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
       // Dynamically import Google Sign-In
       import('@react-native-google-signin/google-signin').then(({ GoogleSignin }) => {
         GoogleSignin.configure({
-          iosClientId: '47888129307-u4k28pevnbqrtbit67ce0lhgm497s2vu.apps.googleusercontent.com'
+          iosClientId: '47888129307-u4k28pevnbqrtbit67ce0lhgm497s2vu.apps.googleusercontent.com',
+          webClientId: '47888129307-dgs1cdotptmh232gigmtukg7bsso31p4.apps.googleusercontent.com',
         });
       });
     } catch (error) {
@@ -215,14 +215,24 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
       const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
 
       // Check if Google Play services are available (Android)
-      await GoogleSignin.hasPlayServices();
+      if (Platform.OS === 'android') {
+        await GoogleSignin.hasPlayServices();
+      }
+
       const userInfo = await GoogleSignin.signIn();
+      console.log('Google Sign-In userInfo:', userInfo);
+
+      // Try different paths for the ID token
       const idToken = userInfo.data?.idToken;
 
       if (!idToken) {
         console.error('No ID token present!');
+        console.log('Full userInfo object:', JSON.stringify(userInfo, null, 2));
+        Alert.alert(t('common.error'), 'Failed to get authentication token from Google');
         return;
       }
+
+      console.log('ID Token found:', idToken.substring(0, 50) + '...');
 
       // Use correct client name for Android
       const clientName = Platform.OS === 'android' ? 'google-android-dev' : 'google-ios';
@@ -231,8 +241,10 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
         clientName,
         idToken,
       });
+
+      console.log('Google Sign-In successful!');
     } catch (error: any) {
-      if (error.code === 'SIGN_IN_CANCELLED') {
+      if (error.code === 'SIGN_IN_CANCELLED' || error.code === 'SIGN_IN_CANCELED') {
         // User canceled the sign-in flow
         return;
       }
