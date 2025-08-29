@@ -957,6 +957,31 @@ export function useInstantDB() {
     [db]
   );
 
+  const reportGroup = useCallback(
+    async (reportData: {
+      groupId: string;
+      reason: string;
+      description?: string;
+      reporterId: string;
+    }) => {
+      const result = await db.transact([
+        db.tx.reports[id()].update({
+          reason: reportData.reason,
+          description: reportData.description,
+          type: 'group',
+          targetId: reportData.groupId,
+          status: 'pending',
+          createdAt: Date.now(),
+        }).link({
+          reporter: reportData.reporterId,
+          reportedGroup: reportData.groupId,
+        }),
+      ]);
+      return result;
+    },
+    [db]
+  );
+
   const useUnreadCount = (groupId: string, lastReadMessageAt: number | undefined) => {
     if (!groupId) {
       return { data: { messages: [] }, isLoading: false, error: null };
@@ -1175,5 +1200,6 @@ export function useInstantDB() {
     updateGroup,
     reportMessage,
     reportUser,
+    reportGroup,
   };
 }

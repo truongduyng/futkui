@@ -84,8 +84,8 @@ const _schema = i.schema({
     reports: i.entity({
       reason: i.string(),
       description: i.string().optional(),
-      type: i.string(), // "message" or "user"
-      targetId: i.string(), // ID of the message or user being reported
+      type: i.string(), // "message", "user", or "group"
+      targetId: i.string(), // ID of the message, user, or group being reported
       status: i.string().optional(), // "pending", "reviewed", "resolved", "dismissed"
       createdAt: i.number(),
       resolvedAt: i.number().optional(),
@@ -356,6 +356,18 @@ const _schema = i.schema({
         on: "profiles",
         has: "many",
         label: "userReports",
+      },
+    },
+    reportsReportedGroup: {
+      forward: {
+        on: "reports",
+        has: "one",
+        label: "reportedGroup",
+      },
+      reverse: {
+        on: "groups",
+        has: "many",
+        label: "groupReports",
       },
     },
   },

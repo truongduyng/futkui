@@ -368,6 +368,7 @@
   "report": {
     "reportMessage": "Báo cáo",
     "reportUser": "Báo cáo",
+    "reportGroup": "Báo cáo nhóm",
     "reporting": "Đang báo cáo",
     "reason": "Lý do báo cáo",
     "description": "Chi tiết bổ sung",

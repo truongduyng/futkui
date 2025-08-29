@@ -16,7 +16,7 @@ interface ReportModalProps {
   isVisible: boolean;
   onClose: () => void;
   onSubmit: (reason: string, description: string) => void;
-  type: 'message' | 'user';
+  type: 'message' | 'user' | 'group';
   targetName?: string;
 }
 
@@ -37,6 +37,16 @@ const REPORT_REASONS = {
     'inappropriate_behavior',
     'hate_speech',
     'impersonation',
+    'other',
+  ],
+  group: [
+    'inappropriate_content',
+    'harassment',
+    'spam',
+    'hate_speech',
+    'violence',
+    'misinformation',
+    'inappropriate_behavior',
     'other',
   ],
 };
@@ -111,7 +121,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             <Text style={[styles.title, { color: textColor }]}>
               {type === 'message'
                 ? getTranslation('report.reportMessage')
-                : getTranslation('report.reportUser')}
+                : type === 'user'
+                ? getTranslation('report.reportUser')
+                : getTranslation('report.reportGroup')}
             </Text>
           </View>
 

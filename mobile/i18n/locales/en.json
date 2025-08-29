@@ -369,6 +369,7 @@
   "report": {
     "reportMessage": "Report",
     "reportUser": "Report",
+    "reportGroup": "Report Group",
     "reporting": "Reporting",
     "reason": "Reason for Report",
     "description": "Additional Details",

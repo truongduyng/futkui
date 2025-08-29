@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useInstantDB } from "@/hooks/useInstantDB";
+import { instantClient, useInstantDB } from "@/hooks/useInstantDB";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -18,6 +18,7 @@ import React, { useEffect, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
 import { useToast } from "@/hooks/useToast";
 import { EditGroupModal } from '@/components/chat/EditGroupModal';
+import { ReportModal } from '@/components/chat/ReportModal';
 
 interface Member {
   id: string;
@@ -38,7 +39,7 @@ export default function GroupProfileScreen() {
   const { t } = useTranslation();
   const { showSuccess, showError } = useToast();
 
-  const { useGroup, useUserMembership, useMessages, leaveGroup, removeMember, updateGroup } =
+  const { useGroup, useUserMembership, useMessages, leaveGroup, removeMember, updateGroup, reportGroup } =
     useInstantDB();
 
   const { data: groupData } = useGroup(groupId || "");
@@ -64,6 +65,9 @@ export default function GroupProfileScreen() {
   const isBotGroup = group?.creator?.handle === 'fk';
 
   const [showEditModal, setShowEditModal] = React.useState(false);
+  const [showReportModal, setShowReportModal] = React.useState(false);
+
+  const { user: currentUser } = instantClient.useAuth();
 
   const handleShareGroup = useCallback(async () => {
     // Prevent sharing bot groups
@@ -190,6 +194,22 @@ export default function GroupProfileScreen() {
       Alert.alert(t('common.error'), t('groupProfile.failedToUpdateGroup'));
     }
   }, [groupId, updateGroup, t]);
+
+  const handleReportGroup = useCallback(async (reason: string, description: string) => {
+    if (!groupId || !currentUser?.id || !userMembership?.profile?.id) return;
+
+    try {
+      await reportGroup({
+        groupId,
+        reason,
+        description,
+        reporterId: userMembership.profile.id,
+      });
+    } catch (error) {
+      console.error('Error reporting group:', error);
+      throw error;
+    }
+  }, [groupId, currentUser?.id, userMembership?.profile?.id, reportGroup]);
 
   if (!group) {
     return (
@@ -435,9 +455,33 @@ export default function GroupProfileScreen() {
           </View>
         </View>
 
-        {/* Danger Zone - Hide for bot groups */}
+        {/* Actions - Hide for bot groups */}
         {!isBotGroup && (
           <View style={styles.section}>
+            {/* Report Group - Hide for admins */}
+            {!isCurrentUserAdmin && (
+              <View style={[styles.dangerZone, { backgroundColor: "#FF8C0010", marginBottom: 12 }]}>
+                <TouchableOpacity
+                  style={styles.option}
+                  onPress={() => setShowReportModal(true)}
+                  activeOpacity={0.6}
+                >
+                  <View style={styles.optionLeft}>
+                    <Ionicons
+                      name="flag-outline"
+                      size={24}
+                      color="#FF8C00"
+                      style={styles.optionIcon}
+                    />
+                    <Text style={[styles.optionText, { color: "#FF8C00" }]}>
+                      {t('report.reportGroup')}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Leave Group */}
             <View style={[styles.dangerZone, { backgroundColor: "#FF3B3010" }]}>
               <TouchableOpacity
                 style={styles.option}
@@ -475,6 +519,15 @@ export default function GroupProfileScreen() {
           }}
         />
       )}
+
+      {/* Report Group Modal */}
+      <ReportModal
+        isVisible={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        onSubmit={handleReportGroup}
+        type="group"
+        targetName={group?.name}
+      />
     </View>
   );
 }
