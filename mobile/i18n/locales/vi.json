@@ -12,7 +12,9 @@
     "success": "Thành công",
     "back": "Quay lại",
     "join": "Tham gia",
-    "optional": "tùy chọn"
+    "optional": "tùy chọn",
+    "active": "Hoạt động",
+    "all": "Tất cả"
   },
   "auth": {
     "welcome": "Chào mừng đến với FutKui",
@@ -212,10 +214,16 @@
     "errorMatchDetails": "Vui lòng nhập chi tiết trận đấu bao gồm thời gian, địa điểm và loại trò chơi",
     "activePoll": "Bình chọn đang chờ",
     "activePolls": "Bình chọn đang chờ",
+    "allPolls": "Tất cả bình chọn",
+    "noActivePolls": "Không có bình chọn đang hoạt động",
+    "noPolls": "Chưa có bình chọn nào",
     "upcomingMatch": "Trận đấu sắp tới",
     "upcomingMatches": "Trận đấu sắp tới",
+    "allMatches": "Tất cả trận đấu",
+    "noUpcomingMatches": "Không có trận đấu sắp tới",
+    "noMatches": "Chưa có trận đấu nào",
     "groupActivities": "Hoạt động nhóm",
-    "noActiveActivities": "Không có hoạt động nào",
+    "noActiveActivities": "Không có hoạt động đang hoạt động nào",
     "createActivityPrompt": "Tạo bình chọn hoặc trận đấu trong cuộc trò chuyện để xem chúng ở đây",
     "welcomeMessage": "👋 Chào mừng đến với FutKui!\n\nTôi là trợ lý cá nhân của bạn, sẵn sàng giúp bạn với:\n• 📅 Thông báo và nhắc nhở trận đấu\n• ⚽ Cập nhật đội bóng và thông báo\n• 🔔 Thông báo quan trọng của ứng dụng\n• 💬 Hỗ trợ nhanh khi bạn cần\n\nHãy nhắn tin cho tôi bất cứ lúc nào nếu bạn có câu hỏi hoặc cần giúp đỡ với ứng dụng!",
     "language": "Ngôn ngữ",

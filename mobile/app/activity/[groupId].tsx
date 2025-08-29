@@ -4,10 +4,11 @@ import { Colors } from "@/constants/Colors";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useInstantDB } from "@/hooks/useInstantDB";
 import { useLocalSearchParams, useNavigation } from "expo-router";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   View,
 } from "react-native";
@@ -41,6 +42,9 @@ const colors = isDark ? Colors.dark : Colors.light;
   const { data: profileData } = useProfile();
   const { data: membershipData } = useUserMembership(groupId || "");
 
+  const [showActivePollsOnly, setShowActivePollsOnly] = useState(true);
+  const [showActiveMatchesOnly, setShowActiveMatchesOnly] = useState(true);
+
   const group = groupData?.groups?.[0];
   const matches = matchesData?.matches || [];
   const currentProfile = profileData?.profiles?.[0];
@@ -66,16 +70,22 @@ const colors = isDark ? Colors.dark : Colors.light;
       }));
   }, [messagesData?.messages]);
 
-  // Filter active polls
-  const activePolls = polls.filter((poll) => {
-    if (poll.closedAt) return false;
-    if (poll.expiresAt && poll.expiresAt < Date.now()) return false;
-    return true;
+  // Filter polls based on toggle state
+  const filteredPolls = polls.filter((poll) => {
+    if (showActivePollsOnly) {
+      if (poll.closedAt) return false;
+      if (poll.expiresAt && poll.expiresAt < Date.now()) return false;
+      return true;
+    }
+    return true; // Show all polls when toggle is off
   });
 
-  // Filter upcoming matches
-  const upcomingMatches = matches.filter((match) => {
-    return match.isActive && match.matchDate > Date.now();
+  // Filter matches based on toggle state
+  const filteredMatches = matches.filter((match) => {
+    if (showActiveMatchesOnly) {
+      return match.isActive && match.matchDate > Date.now();
+    }
+    return true; // Show all matches when toggle is off
   });
 
   useEffect(() => {
@@ -91,7 +101,7 @@ const colors = isDark ? Colors.dark : Colors.light;
         color: colors.text,
       },
     });
-  }, [navigation, colors]);
+  }, [navigation, colors, t]);
 
   const handleVote = async (pollId: string, optionId: string, votes: any[], allowMultiple: boolean) => {
     if (!currentProfile) return;
@@ -175,113 +185,135 @@ const colors = isDark ? Colors.dark : Colors.light;
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Active Polls Section */}
-        {activePolls.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionIcon}>📊</Text>
+        {/* Polls Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionIcon}>📊</Text>
+            <View style={styles.titleWithBadge}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                {t('chat.activePolls')}
+                {showActivePollsOnly ? t('chat.activePolls') : t('chat.allPolls')}
               </Text>
               <View style={[styles.badge, { backgroundColor: colors.tint }]}>
-                <Text style={styles.badgeText}>{activePolls.length}</Text>
+                <Text style={styles.badgeText}>{filteredPolls.length}</Text>
               </View>
             </View>
-          {activePolls.map((poll) => {
-            const isOwnPoll = poll.message?.author?.id === currentProfile?.id;
-            return (
-              <PollBubble
-                key={poll.id}
-                poll={{
-                  id: poll.id || '',
-                  question: poll.question || '',
-                  options: poll.options || [],
-                  allowMultiple: poll.allowMultiple || false,
-                  expiresAt: poll.expiresAt,
-                  closedAt: poll.closedAt,
-                  votes: (poll.votes || []).filter((vote): vote is any => vote.user != null),
-                }}
-                currentUserId={currentProfile?.id || ''}
-                onVote={(optionId) => handleVote(poll.id || '', optionId, poll.votes || [], poll.allowMultiple || false)}
-                onClosePoll={handleClosePoll}
-                isOwnMessage={isOwnPoll}
-                author={poll.message?.author}
-                createdAt={new Date(poll.message?.createdAt || Date.now())}
-                showAuthor={!isOwnPoll}
-                totalMembers={members.length}
+            <View style={styles.sectionToggle}>
+              <Switch
+                value={showActivePollsOnly}
+                onValueChange={setShowActivePollsOnly}
+                trackColor={{ false: colors.tabIconDefault, true: colors.tint }}
+                thumbColor={showActivePollsOnly ? 'white' : '#f4f3f4'}
+                ios_backgroundColor={colors.tabIconDefault}
+                style={styles.sectionSwitch}
               />
-            );
-          })}
-        </View>
-      )}
-
-        {/* Upcoming Matches Section */}
-        {upcomingMatches.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionIcon}>⚽</Text>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                {t('chat.upcomingMatches')}
-              </Text>
-              <View style={[styles.badge, { backgroundColor: colors.tint }]}>
-                <Text style={styles.badgeText}>{upcomingMatches.length}</Text>
-              </View>
             </View>
-          {upcomingMatches.map((match) => {
-            const isOwnMatch = match.creator?.id === currentProfile?.id;
-            const isCreator = match.creator?.id === currentProfile?.id;
-            const isGroupAdmin = userMembership?.role === "admin";
-
-            return (
-              <MatchCard
-                key={match.id}
-                match={{
-                  id: match.id,
-                  title: match.title,
-                  description: match.description,
-                  gameType: match.gameType,
-                  location: match.location,
-                  matchDate: match.matchDate,
-                  createdAt: match.createdAt,
-                  isActive: match.isActive,
-                  closedAt: match.closedAt,
-                  rsvps: (match.rsvps || []).filter((rsvp): rsvp is any =>
-                    rsvp.user != null &&
-                    (rsvp.response === 'yes' || rsvp.response === 'no' || rsvp.response === 'maybe')
-                  ),
-                  checkIns: (match.checkIns || []).filter((checkIn): checkIn is any => checkIn.user != null),
-                  creator: match.creator || { id: '', handle: 'Unknown', displayName: 'Unknown' },
-                }}
-                currentUserId={currentProfile?.id || ''}
-                onRsvp={(response) => handleRsvp(match.id, response)}
-                onCheckIn={() => handleCheckIn(match.id)}
-                onCloseMatch={() => handleCloseMatch(match.id)}
-                isOwnMessage={isOwnMatch}
-                author={match.creator}
-                createdAt={new Date(match.createdAt)}
-                showAuthor={!isOwnMatch}
-                isCreator={isCreator}
-                isGroupAdmin={isGroupAdmin}
-              />
-            );
-          })}
-        </View>
-      )}
-
-        {/* Empty State */}
-        {activePolls.length === 0 && upcomingMatches.length === 0 && (
-          <View style={[styles.emptyState, { backgroundColor: colors.background }]}>
-            <View style={styles.emptyStateIcon}>
-              <Text style={styles.emptyStateEmoji}>🎯</Text>
-            </View>
-            <Text style={[styles.emptyStateText, { color: colors.text }]}>
-              {t('chat.noActiveActivities')}
-            </Text>
-            <Text style={[styles.emptyStateSubtext, { color: colors.tabIconDefault }]}>
-              {t('chat.createActivityPrompt')}
-            </Text>
           </View>
-        )}
+          {filteredPolls.length > 0 ? (
+            filteredPolls.map((poll) => {
+              const isOwnPoll = poll.message?.author?.id === currentProfile?.id;
+              return (
+                <PollBubble
+                  key={poll.id}
+                  poll={{
+                    id: poll.id || '',
+                    question: poll.question || '',
+                    options: poll.options || [],
+                    allowMultiple: poll.allowMultiple || false,
+                    expiresAt: poll.expiresAt,
+                    closedAt: poll.closedAt,
+                    votes: (poll.votes || []).filter((vote): vote is any => vote.user != null),
+                  }}
+                  currentUserId={currentProfile?.id || ''}
+                  onVote={(optionId) => handleVote(poll.id || '', optionId, poll.votes || [], poll.allowMultiple || false)}
+                  onClosePoll={handleClosePoll}
+                  isOwnMessage={isOwnPoll}
+                  author={poll.message?.author}
+                  createdAt={new Date(poll.message?.createdAt || Date.now())}
+                  showAuthor={!isOwnPoll}
+                  totalMembers={members.length}
+                />
+              );
+            })
+          ) : (
+            <View style={styles.emptySection}>
+              <Text style={[styles.emptySectionText, { color: colors.tabIconDefault }]}>
+                {showActivePollsOnly ? t('chat.noActivePolls') : t('chat.noPolls')}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Matches Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionIcon}>⚽</Text>
+            <View style={styles.titleWithBadge}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                {showActiveMatchesOnly ? t('chat.upcomingMatches') : t('chat.allMatches')}
+              </Text>
+              <View style={[styles.badge, { backgroundColor: colors.tint }]}>
+                <Text style={styles.badgeText}>{filteredMatches.length}</Text>
+              </View>
+            </View>
+            <View style={styles.sectionToggle}>
+              <Switch
+                value={showActiveMatchesOnly}
+                onValueChange={setShowActiveMatchesOnly}
+                trackColor={{ false: colors.tabIconDefault, true: colors.tint }}
+                thumbColor={showActiveMatchesOnly ? 'white' : '#f4f3f4'}
+                ios_backgroundColor={colors.tabIconDefault}
+                style={styles.sectionSwitch}
+              />
+            </View>
+          </View>
+          {filteredMatches.length > 0 ? (
+            filteredMatches.map((match) => {
+              const isOwnMatch = match.creator?.id === currentProfile?.id;
+              const isCreator = match.creator?.id === currentProfile?.id;
+              const isGroupAdmin = userMembership?.role === "admin";
+
+              return (
+                <MatchCard
+                  key={match.id}
+                  match={{
+                    id: match.id,
+                    title: match.title,
+                    description: match.description,
+                    gameType: match.gameType,
+                    location: match.location,
+                    matchDate: match.matchDate,
+                    createdAt: match.createdAt,
+                    isActive: match.isActive,
+                    closedAt: match.closedAt,
+                    rsvps: (match.rsvps || []).filter((rsvp): rsvp is any =>
+                      rsvp.user != null &&
+                      (rsvp.response === 'yes' || rsvp.response === 'no' || rsvp.response === 'maybe')
+                    ),
+                    checkIns: (match.checkIns || []).filter((checkIn): checkIn is any => checkIn.user != null),
+                    creator: match.creator || { id: '', handle: 'Unknown', displayName: 'Unknown' },
+                  }}
+                  currentUserId={currentProfile?.id || ''}
+                  onRsvp={(response) => handleRsvp(match.id, response)}
+                  onCheckIn={() => handleCheckIn(match.id)}
+                  onCloseMatch={() => handleCloseMatch(match.id)}
+                  isOwnMessage={isOwnMatch}
+                  author={match.creator}
+                  createdAt={new Date(match.createdAt)}
+                  showAuthor={!isOwnMatch}
+                  isCreator={isCreator}
+                  isGroupAdmin={isGroupAdmin}
+                />
+              );
+            })
+          ) : (
+            <View style={styles.emptySection}>
+              <Text style={[styles.emptySectionText, { color: colors.tabIconDefault }]}>
+                {showActiveMatchesOnly ? t('chat.noUpcomingMatches') : t('chat.noMatches')}
+              </Text>
+            </View>
+          )}
+        </View>
+
       </ScrollView>
     </View>
   );
@@ -330,7 +362,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
+  },
+  titleWithBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
+    gap: 8,
   },
   badge: {
     minWidth: 24,
@@ -385,5 +422,26 @@ const styles = StyleSheet.create({
   },
   activityItem: {
     marginBottom: 12,
+  },
+  sectionToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginLeft: 8,
+  },
+  toggleLabel: {
+    fontSize: 10,
+    fontWeight: '500',
+  },
+  sectionSwitch: {
+    transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }],
+  },
+  emptySection: {
+    paddingVertical: 32,
+    alignItems: 'center',
+  },
+  emptySectionText: {
+    fontSize: 14,
+    fontStyle: 'italic',
   },
 });

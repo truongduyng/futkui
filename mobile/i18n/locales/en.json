@@ -12,7 +12,9 @@
     "success": "Success",
     "back": "Back",
     "join": "Join",
-    "optional": "optional"
+    "optional": "optional",
+    "active": "Active",
+    "all": "All"
   },
   "auth": {
     "welcome": "Welcome to FutKui",
@@ -212,8 +214,14 @@
     "errorMatchDetails": "Please enter match details including time, location, and game type",
     "activePoll": "Active Poll",
     "activePolls": "Active Polls",
+    "allPolls": "All Polls",
+    "noActivePolls": "No active polls",
+    "noPolls": "No polls yet",
     "upcomingMatch": "Upcoming Match",
     "upcomingMatches": "Upcoming Matches",
+    "allMatches": "All Matches",
+    "noUpcomingMatches": "No upcoming matches",
+    "noMatches": "No matches yet",
     "groupActivities": "Group Activities",
     "noActiveActivities": "No Active Activities",
     "createActivityPrompt": "Create a poll or match in the chat to see them here",
