@@ -16,6 +16,8 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Platform,
+  StatusBar as RNStatusBar,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
@@ -127,7 +129,7 @@ export default function ExploreScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      style={[styles.container, { backgroundColor: colors.background, paddingTop: Platform.OS === 'android' ? RNStatusBar.currentHeight : 0 }]}
     >
       <ScrollView
         style={styles.scrollContainer}

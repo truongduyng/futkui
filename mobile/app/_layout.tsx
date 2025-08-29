@@ -10,6 +10,7 @@ import { Colors } from '@/constants/Colors';
 import Toast from 'react-native-toast-message';
 import '@/i18n';
 import { useTranslation } from 'react-i18next';
+import { Platform } from 'react-native';
 
 
 function ThemedApp() {
@@ -56,8 +57,8 @@ function ThemedApp() {
           </Stack>
         </AuthGate>
       </UnreadCountProvider>
-      <StatusBar style={isDark ? "light" : "dark"} />
-      <Toast topOffset={80} />
+      <StatusBar style={isDark ? "light" : "dark"} translucent={Platform.OS === 'android'} />
+      <Toast topOffset={Platform.OS === 'android' ? 100 : 80} />
     </NavigationThemeProvider>
   );
 }

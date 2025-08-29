@@ -326,7 +326,7 @@ export default function ChatScreen() {
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 20 : 0}
+          keyboardVerticalOffset={insets.top + 25}
           enabled
         >
           {isLoadingMessages && messages.length === 0 ? (

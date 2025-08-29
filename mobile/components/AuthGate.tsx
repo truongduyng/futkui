@@ -220,19 +220,14 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
       }
 
       const userInfo = await GoogleSignin.signIn();
-      console.log('Google Sign-In userInfo:', userInfo);
-
-      // Try different paths for the ID token
       const idToken = userInfo.data?.idToken;
 
       if (!idToken) {
         console.error('No ID token present!');
-        console.log('Full userInfo object:', JSON.stringify(userInfo, null, 2));
         Alert.alert(t('common.error'), 'Failed to get authentication token from Google');
         return;
       }
 
-      console.log('ID Token found:', idToken.substring(0, 50) + '...');
 
       // Use correct client name for Android
       const clientName = Platform.OS === 'android' ? 'google-android-dev' : 'google-ios';
@@ -242,7 +237,6 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
         idToken,
       });
 
-      console.log('Google Sign-In successful!');
     } catch (error: any) {
       if (error.code === 'SIGN_IN_CANCELLED' || error.code === 'SIGN_IN_CANCELED') {
         // User canceled the sign-in flow

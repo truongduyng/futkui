@@ -7,7 +7,7 @@ import { useUnreadCount } from '@/contexts/UnreadCountContext';
 import { useInstantDB } from '@/hooks/useInstantDB';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Animated, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Animated, SafeAreaView, StyleSheet, Text, View, Platform, StatusBar as RNStatusBar } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/useToast';
 
@@ -257,7 +257,7 @@ export default function ChatScreen() {
 
   return (
     <GroupRefreshProvider refreshGroups={async () => {}}>
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background, paddingTop: Platform.OS === 'android' ? RNStatusBar.currentHeight : 0 }]}>
         {isLoading ? (
           <SkeletonLoader />
         ) : error ? (
