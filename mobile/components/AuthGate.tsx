@@ -7,7 +7,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import Constants from 'expo-constants';
 import * as Crypto from 'expo-crypto';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ProfileSetup } from './ProfileSetup';
 import { WebViewModal } from './WebViewModal';
@@ -207,7 +207,7 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
             email: credential.email,
             authMethod: 'apple'
           };
-          
+
           // Store in AsyncStorage to use during profile creation
           try {
             const AsyncStorage = await import('@react-native-async-storage/async-storage');
@@ -261,6 +261,11 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
 
   return (
     <>
+      <Image
+        source={require('../assets/images/ios-light.png')}
+        style={styles.logo}
+        resizeMode="contain"
+      />
       <Text style={[styles.title, { color: colors.text }]}>{t('auth.welcome')}</Text>
       {/* <Text style={[styles.subtitle, { color: colors.text }]}>
         {t('auth.chooseMethod')}
@@ -272,7 +277,7 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
           onPress={handleGoogleSignIn}
         >
           <View style={styles.googleButtonContent}>
-            <AntDesign name="google" size={14} style={styles.googleIcon} />
+            <AntDesign name="google" size={16} style={styles.googleIcon} />
             <Text style={styles.googleButtonText}>{t('auth.signInGoogle')}</Text>
           </View>
         </TouchableOpacity>
@@ -409,6 +414,11 @@ const styles = StyleSheet.create({
     maxWidth: 300,
     alignItems: 'center',
   },
+  logo: {
+    width: 80,
+    height: 80,
+    marginBottom: 24,
+  },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
@@ -460,8 +470,10 @@ const styles = StyleSheet.create({
   googleButton: {
     width: '100%',
     height: 48,
-    backgroundColor: '#000000',
+    backgroundColor: '#ffffff',
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#dadce0',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -472,11 +484,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   googleIcon: {
-    marginRight: 4,
-    color: 'white',
+    marginRight: 8,
+    color: '#4285f4',
   },
   googleButtonText: {
-    color: 'white',
+    color: '#3c4043',
     fontSize: 18,
     fontWeight: '600',
   },
