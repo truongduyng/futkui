@@ -17,6 +17,9 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+ios/certs/*
+ios/
+android/
 
 # Metro
 .metro-health-check*
@@ -38,5 +41,3 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
-
-ios/certs/*
