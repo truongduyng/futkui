@@ -403,13 +403,16 @@
     "rateAppDescription": "Để lại đánh giá trên App Store",
     "sendFeedback": "Gửi phản hồi",
     "sendFeedbackDescription": "Chia sẻ ý kiến của bạn với chúng tôi",
+    "contactUs": "Liên hệ chúng tôi",
+    "contactUsDescription": "hi@futkui.com",
+    "contactEmailCopied": "Email đã được sao chép",
     "website": "Trang web",
     "legal": "Pháp lý",
     "madeWith": "Được tạo với",
     "byTeam": "bởi đội ngũ FutKui",
     "allRightsReserved": "Bảo lưu mọi quyền.",
     "rateError": "Không thể mở đánh giá. Vui lòng thử lại sau.",
-    "emailError": "Không thể mở ứng dụng email. Vui lòng liên hệ hello@futkui.com trực tiếp."
+    "emailError": "Không thể mở ứng dụng email. Vui lòng liên hệ hi@futkui.com trực tiếp."
   },
   "feedback": {
     "title": "Gửi phản hồi",

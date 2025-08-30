@@ -8,7 +8,6 @@ import * as StoreReview from 'expo-store-review';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useState } from "react";
 import {
-  Alert,
   Platform,
   SafeAreaView,
   ScrollView,
@@ -17,6 +16,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import * as Clipboard from 'expo-clipboard';
+import Toast from 'react-native-toast-message';
 import { useTranslation } from "react-i18next";
 
 export default function AboutScreen() {
@@ -71,6 +72,24 @@ export default function AboutScreen() {
 
   const handleFeedback = () => {
     setFeedbackModalVisible(true);
+  };
+
+  const handleContactUs = async () => {
+    try {
+      await Clipboard.setStringAsync('hi@futkui.com');
+      Toast.show({
+        type: 'success',
+        text1: t('about.contactEmailCopied'),
+        text2: 'hi@futkui.com'
+      });
+    } catch (error) {
+      console.error('Error copying email:', error);
+      Toast.show({
+        type: 'info',
+        text1: t('about.contactUs'),
+        text2: 'hi@futkui.com'
+      });
+    }
   };
 
   return (
@@ -167,6 +186,45 @@ export default function AboutScreen() {
                     ]}
                   >
                     {t('about.sendFeedbackDescription')}
+                  </Text>
+                </View>
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={colors.tabIconDefault}
+              />
+            </TouchableOpacity>
+
+            <View style={[styles.menuSeparator, { backgroundColor: colors.tabIconDefault }]} />
+
+            <TouchableOpacity
+              style={styles.menuButton}
+              onPress={handleContactUs}
+              activeOpacity={0.8}
+            >
+              <View style={styles.menuButtonContent}>
+                <View
+                  style={[
+                    styles.menuIconContainer,
+                    { backgroundColor: "rgba(76, 175, 80, 0.1)" },
+                  ]}
+                >
+                  <Ionicons name="chatbubble-outline" size={20} color="#4CAF50" />
+                </View>
+                <View style={styles.menuTextContainer}>
+                  <Text
+                    style={[styles.menuButtonTitle, { color: colors.text }]}
+                  >
+                    {t('about.contactUs')}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.menuButtonSubtitle,
+                      { color: colors.tabIconDefault },
+                    ]}
+                  >
+                    {t('about.contactUsDescription')}
                   </Text>
                 </View>
               </View>
