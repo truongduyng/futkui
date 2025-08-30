@@ -4,7 +4,8 @@ export default async function (fastify, opts) {
     return reply.view('index', {
       title: 'FutKui - Ứng dụng Chat Đội thể thao',
       description: 'FutKui kết nối các đội thể thao và câu lạc bộ với chat thời gian thực, chia sẻ hình ảnh và quản lý nhóm dễ dàng. Hoàn hảo cho giao tiếp đội nhóm.',
-      lang: 'vi'
+      lang: 'vi',
+      isHomePage: true
     })
   })
 
@@ -29,7 +30,8 @@ export default async function (fastify, opts) {
     return reply.view('en/index', {
       title: 'FutKui - Sports Team Chat App',
       description: 'FutKui connects sports teams and clubs with real-time chat, image sharing, and easy group management. Perfect for team communication.',
-      lang: 'en'
+      lang: 'en',
+      isHomePage: true
     })
   })
 
