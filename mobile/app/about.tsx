@@ -15,6 +15,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Alert,
 } from "react-native";
 import * as Clipboard from 'expo-clipboard';
 import Toast from 'react-native-toast-message';
