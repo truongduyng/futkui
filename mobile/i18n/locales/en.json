@@ -9,6 +9,7 @@
     "saving": "Saving...",
     "sending": "Sending...",
     "verifying": "Verifying...",
+    "processing": "Processing...",
     "success": "Success",
     "back": "Back",
     "join": "Join",
@@ -424,5 +425,28 @@
     "successMessage": "Thank you for your feedback! We'll review it and get back to you if needed.",
     "error": "Feedback Error",
     "errorMessage": "Please enter your feedback message"
+  },
+  "block": {
+    "blockUser": "Block User",
+    "unblockUser": "Unblock User",
+    "block": "Block",
+    "unblock": "Unblock",
+    "blockedUsers": "Blocked Users",
+    "confirmBlock": "Block User?",
+    "confirmUnblock": "Unblock User?",
+    "confirmBlockMessage": "Are you sure you want to block @{{handle}}? You won't see their messages or be able to interact with them.",
+    "confirmUnblockMessage": "Are you sure you want to unblock @{{handle}}? You'll be able to see their messages again.",
+    "blockDescription": "When you block @{{handle}}, you won't see their messages in group chats. They won't be notified that you've blocked them.",
+    "unblockDescription": "Unblocking @{{handle}} will allow you to see their messages again in group chats.",
+    "blockWarning": "This user will not be notified that you've blocked them. You can unblock them anytime from your settings.",
+    "blockSuccess": "User Blocked",
+    "unblockSuccess": "User Unblocked",
+    "blockSuccessMessage": "@{{handle}} has been blocked. You won't see their messages anymore.",
+    "unblockSuccessMessage": "@{{handle}} has been unblocked. You can now see their messages.",
+    "blockError": "Failed to block user. Please try again.",
+    "unblockError": "Failed to unblock user. Please try again.",
+    "noBlockedUsers": "No Blocked Users",
+    "noBlockedUsersDescription": "You haven't blocked anyone yet. You can block users to hide their messages from your view.",
+    "blockedMessage": "Message from blocked user"
   }
 }

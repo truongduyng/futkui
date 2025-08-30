@@ -60,6 +60,7 @@ export default function ChatScreen() {
     leaveGroup,
     markMessagesAsRead,
     reportMessage,
+    useBlockedUsers,
   } = useInstantDB();
 
   // Data queries
@@ -67,11 +68,15 @@ export default function ChatScreen() {
   const { data: messagesData, isLoading: isLoadingMessages } = useMessages(groupId || "", messageLimit);
   const { data: profileData } = useProfile();
   const { data: membershipData } = useUserMembership(groupId || "");
+  const { data: blockedData } = useBlockedUsers();
 
   const currentProfile = profileData?.profiles?.[0];
   const userMembership = membershipData?.memberships?.[0];
   const group = groupData?.groups?.[0];
   const isBotGroup = group?.creator?.handle === 'fk';
+
+  // Get blocked profile IDs instead of user IDs
+  const blockedProfileIds = blockedData?.blocks?.map((block: any) => block.blocked?.id).filter(Boolean) || [];
 
   // Share handler
   const handleShareGroup = useCallback(async () => {
@@ -102,8 +107,10 @@ export default function ChatScreen() {
     messageLimit,
   });
 
-  // Filter out reported messages for the current user
-  const messages = allMessages.filter((message: any) => !reportedMessageIds.has(message.id));
+  // Filter out reported messages and messages from blocked users
+  const messages = allMessages
+    .filter((message: any) => !reportedMessageIds.has(message.id))
+    .filter((message: any) => !blockedProfileIds.includes(message.author?.id));
 
   // Extract members for mentions
   const members = group?.memberships

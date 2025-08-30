@@ -186,6 +186,20 @@ const rules = {
       update: "isAdmin",
     },
   },
+  blocks: {
+    bind: [
+      "isAuthenticated",
+      "auth.id != null",
+      "isBlocker",
+      "auth.id in data.ref('blocker.user.id')",
+    ],
+    allow: {
+      view: "isBlocker",
+      create: "isAuthenticated",
+      delete: "isBlocker",
+      update: "false",
+    },
+  },
 } satisfies InstantRules;
 
 export default rules;

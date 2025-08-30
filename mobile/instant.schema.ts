@@ -91,6 +91,10 @@ const _schema = i.schema({
       resolvedAt: i.number().optional(),
       adminNotes: i.string().optional(),
     }),
+    blocks: i.entity({
+      createdAt: i.number(),
+      blockerProfileKey: i.string().unique().indexed(), // "blockerId_blockedId" for uniqueness
+    }),
   },
   links: {
     checkInsUser: {
@@ -368,6 +372,30 @@ const _schema = i.schema({
         on: "groups",
         has: "many",
         label: "groupReports",
+      },
+    },
+    blocksBlocker: {
+      forward: {
+        on: "blocks",
+        has: "one",
+        label: "blocker",
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "blockedByMe",
+      },
+    },
+    blocksBlocked: {
+      forward: {
+        on: "blocks",
+        has: "one",
+        label: "blocked",
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "blockedMe",
       },
     },
   },

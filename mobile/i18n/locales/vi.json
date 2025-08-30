@@ -9,6 +9,7 @@
     "saving": "Đang lưu...",
     "sending": "Đang gửi...",
     "verifying": "Đang xác minh...",
+    "processing": "Đang xử lý...",
     "success": "Thành công",
     "back": "Quay lại",
     "join": "Tham gia",
@@ -423,5 +424,28 @@
     "successMessage": "Cảm ơn bạn đã gửi phản hồi! Chúng tôi sẽ xem xét và liên hệ lại nếu cần.",
     "error": "Lỗi phản hồi",
     "errorMessage": "Vui lòng nhập tin nhắn phản hồi"
+  },
+  "block": {
+    "blockUser": "Chặn người dùng",
+    "unblockUser": "Bỏ chặn người dùng",
+    "block": "Chặn",
+    "unblock": "Bỏ chặn",
+    "blockedUsers": "Người dùng đã chặn",
+    "confirmBlock": "Chặn người dùng?",
+    "confirmUnblock": "Bỏ chặn người dùng?",
+    "confirmBlockMessage": "Bạn có chắc chắn muốn chặn @{{handle}}? Bạn sẽ không thấy tin nhắn của họ hoặc có thể tương tác với họ.",
+    "confirmUnblockMessage": "Bạn có chắc chắn muốn bỏ chặn @{{handle}}? Bạn sẽ có thể thấy tin nhắn của họ trở lại.",
+    "blockDescription": "Khi bạn chặn @{{handle}}, bạn sẽ không thấy tin nhắn của họ trong cuộc trò chuyện nhóm. Họ sẽ không được thông báo rằng bạn đã chặn họ.",
+    "unblockDescription": "Bỏ chặn @{{handle}} sẽ cho phép bạn thấy tin nhắn của họ trở lại trong cuộc trò chuyện nhóm.",
+    "blockWarning": "Người dùng này sẽ không được thông báo rằng bạn đã chặn họ. Bạn có thể bỏ chặn họ bất cứ lúc nào từ cài đặt.",
+    "blockSuccess": "Đã chặn người dùng",
+    "unblockSuccess": "Đã bỏ chặn người dùng",
+    "blockSuccessMessage": "@{{handle}} đã được chặn. Bạn sẽ không thấy tin nhắn của họ nữa.",
+    "unblockSuccessMessage": "@{{handle}} đã được bỏ chặn. Bây giờ bạn có thể thấy tin nhắn của họ.",
+    "blockError": "Không thể chặn người dùng. Vui lòng thử lại.",
+    "unblockError": "Không thể bỏ chặn người dùng. Vui lòng thử lại.",
+    "noBlockedUsers": "Không có người dùng bị chặn",
+    "noBlockedUsersDescription": "Bạn chưa chặn ai. Bạn có thể chặn người dùng để ẩn tin nhắn của họ khỏi chế độ xem của bạn.",
+    "blockedMessage": "Tin nhắn từ người dùng bị chặn"
   }
 }

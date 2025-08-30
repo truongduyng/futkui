@@ -1161,6 +1161,147 @@ export function useInstantDB() {
     });
   };
 
+  // Blocking functionality
+  const useBlockedUsers = () => {
+    const { user } = db.useAuth();
+    if (!user) {
+      return { data: null, isLoading: false, error: null };
+    }
+
+    return db.useQuery({
+      blocks: {
+        $: { where: { "blocker.user.id": user.id } },
+        blocker: {
+          user: {},
+        },
+        blocked: {
+          user: {},
+        },
+      },
+    });
+  };
+
+  const useIsBlocked = (targetUserId: string) => {
+    const { user } = db.useAuth();
+    if (!user || !targetUserId) {
+      return { data: null, isLoading: false, error: null };
+    }
+
+    return db.useQuery({
+      blocks: {
+        $: { 
+          where: { 
+            "blocker.user.id": user.id,
+            "blocked.user.id": targetUserId
+          } 
+        },
+      },
+    });
+  };
+
+  const blockUser = useCallback(
+    async (blockedProfileId: string, currentUserId: string) => {
+      if (!currentUserId) throw new Error("User not authenticated");
+
+      // Get current user's profile
+      const currentUserProfile = await db.queryOnce({
+        profiles: {
+          $: { where: { "user.id": currentUserId } }
+        }
+      });
+
+      if (!currentUserProfile.data.profiles?.[0]) {
+        throw new Error("Current user profile not found");
+      }
+
+      const currentProfileId = currentUserProfile.data.profiles[0].id;
+      const blockerProfileKey = `${currentProfileId}_${blockedProfileId}`;
+
+      const result = await db.transact([
+        db.tx.blocks[id()].update({
+          createdAt: Date.now(),
+          blockerProfileKey,
+        }).link({
+          blocker: currentProfileId,
+          blocked: blockedProfileId
+        }),
+      ]);
+
+      return result;
+    },
+    [db]
+  );
+
+  const unblockUser = useCallback(
+    async (blockedProfileId: string, currentUserId: string) => {
+      if (!currentUserId) throw new Error("User not authenticated");
+
+      // Get current user's profile ID first
+      const currentUserProfile = await db.queryOnce({
+        profiles: {
+          $: { where: { "user.id": currentUserId } }
+        }
+      });
+
+      if (!currentUserProfile.data.profiles?.[0]) {
+        throw new Error("Current user profile not found");
+      }
+
+      const currentProfileId = currentUserProfile.data.profiles[0].id;
+      const blockerProfileKey = `${currentProfileId}_${blockedProfileId}`;
+
+      // Find the block relationship using the unique blockerProfileKey
+      const blockQuery = await db.queryOnce({
+        blocks: {
+          $: { 
+            where: { 
+              blockerProfileKey: blockerProfileKey
+            }
+          }
+        }
+      });
+
+
+      const blockToRemove = blockQuery.data.blocks?.[0];
+      if (!blockToRemove) {
+        throw new Error("Block relationship not found");
+      }
+
+      const result = await db.transact([
+        db.tx.blocks[blockToRemove.id].delete(),
+      ]);
+
+      return result;
+    },
+    [db]
+  );
+
+  // Helper function to filter messages from blocked users
+  const filterBlockedMessages = useCallback((messages: any[], blockedUserIds: string[]) => {
+    if (!blockedUserIds.length) return messages;
+    
+    return messages.filter((message: any) => {
+      const authorUserId = message.author?.user?.id;
+      return !blockedUserIds.includes(authorUserId);
+    });
+  }, []);
+
+  // Helper function to get blocked user IDs for current user
+  const getBlockedUserIds = useCallback(async (currentUserId: string): Promise<string[]> => {
+    if (!currentUserId) return [];
+
+    const blocksQuery = await db.queryOnce({
+      blocks: {
+        $: { where: { "blocker.user.id": currentUserId } },
+        blocked: {
+          user: {},
+        },
+      },
+    });
+
+    return blocksQuery.data.blocks?.map((block: any) => block.blocked?.user?.id).filter(Boolean) || [];
+  }, [db]);
+
   return {
     instantClient,
     useGroups,
@@ -1172,6 +1313,8 @@ export function useInstantDB() {
     useProfile,
     useUserMembership,
     useUnreadCount,
+    useBlockedUsers,
+    useIsBlocked,
     queryAllGroupsOnce,
     queryGroupByShareLink,
     queryGroupsOnce,
@@ -1201,5 +1344,9 @@ export function useInstantDB() {
     reportMessage,
     reportUser,
     reportGroup,
+    blockUser,
+    unblockUser,
+    filterBlockedMessages,
+    getBlockedUserIds,
   };
 }

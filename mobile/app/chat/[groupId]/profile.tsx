@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { useToast } from "@/hooks/useToast";
 import { EditGroupModal } from '@/components/chat/EditGroupModal';
 import { ReportModal } from '@/components/chat/ReportModal';
+import { BlockUserModal } from '@/components/chat/BlockUserModal';
 
 interface Member {
   id: string;
@@ -39,12 +40,13 @@ export default function GroupProfileScreen() {
   const { t } = useTranslation();
   const { showSuccess, showError } = useToast();
 
-  const { useGroup, useUserMembership, useMessages, leaveGroup, removeMember, updateGroup, reportGroup } =
+  const { useGroup, useUserMembership, useMessages, leaveGroup, removeMember, updateGroup, reportGroup, useBlockedUsers, blockUser, unblockUser } =
     useInstantDB();
 
   const { data: groupData } = useGroup(groupId || "");
   const { data: membershipData } = useUserMembership(groupId || "");
   const { data: messagesData } = useMessages(groupId || "", 50);
+  const { data: blockedData } = useBlockedUsers();
 
   const userMembership = membershipData?.memberships?.[0];
   const group = groupData?.groups?.[0];
@@ -66,6 +68,7 @@ export default function GroupProfileScreen() {
 
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [showReportModal, setShowReportModal] = React.useState(false);
+  const [blockModalUser, setBlockModalUser] = React.useState<Member | null>(null);
 
   const { user: currentUser } = instantClient.useAuth();
 
@@ -159,29 +162,20 @@ export default function GroupProfileScreen() {
     );
   };
 
-  const handleRemoveMember = useCallback((member: Member) => {
-    Alert.alert(
-      t('groupProfile.removeMember'),
-      t('groupProfile.removeMemberConfirm', { memberName: member.displayName || member.handle }),
-      [
-        { text: t('common.cancel'), style: "cancel" },
-        {
-          text: t('groupProfile.remove'),
-          style: "destructive",
-          onPress: async () => {
-            try {
-              if (member.membershipId) {
-                await removeMember(member.membershipId);
-              }
-            } catch (error) {
-              console.error("Error removing member:", error);
-              Alert.alert(t('common.error'), t('groupProfile.failedToRemoveMember'));
-            }
-          },
-        },
-      ]
-    );
-  }, [removeMember, t]);
+  const handleRemoveMember = useCallback(async (member: Member) => {
+    try {
+      if (member.membershipId) {
+        await removeMember(member.membershipId);
+        showSuccess(
+          t('groupProfile.memberRemoved'),
+          t('groupProfile.memberRemovedMessage', { name: member.displayName || member.handle })
+        );
+      }
+    } catch (error) {
+      console.error("Error removing member:", error);
+      showError(t('common.error'), t('groupProfile.failedToRemoveMember'));
+    }
+  }, [removeMember, t, showSuccess, showError]);
 
   const handleUpdateGroup = useCallback(async (groupData: { name: string; description: string; avatarUrl: string; sports: string[] }) => {
     if (!groupId) return;
@@ -210,6 +204,27 @@ export default function GroupProfileScreen() {
       throw error;
     }
   }, [groupId, currentUser?.id, userMembership?.profile?.id, reportGroup]);
+
+  const handleBlockUser = useCallback(async (member: Member) => {
+    if (!currentUser?.id) return;
+    await blockUser(member.id, currentUser.id);
+  }, [blockUser, currentUser?.id]);
+
+  const handleUnblockUser = useCallback(async (member: Member) => {
+    if (!currentUser?.id) return;
+    await unblockUser(member.id, currentUser.id);
+  }, [unblockUser, currentUser?.id]);
+
+  const handleMemberAction = useCallback((member: Member) => {
+    const isCurrentUser = member.id === userMembership?.profile?.id;
+    const isBotUser = member.handle === 'fk';
+
+    if (isCurrentUser || isBotUser) {
+      return; // No actions available for current user or bot
+    }
+
+    setBlockModalUser(member);
+  }, [userMembership?.profile?.id]);
 
   if (!group) {
     return (
@@ -366,18 +381,16 @@ export default function GroupProfileScreen() {
           </Text>
           <View style={[styles.membersList, { backgroundColor: colors.card }]}>
             {members.map((member, index) => {
-              const canRemoveMember = isCurrentUserAdmin &&
-                member.role !== "admin" &&
-                member.id !== userMembership?.profile?.id;
-
               return (
-                <View
+                <TouchableOpacity
                   key={member.id}
                   style={[
                     styles.memberRow,
                     index === members.length - 1 && styles.memberRowLast,
                     { borderBottomColor: colors.border },
                   ]}
+                  onPress={() => handleMemberAction(member)}
+                  activeOpacity={0.7}
                 >
                   <View style={styles.memberInfo}>
                     <View
@@ -435,21 +448,8 @@ export default function GroupProfileScreen() {
                         </Text>
                       )}
                     </View>
-                    {canRemoveMember && (
-                      <TouchableOpacity
-                        onPress={() => handleRemoveMember(member)}
-                        style={styles.removeMemberButton}
-                        activeOpacity={0.7}
-                      >
-                        <Ionicons
-                          name="remove-circle-outline"
-                          size={24}
-                          color="#FF3B30"
-                        />
-                      </TouchableOpacity>
-                    )}
                   </View>
-                </View>
+                </TouchableOpacity>
               );
             })}
           </View>
@@ -458,28 +458,26 @@ export default function GroupProfileScreen() {
         {/* Actions - Hide for bot groups */}
         {!isBotGroup && (
           <View style={styles.section}>
-            {/* Report Group - Hide for admins */}
-            {!isCurrentUserAdmin && (
-              <View style={[styles.dangerZone, { backgroundColor: "#FF8C0010", marginBottom: 12 }]}>
-                <TouchableOpacity
-                  style={styles.option}
-                  onPress={() => setShowReportModal(true)}
-                  activeOpacity={0.6}
-                >
-                  <View style={styles.optionLeft}>
-                    <Ionicons
-                      name="flag-outline"
-                      size={24}
-                      color="#FF8C00"
-                      style={styles.optionIcon}
-                    />
-                    <Text style={[styles.optionText, { color: "#FF8C00" }]}>
-                      {t('report.reportGroup')}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            )}
+
+            <View style={[styles.dangerZone, { backgroundColor: "#FF8C0010", marginBottom: 12 }]}>
+              <TouchableOpacity
+                style={styles.option}
+                onPress={() => setShowReportModal(true)}
+                activeOpacity={0.6}
+              >
+                <View style={styles.optionLeft}>
+                  <Ionicons
+                    name="flag-outline"
+                    size={24}
+                    color="#FF8C00"
+                    style={styles.optionIcon}
+                  />
+                  <Text style={[styles.optionText, { color: "#FF8C00" }]}>
+                    {t('report.reportGroup')}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
 
             {/* Leave Group */}
             <View style={[styles.dangerZone, { backgroundColor: "#FF3B3010" }]}>
@@ -527,6 +525,18 @@ export default function GroupProfileScreen() {
         onSubmit={handleReportGroup}
         type="group"
         targetName={group?.name}
+      />
+
+      {/* Block User Modal */}
+      <BlockUserModal
+        isVisible={!!blockModalUser}
+        onClose={() => setBlockModalUser(null)}
+        member={blockModalUser}
+        isBlocked={blockModalUser ? (blockedData?.blocks?.map((block: any) => block.blocked?.id).filter(Boolean) || []).includes(blockModalUser.id) : false}
+        isCurrentUserAdmin={isCurrentUserAdmin}
+        onBlock={handleBlockUser}
+        onUnblock={handleUnblockUser}
+        onRemove={handleRemoveMember}
       />
     </View>
   );
