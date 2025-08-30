@@ -15,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { useTranslation } from 'react-i18next';
+import { filterContent } from '@/utils/contentFilter';
 import { CreatePollModal } from "./CreatePollModal";
 import { CreateMatchModal } from "./CreateMatchModal";
 import { MentionPicker } from "./MentionPicker";
@@ -74,12 +75,25 @@ export function MessageInput({
 
   const handleSend = async () => {
     if ((message.trim() || selectedImage) && !disabled && !isSending) {
-      // Extract mentions from the message
-      const mentionMatches = message.match(/@(\w+)/g) || [];
+      // Filter message content
+      const filterResult = filterContent(message.trim());
+      
+      if (filterResult.isBlocked) {
+        Alert.alert(
+          t('common.error'),
+          filterResult.reason || 'Message contains inappropriate content',
+          [{ text: t('common.ok') }]
+        );
+        return;
+      }
+
+      // Extract mentions from the filtered message
+      const messageToProcess = filterResult.filteredContent;
+      const mentionMatches = messageToProcess.match(/@(\w+)/g) || [];
       const mentions = mentionMatches.map((match) => match.substring(1)); // Remove @ symbol
 
       // Store values before clearing state
-      const messageToSend = message.trim();
+      const messageToSend = messageToProcess;
       const imageToSend = selectedImage || undefined;
 
       setIsSending(true);
@@ -158,9 +172,41 @@ export function MessageInput({
     expiresAt?: number,
   ) => {
     if (onSendPoll && !isSending) {
+      // Filter poll question
+      const questionFilter = filterContent(question);
+      if (questionFilter.isBlocked) {
+        Alert.alert(
+          t('common.error'),
+          questionFilter.reason || 'Poll question contains inappropriate content',
+          [{ text: t('common.ok') }]
+        );
+        return;
+      }
+
+      // Filter poll options
+      const filteredOptions = options.map(option => {
+        const optionFilter = filterContent(option.text);
+        if (optionFilter.isBlocked) {
+          Alert.alert(
+            t('common.error'),
+            `Poll option "${option.text}" contains inappropriate content`,
+            [{ text: t('common.ok') }]
+          );
+          return null;
+        }
+        return {
+          ...option,
+          text: optionFilter.filteredContent
+        };
+      }).filter(option => option !== null) as PollOption[];
+
+      if (filteredOptions.length !== options.length) {
+        return; // Some options were blocked
+      }
+
       setIsSending(true);
       try {
-        await onSendPoll(question, options, allowMultiple, expiresAt);
+        await onSendPoll(questionFilter.filteredContent, filteredOptions, allowMultiple, expiresAt);
       } catch (error) {
         console.error("Failed to send poll:", error);
       } finally {
@@ -177,9 +223,37 @@ export function MessageInput({
     matchDate: number;
   }) => {
     if (onCreateMatch && !isSending) {
+      // Filter match title
+      const titleFilter = filterContent(matchData.title);
+      if (titleFilter.isBlocked) {
+        Alert.alert(
+          t('common.error'),
+          titleFilter.reason || 'Match title contains inappropriate content',
+          [{ text: t('common.ok') }]
+        );
+        return;
+      }
+
+      // Filter match description
+      const descriptionFilter = filterContent(matchData.description);
+      if (descriptionFilter.isBlocked) {
+        Alert.alert(
+          t('common.error'),
+          descriptionFilter.reason || 'Match description contains inappropriate content',
+          [{ text: t('common.ok') }]
+        );
+        return;
+      }
+
+      const filteredMatchData = {
+        ...matchData,
+        title: titleFilter.filteredContent,
+        description: descriptionFilter.filteredContent,
+      };
+
       setIsSending(true);
       try {
-        await onCreateMatch(matchData);
+        await onCreateMatch(filteredMatchData);
       } catch (error) {
         console.error("Failed to create match:", error);
       } finally {
