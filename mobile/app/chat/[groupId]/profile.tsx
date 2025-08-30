@@ -381,6 +381,11 @@ export default function GroupProfileScreen() {
           </Text>
           <View style={[styles.membersList, { backgroundColor: colors.card }]}>
             {members.map((member, index) => {
+              const isCurrentUser = member.id === userMembership?.profile?.id;
+              const isBotUser = member.handle === 'fk';
+              const isBlocked = (blockedData?.blocks?.map((block: any) => block.blocked?.id).filter(Boolean) || []).includes(member.id);
+              const isTouchable = !isCurrentUser && !isBotUser;
+              
               return (
                 <TouchableOpacity
                   key={member.id}
@@ -388,27 +393,35 @@ export default function GroupProfileScreen() {
                     styles.memberRow,
                     index === members.length - 1 && styles.memberRowLast,
                     { borderBottomColor: colors.border },
+                    isTouchable && styles.touchableMember,
+                    isBlocked && styles.blockedMemberRow,
                   ]}
                   onPress={() => handleMemberAction(member)}
-                  activeOpacity={0.7}
+                  activeOpacity={isTouchable ? 0.6 : 1}
+                  disabled={!isTouchable}
                 >
                   <View style={styles.memberInfo}>
                     <View
                       style={[
                         styles.memberAvatar,
                         { backgroundColor: colors.background },
+                        isBlocked && styles.blockedAvatar,
                       ]}
                     >
                       {member.avatarUrl ? (
                         <Image
                           source={{ uri: member.avatarUrl }}
-                          style={styles.memberAvatarImage}
+                          style={[
+                            styles.memberAvatarImage,
+                            isBlocked && styles.blockedAvatarImage,
+                          ]}
                         />
                       ) : (
                         <Text
                           style={[
                             styles.memberAvatarText,
                             { color: colors.tint },
+                            isBlocked && styles.blockedAvatarText,
                           ]}
                         >
                           {(member.displayName || member.handle)
@@ -416,10 +429,23 @@ export default function GroupProfileScreen() {
                             .toUpperCase()}
                         </Text>
                       )}
+                      {isBlocked && (
+                        <View style={styles.blockedIndicator}>
+                          <Ionicons
+                            name="person-remove"
+                            size={14}
+                            color="#FF3B30"
+                          />
+                        </View>
+                      )}
                     </View>
                     <View style={styles.memberDetails}>
                       <View style={styles.memberNameRow}>
-                        <Text style={[styles.memberName, { color: colors.text }]}>
+                        <Text style={[
+                          styles.memberName, 
+                          { color: colors.text },
+                          isBlocked && styles.blockedMemberName,
+                        ]}>
                           {member.displayName || member.handle}
                         </Text>
                         {member.role === "admin" && (
@@ -436,6 +462,20 @@ export default function GroupProfileScreen() {
                             </Text>
                           </View>
                         )}
+                        {isBlocked && (
+                          <View
+                            style={[
+                              styles.blockedBadge,
+                              { backgroundColor: "#FF3B3020" },
+                            ]}
+                          >
+                            <Text
+                              style={[styles.blockedText, { color: "#FF3B30" }]}
+                            >
+                              {t('block.blocked')}
+                            </Text>
+                          </View>
+                        )}
                       </View>
                       {member.displayName && (
                         <Text
@@ -449,6 +489,14 @@ export default function GroupProfileScreen() {
                       )}
                     </View>
                   </View>
+                  {isTouchable && (
+                    <Ionicons
+                      name="chevron-forward"
+                      size={20}
+                      color={colors.tabIconDefault}
+                      style={styles.chevronIcon}
+                    />
+                  )}
                 </TouchableOpacity>
               );
             })}
@@ -622,15 +670,29 @@ const styles = StyleSheet.create({
   },
   memberRow: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  memberRowLast: {
-    borderBottomWidth: 0,
-  },
-  memberInfo: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 16,
     paddingHorizontal: 16,
+  },
+  memberRowLast: {
+    borderBottomWidth: 0,
+  },
+  touchableMember: {
+    backgroundColor: 'transparent',
+  },
+  blockedMemberRow: {
+    opacity: 0.7,
+    backgroundColor: '#FF3B3005',
+  },
+  memberInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  chevronIcon: {
+    marginLeft: 12,
+    opacity: 0.6,
   },
   memberAvatar: {
     width: 48,
@@ -639,15 +701,44 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
+    position: "relative",
+  },
+  blockedAvatar: {
+    opacity: 0.6,
   },
   memberAvatarImage: {
     width: 48,
     height: 48,
     borderRadius: 24,
   },
+  blockedAvatarImage: {
+    opacity: 0.5,
+  },
   memberAvatarText: {
     fontSize: 18,
     fontWeight: "600",
+  },
+  blockedAvatarText: {
+    opacity: 0.5,
+  },
+  blockedIndicator: {
+    position: "absolute",
+    bottom: -2,
+    right: -2,
+    backgroundColor: "white",
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
   memberDetails: {
     flex: 1,
@@ -662,12 +753,27 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginRight: 8,
   },
+  blockedMemberName: {
+    opacity: 0.6,
+    textDecorationLine: "line-through",
+  },
   adminBadge: {
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
+    marginRight: 6,
   },
   adminText: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+  },
+  blockedBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  blockedText: {
     fontSize: 11,
     fontWeight: "600",
     textTransform: "uppercase",

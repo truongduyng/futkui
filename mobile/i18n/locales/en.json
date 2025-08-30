@@ -431,6 +431,7 @@
     "unblockUser": "Unblock User",
     "block": "Block",
     "unblock": "Unblock",
+    "blocked": "Blocked",
     "blockedUsers": "Blocked Users",
     "confirmBlock": "Block User?",
     "confirmUnblock": "Unblock User?",
