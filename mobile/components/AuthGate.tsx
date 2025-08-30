@@ -231,7 +231,8 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
 
 
       // Use correct client name for Android
-      const clientName = Platform.OS === 'android' ? 'google-android-dev' : 'google-ios';
+      const androidClientName = __DEV__ ? 'google-android-dev' : 'google-android';
+      const clientName = Platform.OS === 'android' ? androidClientName : 'google-ios';
 
       await instantClient.auth.signInWithIdToken({
         clientName,
