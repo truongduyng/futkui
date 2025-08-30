@@ -34,7 +34,9 @@
     "failedGoogleSignIn": "Không thể đăng nhập bằng Google. Vui lòng thử lại.",
     "settingUpProfile": "Đang thiết lập hồ sơ của bạn...",
     "privacyAccept": "Bằng cách đăng nhập, bạn chấp nhận",
-    "privacyPolicy": "Chính sách quyền riêng tư"
+    "privacyPolicy": "Chính sách quyền riêng tư",
+    "termsOfService": "Điều khoản dịch vụ",
+    "and": "và"
   },
   "groups": {
     "errorLoading": "Lỗi tải nhóm:",

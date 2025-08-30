@@ -127,7 +127,8 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showLegalModal, setShowLegalModal] = useState(false);
+  const [legalModalData, setLegalModalData] = useState<{ url: string; title: string } | null>(null);
 
   useEffect(() => {
     // Configure Google Sign-In
@@ -248,7 +249,19 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
   };
 
   const handlePrivacyPress = () => {
-    setShowPrivacyModal(true);
+    setLegalModalData({
+      url: 'https://futkui.com/privacy',
+      title: 'Privacy Policy'
+    });
+    setShowLegalModal(true);
+  };
+
+  const handleTermsPress = () => {
+    setLegalModalData({
+      url: 'https://futkui.com/terms',
+      title: 'Terms of Service'
+    });
+    setShowLegalModal(true);
   };
 
   return (
@@ -312,17 +325,27 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
 
       <Text style={[styles.privacyText, { color: colors.tabIconDefault }]}>
         {t('auth.privacyAccept')}{' '}
+        <Text style={[styles.privacyLink, { color: colors.tint }]} onPress={handleTermsPress}>
+          {t('auth.termsOfService')}
+        </Text>
+        {' '}{t('auth.and')}{' '}
         <Text style={[styles.privacyLink, { color: colors.tint }]} onPress={handlePrivacyPress}>
           {t('auth.privacyPolicy')}
         </Text>
+        .
       </Text>
 
-      <WebViewModal
-        visible={showPrivacyModal}
-        onClose={() => setShowPrivacyModal(false)}
-        url="https://futkui.com/privacy"
-        title="Privacy Policy"
-      />
+      {legalModalData && (
+        <WebViewModal
+          visible={showLegalModal}
+          onClose={() => {
+            setShowLegalModal(false);
+            setLegalModalData(null);
+          }}
+          url={legalModalData.url}
+          title={legalModalData.title}
+        />
+      )}
     </>
   );
 }
@@ -495,5 +518,12 @@ const styles = StyleSheet.create({
   },
   privacyLink: {
     textDecorationLine: 'underline',
+  },
+  contentGuidelinesText: {
+    fontSize: 11,
+    textAlign: 'center',
+    marginTop: 8,
+    opacity: 0.6,
+    fontStyle: 'italic',
   },
 });

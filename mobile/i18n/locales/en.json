@@ -34,7 +34,9 @@
     "failedGoogleSignIn": "Failed to sign in with Google. Please try again.",
     "settingUpProfile": "Setting up your profile...",
     "privacyAccept": "By logging in, you accept our",
-    "privacyPolicy": "Privacy Policy"
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "and": "and"
   },
   "groups": {
     "errorLoading": "Error loading groups:",
