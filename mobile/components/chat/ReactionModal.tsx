@@ -74,18 +74,7 @@ export function ReactionModal({
   const { isDark } = useTheme();
   const colors = useMemo(() => isDark ? Colors.dark : Colors.light, [isDark]);
 
-  const groupedReactions = useMemo(() => {
-    return reactions.reduce((acc, reaction) => {
-      if (!acc[reaction.emoji]) {
-        acc[reaction.emoji] = [];
-      }
-      acc[reaction.emoji].push(reaction);
-      return acc;
-    }, {} as Record<string, Reaction[]>);
-  }, [reactions]);
-
   const hasTextContent = content && content.trim();
-  const hasReactions = Object.keys(groupedReactions).length > 0;
 
   // Dynamic styles based on theme
   const dynamicStyles = useMemo(() => ({
