@@ -373,7 +373,7 @@ export function MessageInput({
           placeholderTextColor={colors.tabIconDefault}
           multiline
           maxLength={1000}
-          editable={!disabled}
+          editable={!disabled && !isSending}
           textAlignVertical="top"
           scrollEnabled={true}
           returnKeyType="default"
