@@ -371,6 +371,7 @@ const colors = isDark ? Colors.dark : Colors.light;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 8,
   },
   scrollContent: {
     paddingBottom: 32,

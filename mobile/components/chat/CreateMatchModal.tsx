@@ -141,7 +141,7 @@ const colors = isDark ? Colors.dark : Colors.light;
             </Text>
             <View style={[styles.pickerContainer]}>
               <DateTimePicker
-                themeVariant='dark'
+                themeVariant={isDark ? 'dark' : 'light'}
                 value={selectedDate}
                 mode="datetime"
                 onChange={onChange}
