@@ -1,6 +1,5 @@
 import { Colors } from "@/constants/Colors";
 import { useTheme } from '@/contexts/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import React, { useCallback, useMemo, useState } from "react";
 import {
@@ -18,6 +17,7 @@ import { CachedAvatar } from "./CachedAvatar";
 import { WebViewModal } from "../WebViewModal";
 import { MessageImage } from "./MessageImage";
 import { ReactionButton } from "./ReactionButton";
+import { ReactionModal } from "./ReactionModal";
 import { ReportModal } from "./ReportModal";
 
 interface Reaction {
@@ -78,33 +78,12 @@ export const MessageBubble = React.memo(function MessageBubble({
   const [showWebView, setShowWebView] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
-  // Position and content states
-  const [messagePosition, setMessagePosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  // Content states
   const [webViewUrl, setWebViewUrl] = useState<string | null>(null);
-
-  const QUICK_REACTIONS = useMemo(() => ["👍", "❤️", "😂", "😮", "😢", "😡"], []);
+  const [messagePosition, setMessagePosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
   // Dynamic styles based on theme
   const dynamicStyles = useMemo(() => ({
-    reactionOptionsContainer: {
-      ...styles.reactionOptionsContainer,
-      backgroundColor: isDark ? "#2A2A2A" : "white",
-      borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
-    },
-    messageOptionsContainer: {
-      ...styles.messageOptionsContainer,
-      backgroundColor: isDark ? "#2A2A2A" : "white",
-      borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
-    },
-    messageOptionText: {
-      ...styles.messageOptionText,
-      color: isDark ? "#ECEDEE" : "#333",
-    },
-    reportOptionText: {
-      ...styles.messageOptionText,
-      color: "#FF4444",
-      fontWeight: "bold" as const,
-    },
     bottomSheet: {
       ...styles.bottomSheet,
       backgroundColor: isDark ? "#2A2A2A" : "white",
@@ -168,10 +147,13 @@ export const MessageBubble = React.memo(function MessageBubble({
   const handleAddReaction = useCallback((emoji: string) => {
     if (onAddReaction) {
       onAddReaction(emoji);
-      setShowReactionOptions(false);
-      setShowMessageOptions(false);
     }
   }, [onAddReaction]);
+
+  const handleCloseReactionModal = useCallback(() => {
+    setShowReactionOptions(false);
+    setShowMessageOptions(false);
+  }, []);
 
   const handleTapOutside = useCallback(() => {
     setShowReactionOptions(false);
@@ -275,80 +257,24 @@ export const MessageBubble = React.memo(function MessageBubble({
           )}
         </View>
 
-        {(showReactionOptions || showMessageOptions) && (
-          <Modal
-            visible={showReactionOptions || showMessageOptions}
-            transparent={true}
-            animationType="none"
-            onRequestClose={handleTapOutside}
-          >
-            <TouchableOpacity
-              style={styles.reactionModalOverlay}
-              activeOpacity={1}
-              onPress={handleTapOutside}
-            >
-              {/* Reaction options above message */}
-              {showReactionOptions && onAddReaction && !isOwnMessage && (
-                <View
-                  style={[
-                    dynamicStyles.reactionOptionsContainer,
-                    {
-                      position: "absolute",
-                      left: messagePosition.x,
-                      top: messagePosition.y - 60, // Position above the message
-                    },
-                  ]}
-                >
-                  {QUICK_REACTIONS.map((emoji) => (
-                    <TouchableOpacity
-                      key={emoji}
-                      style={styles.reactionOptionButton}
-                      onPress={() => handleAddReaction(emoji)}
-                    >
-                      <Text style={styles.reactionOptionEmoji}>{emoji}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-
-              {/* Message options below message */}
-              {showMessageOptions && hasTextContent && (
-                <View
-                  style={[
-                    dynamicStyles.messageOptionsContainer,
-                    {
-                      position: "absolute",
-                      left: messagePosition.x,
-                      top: messagePosition.y + messagePosition.height + 10,
-                    },
-                  ]}
-                >
-                  <TouchableOpacity
-                    style={styles.messageOptionButton}
-                    onPress={handleCopyText}
-                  >
-                    <View style={styles.messageOptionContent}>
-                      <Ionicons name="copy-outline" size={18} color={isDark ? "#999" : "#666"} />
-                      <Text style={dynamicStyles.messageOptionText}>{t('chat.copyText')}</Text>
-                    </View>
-                  </TouchableOpacity>
-
-                  {!isOwnMessage && onReportMessage && messageId && (
-                    <TouchableOpacity
-                      style={styles.reportOptionButton}
-                      onPress={handleShowReport}
-                    >
-                      <View style={styles.messageOptionContent}>
-                        <Ionicons name="flag" size={18} color="#FF4444" />
-                        <Text style={dynamicStyles.reportOptionText}>{t('report.reportMessage')}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              )}
-            </TouchableOpacity>
-          </Modal>
-        )}
+        <ReactionModal
+          visible={showReactionOptions || showMessageOptions}
+          onClose={handleCloseReactionModal}
+          content={content}
+          author={author}
+          isOwnMessage={isOwnMessage}
+          showAuthor={showAuthor}
+          imageUrl={imageUrl}
+          onImagePress={onImagePress}
+          reactions={reactions}
+          showReactionOptions={showReactionOptions}
+          showMessageOptions={showMessageOptions}
+          onAddReaction={handleAddReaction}
+          onCopyText={handleCopyText}
+          onReportMessage={handleShowReport}
+          messageId={messageId}
+          messagePosition={messagePosition}
+        />
 
         {hasReactions && (
           <View
@@ -532,71 +458,6 @@ const styles = StyleSheet.create({
   },
   reactionsOtherMessage: {
     right: 8,
-  },
-  reactionModalOverlay: {
-    flex: 1,
-    backgroundColor: "transparent",
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-  },
-  reactionOptionsContainer: {
-    flexDirection: "row",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 25,
-    backgroundColor: "white",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 10,
-    borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.1)",
-  },
-  reactionOptionsOther: {
-    left: 8,
-  },
-  reactionOptionButton: {
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    marginHorizontal: 2,
-    borderRadius: 8,
-  },
-  reactionOptionEmoji: {
-    fontSize: 20,
-  },
-  messageOptionsContainer: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    backgroundColor: "white",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 10,
-    borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.1)",
-  },
-  messageOptionButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 4,
-    borderRadius: 8,
-  },
-  reportOptionButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 4,
-    borderRadius: 8,
-  },
-  messageOptionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  messageOptionText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#333",
   },
   modalOverlay: {
     flex: 1,

@@ -165,23 +165,7 @@ const colors = isDark ? Colors.dark : Colors.light;
         )}
       </>
     );
-  }, [
-    chatItems,
-    currentProfile?.id,
-    userMembership,
-    totalMembers,
-    shouldShowTimestamp,
-    colors.tabIconDefault,
-    stableHandleVote,
-    stableHandleClosePoll,
-    stableHandleReaction,
-    stableHandleAddReaction,
-    handleImagePress,
-    handleRsvp,
-    handleCheckIn,
-    handleCloseMatch,
-    handleReportMessage
-  ]);
+  }, [currentProfile?.id, chatItems, shouldShowTimestamp, totalMembers, userMembership?.role, handleImagePress, handleReportMessage, colors.tabIconDefault, stableHandleVote, handleAddOptionToPoll, stableHandleClosePoll, handleRsvp, handleCheckIn, handleCloseMatch, stableHandleReaction, stableHandleAddReaction]);
 
   const keyExtractor = useCallback((item: any) => item.id, []);
 
