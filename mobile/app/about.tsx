@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   View,
   Alert,
+  Image,
 } from "react-native";
 import * as Clipboard from 'expo-clipboard';
 import Toast from 'react-native-toast-message';
@@ -105,15 +106,17 @@ export default function AboutScreen() {
         {/* App Info Section */}
         <View style={styles.section}>
           <View style={styles.appHeader}>
-            <View style={[styles.appIcon, { backgroundColor: colors.tint }]}>
-              <Text style={styles.appIconText}>FK</Text>
-            </View>
+            <Image
+              source={require('@/assets/images/icon.png')}
+              style={styles.appIcon}
+              resizeMode="contain"
+            />
             <Text style={[styles.appName, { color: colors.text }]}>FutKui</Text>
-            <Text style={[styles.appVersion, { color: colors.tabIconDefault }]}>
-              {t('about.version')} {appVersion} ({buildVersion})
-            </Text>
             <Text style={[styles.appDescription, { color: colors.tabIconDefault }]}>
               {t('about.description')}
+            </Text>
+            <Text style={[styles.appVersion, { color: colors.tabIconDefault }]}>
+              {t('about.version')} {appVersion} ({buildVersion})
             </Text>
           </View>
         </View>
@@ -357,14 +360,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  appIconText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: 'white',
+    marginBottom: -6,
   },
   appName: {
     fontSize: 28,
@@ -372,11 +368,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   appVersion: {
-    fontSize: 16,
-    marginBottom: 8,
+    fontSize: 10,
+    marginVertical: 8,
   },
   appDescription: {
-    fontSize: 14,
+    fontSize: 16,
     textAlign: 'center',
     lineHeight: 20,
     paddingHorizontal: 20,
