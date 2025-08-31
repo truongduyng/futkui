@@ -21,6 +21,7 @@ import {
 import * as Clipboard from 'expo-clipboard';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from "react-i18next";
+import i18n from "@/i18n/index";
 
 export default function AboutScreen() {
   const { t } = useTranslation();
@@ -39,18 +40,20 @@ export default function AboutScreen() {
   const buildVersion = Application.nativeBuildVersion || "1";
 
   const handlePrivacy = () => {
+    const langPath = i18n.language === 'vi' ? '' : 'en/';
     setWebViewModal({
       visible: true,
-      url: 'https://futkui.com/en/privacy',
-      title: 'Privacy Policy'
+      url: `https://futkui.com/${langPath}privacy`,
+      title: t('explore.privacy')
     });
   };
 
   const handleTerms = () => {
+    const langPath = i18n.language === 'vi' ? '' : 'en/';
     setWebViewModal({
       visible: true,
-      url: 'https://futkui.com/en/terms',
-      title: 'Terms of Service'
+      url: `https://futkui.com/${langPath}terms`,
+      title: t('explore.termsOfService')
     });
   };
 
