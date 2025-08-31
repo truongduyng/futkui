@@ -13,7 +13,7 @@ import { useChatScroll } from "@/hooks/useChatScroll";
 import { useInstantDB } from "@/hooks/useInstantDB";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useTranslation } from 'react-i18next';
 import * as Clipboard from "expo-clipboard";
 import { useToast } from "@/hooks/useToast";
@@ -40,7 +40,7 @@ export default function ChatScreen() {
   const { t } = useTranslation();
   const { showSuccess, showError } = useToast();
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
-  const [messageLimit, setMessageLimit] = useState(200);
+  const [messageLimit, setMessageLimit] = useState(500);
   const [reportedMessageIds, setReportedMessageIds] = useState<Set<string>>(new Set());
 
   const {
@@ -76,7 +76,10 @@ export default function ChatScreen() {
   const isBotGroup = group?.creator?.handle === 'fk';
 
   // Get blocked profile IDs instead of user IDs
-  const blockedProfileIds = blockedData?.blocks?.map((block: any) => block.blocked?.id).filter(Boolean) || [];
+  const blockedProfileIds = useMemo(() => 
+    blockedData?.blocks?.map((block: any) => block.blocked?.id).filter(Boolean) || [],
+    [blockedData?.blocks]
+  );
 
   // Share handler
   const handleShareGroup = useCallback(async () => {
@@ -109,18 +112,25 @@ export default function ChatScreen() {
   });
 
   // Filter out reported messages and messages from blocked users
-  const messages = allMessages
-    .filter((message: any) => !reportedMessageIds.has(message.id))
-    .filter((message: any) => !blockedProfileIds.includes(message.author?.id));
+  const messages = useMemo(() => 
+    allMessages
+      .filter((message: any) => !reportedMessageIds.has(message.id))
+      .filter((message: any) => !blockedProfileIds.includes(message.author?.id)),
+    [allMessages, reportedMessageIds, blockedProfileIds]
+  );
+
 
   // Extract members for mentions
-  const members = group?.memberships
-    ?.map((membership) => ({
-      id: membership.profile?.id || "",
-      handle: membership.profile?.handle || "",
-      displayName: membership.profile?.displayName,
-    }))
-    .filter((member) => member.id && member.handle) || [];
+  const members = useMemo(() => 
+    group?.memberships
+      ?.map((membership) => ({
+        id: membership.profile?.id || "",
+        handle: membership.profile?.handle || "",
+        displayName: membership.profile?.displayName,
+      }))
+      .filter((member) => member.id && member.handle) || [],
+    [group?.memberships]
+  );
 
   // Scroll management
   const {
