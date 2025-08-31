@@ -17,7 +17,7 @@ import * as Clipboard from "expo-clipboard";
 import React, { useEffect, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
 import { useToast } from "@/hooks/useToast";
-import { EditGroupModal } from '@/components/chat/EditGroupModal';
+import { GroupModal } from '@/components/chat/GroupModal';
 import { ReportModal } from '@/components/chat/ReportModal';
 import { BlockUserModal } from '@/components/chat/BlockUserModal';
 
@@ -178,7 +178,7 @@ export default function GroupProfileScreen() {
     }
   }, [removeMember, t, showSuccess, showError]);
 
-  const handleUpdateGroup = useCallback(async (groupData: { name: string; description: string; avatarUrl: string; sports: string[] }) => {
+  const handleUpdateGroup = useCallback(async (groupData: { name: string; description: string; avatarUrl: string; sports: string[]; rule?: string }) => {
     if (!groupId) return;
 
     try {
@@ -283,6 +283,24 @@ export default function GroupProfileScreen() {
             >
               {group.description}
             </Text>
+          )}
+          {group.rule && (
+            <View style={[styles.ruleContainer, { backgroundColor: colors.card + "50", borderColor: colors.tint + "30" }]}>
+              <View style={styles.ruleHeader}>
+                <Ionicons name="library-outline" size={16} color={colors.tint} />
+                <Text style={[styles.ruleTitle, { color: colors.tint }]}>
+                  {t('groupProfile.rule')}
+                </Text>
+              </View>
+              <Text
+                style={[
+                  styles.ruleText,
+                  { color: colors.text },
+                ]}
+              >
+                {group.rule}
+              </Text>
+            </View>
           )}
           <Text style={[styles.memberCount, { color: colors.tabIconDefault }]}>
             {t('groupProfile.memberCount', { count: members.length })}
@@ -554,15 +572,17 @@ export default function GroupProfileScreen() {
 
       {/* Edit Group Modal */}
       {isCurrentUserAdmin && (
-        <EditGroupModal
+        <GroupModal
+          mode="edit"
           visible={showEditModal}
           onClose={() => setShowEditModal(false)}
-          onUpdateGroup={handleUpdateGroup}
+          onSubmit={handleUpdateGroup}
           initialData={{
             name: group.name || '',
             description: group.description || '',
             avatarUrl: group.avatarUrl || '',
             sports: group.sports || [],
+            rule: group.rule || '',
           }}
         />
       )}
@@ -651,6 +671,28 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 12,
     lineHeight: 22,
+  },
+  ruleContainer: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  ruleHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  ruleTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 6,
+    textTransform: "uppercase",
+  },
+  ruleText: {
+    fontSize: 14,
+    lineHeight: 20,
   },
   memberCount: {
     fontSize: 14,

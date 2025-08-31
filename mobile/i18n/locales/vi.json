@@ -66,6 +66,8 @@
     "errorName": "Vui lòng nhập tên câu lạc bộ",
     "errorDescription": "Vui lòng nhập mô tả câu lạc bộ",
     "errorImage": "Vui lòng chọn hình ảnh nhóm",
+    "rule": "Quy tắc (Tùy chọn)",
+    "rulePlaceholder": "Nhập quy tắc nhóm...",
     "permissionRequired": "Cần quyền truy cập",
     "permissionMessage": "Xin lỗi, chúng tôi cần quyền truy cập thư viện ảnh để tải lên hình ảnh nhóm.",
     "failedUpload": "Không thể tải lên hình ảnh nhóm. Vui lòng thử lại."
@@ -294,7 +296,8 @@
     "leave": "Rời",
     "failedToLeaveGroup": "Không thể rời nhóm",
     "cannotShareBotGroup": "Không thể chia sẻ nhóm bot",
-    "cannotLeaveBotGroup": "Không thể rời khỏi trợ lý bot cá nhân của bạn"
+    "cannotLeaveBotGroup": "Không thể rời khỏi trợ lý bot cá nhân của bạn",
+    "rule": "Quy tắc"
   },
   "hooks": {
     "shareGroup": {

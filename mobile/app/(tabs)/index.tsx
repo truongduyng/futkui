@@ -1,4 +1,4 @@
-import { CreateGroupModal } from '@/components/chat/CreateGroupModal';
+import { GroupModal } from '@/components/chat/GroupModal';
 import { GroupList } from '@/components/chat/GroupList';
 import { Colors } from '@/constants/Colors';
 import { GroupRefreshProvider } from '@/contexts/GroupRefreshContext';
@@ -143,7 +143,7 @@ export default function ChatScreen() {
     });
   };
 
-  const handleCreateGroup = async (groupData: { name: string; description: string; avatarUrl: string; sports: string[] }) => {
+  const handleCreateGroup = async (groupData: { name: string; description: string; avatarUrl: string; sports: string[]; rule?: string }) => {
     if (!currentProfile) {
       showError(t('common.error'), t('groups.waitProfileLoad'));
       return;
@@ -280,10 +280,11 @@ export default function ChatScreen() {
           />
         )}
 
-        <CreateGroupModal
+        <GroupModal
+          mode="create"
           visible={showCreateModal}
           onClose={() => setShowCreateModal(false)}
-          onCreateGroup={handleCreateGroup}
+          onSubmit={handleCreateGroup}
         />
 
       </SafeAreaView>

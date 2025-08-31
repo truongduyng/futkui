@@ -66,6 +66,8 @@
     "errorName": "Please enter a club name",
     "errorDescription": "Please enter a club description",
     "errorImage": "Please select a group image",
+    "rule": "Rule (Optional)",
+    "rulePlaceholder": "Enter group rule...",
     "permissionRequired": "Permission required",
     "permissionMessage": "Sorry, we need camera roll permissions to upload group images.",
     "failedUpload": "Failed to upload group image. Please try again."
@@ -295,7 +297,8 @@
     "leave": "Leave",
     "failedToLeaveGroup": "Failed to leave group",
     "cannotShareBotGroup": "Cannot share bot groups",
-    "cannotLeaveBotGroup": "Cannot leave your personal bot assistant"
+    "cannotLeaveBotGroup": "Cannot leave your personal bot assistant",
+    "rule": "Rule"
   },
   "hooks": {
     "shareGroup": {

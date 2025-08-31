@@ -17,16 +17,20 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-interface EditGroupModalProps {
+interface GroupData {
+  name: string;
+  description: string;
+  avatarUrl: string;
+  sports: string[];
+  rule?: string;
+}
+
+interface GroupModalProps {
+  mode: 'create' | 'edit';
   visible: boolean;
   onClose: () => void;
-  onUpdateGroup: (groupData: { name: string; description: string; avatarUrl: string; sports: string[] }) => void;
-  initialData: {
-    name: string;
-    description: string;
-    avatarUrl: string;
-    sports?: string[];
-  };
+  onSubmit: (groupData: GroupData) => void;
+  initialData?: Partial<GroupData>;
 }
 
 const SPORTS_OPTIONS = [
@@ -35,25 +39,38 @@ const SPORTS_OPTIONS = [
   { emoji: '🏸', nameKey: 'sports.badminton' },
 ];
 
-export function EditGroupModal({ visible, onClose, onUpdateGroup, initialData }: EditGroupModalProps) {
+export function GroupModal({ mode, visible, onClose, onSubmit, initialData }: GroupModalProps) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [rule, setRule] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
-  // Initialize form with existing data
+  const isEditMode = mode === 'edit';
+
+  // Initialize form with existing data for edit mode
   useEffect(() => {
-    if (visible && initialData) {
-      setName(initialData.name || '');
-      setDescription(initialData.description || '');
-      setSelectedImage(initialData.avatarUrl || null);
-      setSelectedSports(initialData.sports || []);
+    if (visible) {
+      if (isEditMode && initialData) {
+        setName(initialData.name || '');
+        setDescription(initialData.description || '');
+        setRule(initialData.rule || '');
+        setSelectedImage(initialData.avatarUrl || null);
+        setSelectedSports(initialData.sports || []);
+      } else {
+        // Reset form for create mode
+        setName('');
+        setDescription('');
+        setRule('');
+        setSelectedImage(null);
+        setSelectedSports([]);
+      }
     }
-  }, [visible, initialData]);
+  }, [visible, isEditMode, initialData]);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -74,7 +91,7 @@ export function EditGroupModal({ visible, onClose, onUpdateGroup, initialData }:
     }
   };
 
-  const handleUpdate = async () => {
+  const handleSubmit = async () => {
     if (!name.trim()) {
       Alert.alert(t('common.error'), t('createGroup.errorName'));
       return;
@@ -100,22 +117,34 @@ export function EditGroupModal({ visible, onClose, onUpdateGroup, initialData }:
     try {
       let avatarUrl = selectedImage;
 
-      // Only upload if it's a new local image (starts with file://)
-      if (selectedImage.startsWith('file://')) {
+      // For create mode, always upload. For edit mode, only upload if it's a new local image
+      const shouldUpload = !isEditMode || selectedImage.startsWith('file://');
+      
+      if (shouldUpload) {
         const fileName = `group-avatar-${id()}-${Date.now()}.jpg`;
         avatarUrl = await uploadToR2(selectedImage, fileName);
       }
 
-      onUpdateGroup({
+      onSubmit({
         name: name.trim(),
         description: description.trim(),
         avatarUrl,
         sports: selectedSports,
+        rule: rule.trim() || undefined,
       });
 
+      // Reset form after successful create
+      if (!isEditMode) {
+        setName('');
+        setDescription('');
+        setRule('');
+        setSelectedImage(null);
+        setSelectedSports([]);
+      }
+      
       onClose();
     } catch (error) {
-      console.error('Error updating group:', error);
+      console.error(`Error ${isEditMode ? 'updating' : 'creating'} group:`, error);
       Alert.alert(t('common.error'), t('createGroup.failedUpload'));
     } finally {
       setIsSubmitting(false);
@@ -123,11 +152,21 @@ export function EditGroupModal({ visible, onClose, onUpdateGroup, initialData }:
   };
 
   const handleCancel = () => {
-    // Reset to initial values
-    setName(initialData.name || '');
-    setDescription(initialData.description || '');
-    setSelectedImage(initialData.avatarUrl || null);
-    setSelectedSports(initialData.sports || []);
+    if (isEditMode && initialData) {
+      // Reset to initial values for edit mode
+      setName(initialData.name || '');
+      setDescription(initialData.description || '');
+      setRule(initialData.rule || '');
+      setSelectedImage(initialData.avatarUrl || null);
+      setSelectedSports(initialData.sports || []);
+    } else {
+      // Reset form for create mode
+      setName('');
+      setDescription('');
+      setRule('');
+      setSelectedImage(null);
+      setSelectedSports([]);
+    }
     onClose();
   };
 
@@ -138,6 +177,11 @@ export function EditGroupModal({ visible, onClose, onUpdateGroup, initialData }:
         : [...prev, sportName]
     );
   };
+
+  const title = isEditMode ? t('groupProfile.editGroup') : t('createGroup.title');
+  const submitButtonText = isSubmitting 
+    ? (isEditMode ? t('common.saving') : t('common.creating'))
+    : (isEditMode ? t('common.save') : t('common.create'));
 
   return (
     <Modal
@@ -150,10 +194,10 @@ export function EditGroupModal({ visible, onClose, onUpdateGroup, initialData }:
           <TouchableOpacity onPress={handleCancel}>
             <Text style={[styles.cancelButton, { color: colors.tint }]}>{t('common.cancel')}</Text>
           </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.text }]}>{t('groupProfile.editGroup')}</Text>
-          <TouchableOpacity onPress={handleUpdate} disabled={isSubmitting}>
+          <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+          <TouchableOpacity onPress={handleSubmit} disabled={isSubmitting}>
             <Text style={[styles.createButton, { color: colors.tint }]}>
-              {isSubmitting ? t('common.saving') : t('common.save')}
+              {submitButtonText}
             </Text>
           </TouchableOpacity>
         </View>
@@ -240,6 +284,24 @@ export function EditGroupModal({ visible, onClose, onUpdateGroup, initialData }:
               multiline
               numberOfLines={4}
               maxLength={200}
+            />
+          </View>
+
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('createGroup.rule')}</Text>
+            <TextInput
+              style={[styles.textArea, {
+                color: colors.text,
+                backgroundColor: colors.background,
+                borderColor: colors.tabIconDefault
+              }]}
+              value={rule}
+              onChangeText={setRule}
+              placeholder={t('createGroup.rulePlaceholder')}
+              placeholderTextColor={colors.tabIconDefault}
+              multiline
+              numberOfLines={3}
+              maxLength={300}
             />
           </View>
         </ScrollView>

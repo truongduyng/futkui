@@ -24,6 +24,7 @@ const _schema = i.schema({
       creatorId: i.string(),
       description: i.string(),
       name: i.string(),
+      rule: i.string().optional(),
       shareLink: i.string().unique(),
       sports: i.json().optional(),
     }),

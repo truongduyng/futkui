@@ -406,6 +406,7 @@ export function useInstantDB() {
       avatarUrl: string;
       sports: string[];
       creatorId: string;
+      rule?: string;
     }) => {
       const shareLink = `futkui-chat://group/${Math.random().toString(36).substring(2, 15)}`;
       const groupId = id();
@@ -424,6 +425,7 @@ export function useInstantDB() {
           shareLink,
           avatarUrl: groupData.avatarUrl,
           sports: groupData.sports,
+          rule: groupData.rule,
         }).link({
           creator: groupData.creatorId
         }),
@@ -935,6 +937,7 @@ export function useInstantDB() {
       description: string;
       avatarUrl: string;
       sports: string[];
+      rule?: string;
     }) => {
       const result = await db.transact([
         db.tx.groups[groupId].update({
@@ -942,6 +945,7 @@ export function useInstantDB() {
           description: groupData.description,
           avatarUrl: groupData.avatarUrl,
           sports: groupData.sports,
+          rule: groupData.rule,
         }),
       ]);
       return result;
