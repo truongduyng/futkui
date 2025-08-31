@@ -141,6 +141,8 @@
     "accountDeleted": "Tài khoản của bạn đã được xóa thành công.",
     "deletionFailed": "Không thể xóa tài khoản. Vui lòng thử lại.",
     "noCommunitiesYet": "Chưa có cộng đồng nào để giới thiệu.",
+    "joinByLinkOnly": "Chỉ tham gia bằng link",
+    "joinByLinkOnlyMessage": "Bạn chỉ có thể tham gia câu lạc bộ này bằng cách sử dụng link mời hoặc mã từ thành viên.",
     "authError": "Không thể xác thực. Vui lòng thử đăng nhập lại.",
     "deleteError": "Không thể xóa tài khoản. Vui lòng kiểm tra kết nối và thử lại.",
     "language": "Ngôn ngữ",

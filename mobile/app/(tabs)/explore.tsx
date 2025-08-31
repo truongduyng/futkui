@@ -127,6 +127,14 @@ export default function ExploreScreen() {
     );
   };
 
+  const handleGroupTap = (group: any) => {
+    Alert.alert(
+      t('explore.joinByLinkOnly'),
+      t('explore.joinByLinkOnlyMessage'),
+      [{ text: t('common.cancel'), style: "cancel" }]
+    );
+  };
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background, paddingTop: Platform.OS === 'android' ? RNStatusBar.currentHeight : 0 }]}
@@ -398,12 +406,14 @@ export default function ExploreScreen() {
             ) : (
               showcaseGroups.map((group: any) => {
                 return (
-                  <View
+                  <TouchableOpacity
                     key={group.id}
                     style={[
                       styles.groupItem,
                       { backgroundColor: colors.background },
                     ]}
+                    onPress={() => handleGroupTap(group)}
+                    activeOpacity={0.8}
                   >
                     <View
                       style={[
@@ -457,7 +467,7 @@ export default function ExploreScreen() {
                         style={styles.memberIcon}
                       />
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 );
               })
             )}

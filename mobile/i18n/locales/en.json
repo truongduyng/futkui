@@ -141,6 +141,8 @@
     "accountDeleted": "Your account has been successfully deleted.",
     "deletionFailed": "Failed to delete account. Please try again.",
     "noCommunitiesYet": "No clubs to showcase at the moment.",
+    "joinByLinkOnly": "Join by Link Only",
+    "joinByLinkOnlyMessage": "You can only join this club by using an invite link or code from a member.",
     "authError": "Unable to authenticate. Please try logging in again.",
     "deleteError": "Unable to delete account. Please check your connection and try again.",
     "language": "Language",
