@@ -112,7 +112,9 @@
     "noGroupsYet": "Chưa có nhóm nào",
     "createOrJoin": "Tạo nhóm mới hoặc tham gia nhóm có sẵn để bắt đầu trò chuyện!",
     "createGroupButton": "Tạo nhóm",
-    "joinGroupButton": "Tham gia nhóm"
+    "joinGroupButton": "Tham gia nhóm",
+    "botOnlyTitle": "Sẵn sàng trò chuyện?",
+    "botOnlyMessage": "Bạn có thể trò chuyện với bot FutKui bên dưới, hoặc tạo nhóm đầu tiên để kết nối với những người khác!"
   },
   "input": {
     "enterClubLink": "Nhập link câu lạc bộ..."

@@ -112,7 +112,9 @@
     "noGroupsYet": "No Groups Yet",
     "createOrJoin": "Create a new group or join an existing one to start chatting!",
     "createGroupButton": "Create Group",
-    "joinGroupButton": "Join Group"
+    "joinGroupButton": "Join Group",
+    "botOnlyTitle": "Ready to Chat?",
+    "botOnlyMessage": "You can chat with FutKui bot below, or create your first group to start connecting with others!"
   },
   "input": {
     "enterClubLink": "Enter club link..."

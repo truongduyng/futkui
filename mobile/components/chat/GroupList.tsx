@@ -69,14 +69,22 @@ export function GroupList({
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
+
+  // Check if user only has bot groups
+  const nonBotGroups = React.useMemo(() =>
+    (groups || []).filter(group => group.creator?.handle !== 'fk'),
+    [groups]
+  );
+  const hasOnlyBotGroups = nonBotGroups.length === 0 && (groups || []).length > 0;
+
   // Helper function to get unread count for a group from the provided data
-  const getUnreadCount = React.useCallback((groupId: string, membership?: any) => {
+  const getUnreadCount = React.useCallback((groupId: string) => {
     if (!unreadData?.messages) return 0;
     return unreadData.messages.filter((msg: any) => msg.group?.id === groupId).length;
   }, [unreadData]);
 
   const renderEmptyState = () => (
-    <View style={styles.emptyStateContainer}>
+    <View style={hasOnlyBotGroups ? styles.botOnlyFooterContainer : styles.emptyStateContainer}>
       <Text style={[styles.emptyStateTitle, { color: colors.text }]}>{t('empty.noGroupsYet')}</Text>
       <Text style={[styles.emptyStateMessage, { color: colors.tabIconDefault }]}>
         {t('empty.createOrJoin')}
@@ -140,10 +148,10 @@ export function GroupList({
     }
   }, []);
 
-  const GroupItem = React.useCallback(function GroupItem({ group, membership, onPress }: { group: Group; membership?: any; onPress: (group: Group) => void }) {
+  const GroupItem = React.useCallback(function GroupItem({ group, onPress }: { group: Group; onPress: (group: Group) => void }) {
     const lastMessage = getLastMessage(group);
     const isBotGroup = group.creator?.handle === 'fk';
-    const unreadCount = getUnreadCount(group.id, membership);
+    const unreadCount = getUnreadCount(group.id);
 
     // Configuration object to reduce if/else statements
     const groupConfig = React.useMemo(() => {
@@ -231,9 +239,8 @@ export function GroupList({
   }, [getLastMessage, getUnreadCount, colors.tabIconDefault, formatTime, getMessagePreview, isDark]);
 
   const renderGroup = React.useCallback(({ item: group }: { item: Group }) => {
-    const membership = memberships?.find(m => m.group?.id === group.id);
-    return <GroupItem group={group} membership={membership} onPress={onGroupPress} />;
-  }, [memberships, onGroupPress, GroupItem]);
+    return <GroupItem group={group} onPress={onGroupPress} />;
+  }, [onGroupPress, GroupItem]);
 
   return (
     <View style={styles.container}>
@@ -323,6 +330,7 @@ export function GroupList({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={safeGroups.length === 0 ? styles.emptyListContainer : styles.listContainer}
         ListEmptyComponent={renderEmptyState}
+        ListFooterComponent={hasOnlyBotGroups ? renderEmptyState : undefined}
         refreshControl={
           onRefresh ? (
             <RefreshControl
@@ -587,5 +595,13 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: '600',
+  },
+  // Bot-only footer styles
+  botOnlyFooterContainer: {
+    paddingHorizontal: 32,
+    paddingTop: 32,
+    paddingBottom: 100, // Extra bottom padding to prevent tab bar overlap
+    alignItems: 'center',
+    marginTop: 28,
   },
 });
