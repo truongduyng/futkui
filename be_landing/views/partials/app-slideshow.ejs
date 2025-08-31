@@ -1,0 +1,99 @@
+<!-- App Screenshots Slideshow -->
+<div class="relative w-full max-w-sm sm:max-w-md mx-auto">
+  <!-- Slides -->
+  <div class="relative w-auto h-[400px] sm:h-[550px] overflow-hidden rounded-2xl">
+    <div class="slide absolute inset-0 opacity-100 transition-opacity duration-500 ease-in-out">
+      <img src="https://futkui.yikudo.xyz/app_futkui1.png" alt="FutKui Screenshot 1" class="w-full h-full object-contain rounded-2xl shadow-2xl">
+    </div>
+    <div class="slide absolute inset-0 opacity-0 transition-opacity duration-500 ease-in-out">
+      <img src="https://futkui.yikudo.xyz/app_futkui2.png" alt="FutKui Screenshot 2" class="w-full h-full object-contain rounded-2xl shadow-2xl">
+    </div>
+    <div class="slide absolute inset-0 opacity-0 transition-opacity duration-500 ease-in-out">
+      <img src="https://futkui.yikudo.xyz/app_futkui3.png" alt="FutKui Screenshot 3" class="w-full h-full object-contain rounded-2xl shadow-2xl">
+    </div>
+    <div class="slide absolute inset-0 opacity-0 transition-opacity duration-500 ease-in-out">
+      <img src="https://futkui.yikudo.xyz/app_futkui4.png" alt="FutKui Screenshot 4" class="w-full h-full object-contain rounded-2xl shadow-2xl">
+    </div>
+    <div class="slide absolute inset-0 opacity-0 transition-opacity duration-500 ease-in-out">
+      <img src="https://futkui.yikudo.xyz/app_futkui5.png" alt="FutKui Screenshot 5" class="w-full h-full object-contain rounded-2xl shadow-2xl">
+    </div>
+    <div class="slide absolute inset-0 opacity-0 transition-opacity duration-500 ease-in-out">
+      <img src="https://futkui.yikudo.xyz/app_futkui6.png" alt="FutKui Screenshot 6" class="w-full h-full object-contain rounded-2xl shadow-2xl">
+    </div>
+
+    <!-- Navigation Arrows -->
+    <button class="prev-btn absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/75 transition-all z-10" aria-label="Previous slide">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
+    </button>
+    <button class="next-btn absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/75 transition-all z-10" aria-label="Next slide">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Dots Indicator -->
+  <div class="flex justify-center mt-4 space-x-2">
+    <button class="dot w-3 h-3 rounded-full bg-cyan-500 cursor-pointer transition-all duration-300" data-slide="0"></button>
+    <button class="dot w-3 h-3 rounded-full bg-gray-400 cursor-pointer transition-all duration-300 hover:bg-cyan-400" data-slide="1"></button>
+    <button class="dot w-3 h-3 rounded-full bg-gray-400 cursor-pointer transition-all duration-300 hover:bg-cyan-400" data-slide="2"></button>
+    <button class="dot w-3 h-3 rounded-full bg-gray-400 cursor-pointer transition-all duration-300 hover:bg-cyan-400" data-slide="3"></button>
+    <button class="dot w-3 h-3 rounded-full bg-gray-400 cursor-pointer transition-all duration-300 hover:bg-cyan-400" data-slide="4"></button>
+    <button class="dot w-3 h-3 rounded-full bg-gray-400 cursor-pointer transition-all duration-300 hover:bg-cyan-400" data-slide="5"></button>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.dot');
+  const prevBtn = document.querySelector('.prev-btn');
+  const nextBtn = document.querySelector('.next-btn');
+  let currentSlide = 0;
+
+  function showSlide(index) {
+    // Hide all slides
+    slides.forEach(slide => {
+      slide.classList.remove('opacity-100');
+      slide.classList.add('opacity-0');
+    });
+    dots.forEach(dot => {
+      dot.classList.remove('bg-cyan-500');
+      dot.classList.add('bg-gray-400');
+    });
+
+    // Show current slide
+    slides[index].classList.remove('opacity-0');
+    slides[index].classList.add('opacity-100');
+    dots[index].classList.remove('bg-gray-400');
+    dots[index].classList.add('bg-cyan-500');
+  }
+
+  function nextSlide() {
+    currentSlide = (currentSlide + 1) % slides.length;
+    showSlide(currentSlide);
+  }
+
+  function prevSlide() {
+    currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+    showSlide(currentSlide);
+  }
+
+  // Event listeners
+  nextBtn.addEventListener('click', nextSlide);
+  prevBtn.addEventListener('click', prevSlide);
+
+  // Dot navigation
+  dots.forEach((dot, index) => {
+    dot.addEventListener('click', () => {
+      currentSlide = index;
+      showSlide(currentSlide);
+    });
+  });
+
+  // Auto-play slideshow
+  setInterval(nextSlide, 10000);
+});
+</script>

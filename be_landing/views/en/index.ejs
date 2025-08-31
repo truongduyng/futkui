@@ -8,28 +8,36 @@
 
     <!-- Hero Section -->
     <section class="gradient-bg text-white relative">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 min-h-[80vh] flex items-center">
-        <div class="text-center w-full">
-          <h1 class="text-5xl md:text-7xl font-bold mb-4 tracking-tight">
-            Connect Your Sports Team with
-            <br>
-            <span class="bg-gradient-to-r from-cyan-400 to-cyan-600 bg-clip-text text-transparent">FutKui</span>
-          </h1>
-          <p class="text-xl md:text-2xl mb-12 text-gray-300 max-w-4xl mx-auto leading-relaxed">
-            The ultimate chat app for sports teams and clubs. Create matches, organize polls, check-in and keep everyone connected with real-time messaging.
-          </p>
-          <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <a
-              href="#download"
-              class="modern-btn-primary group flex items-center space-x-3"
-            >
-              <span>DOWNLOAD NOW</span>
-              <div class="w-6 h-6 bg-gray-900 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </div>
-            </a>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 min-h-[80vh]">
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+          <!-- Hero Text -->
+          <div class="text-center lg:text-left">
+            <h1 class="text-5xl md:text-7xl font-bold mb-4 tracking-tight">
+              Connect Your Sports Team with
+              <br>
+              <span class="bg-gradient-to-r from-cyan-400 to-cyan-600 bg-clip-text text-transparent">FutKui</span>
+            </h1>
+            <p class="text-xl md:text-2xl mb-12 text-gray-300 max-w-4xl lg:max-w-none leading-relaxed">
+              The ultimate chat app for sports teams and clubs. Create matches, organize polls, check-in and keep everyone connected with real-time messaging.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start items-center">
+              <a
+                href="#download"
+                class="modern-btn-primary group flex items-center space-x-3"
+              >
+                <span>DOWNLOAD NOW</span>
+                <div class="w-6 h-6 bg-gray-900 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- App Slideshow -->
+          <div class="flex justify-center lg:justify-end">
+            <%- include('../partials/app-slideshow') %>
           </div>
         </div>
       </div>
