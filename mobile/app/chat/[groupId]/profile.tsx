@@ -80,7 +80,8 @@ export default function GroupProfileScreen() {
     }
     if (group?.shareLink) {
       try {
-        await Clipboard.setStringAsync(group.shareLink);
+        const shareMessage = `${t('groupProfile.joinGroupMessage', { groupName: group.name })}\n\n${group.shareLink}\n\n${t('groupProfile.downloadAppMessage')}\nhttps://futkui.com/download`;
+        await Clipboard.setStringAsync(shareMessage);;
         showSuccess(
           t('groupProfile.shareLinkCopied'),
           t('groupProfile.shareLinkCopiedMessage')
@@ -90,7 +91,7 @@ export default function GroupProfileScreen() {
         showError(t('common.error'), t('groupProfile.failedToCopyLink'));
       }
     }
-  }, [group?.shareLink, isBotGroup, t, showSuccess, showError]);
+  }, [group?.shareLink, group?.name, isBotGroup, t, showSuccess, showError]);
 
   // Get recent activities (polls, matches, messages)
   const recentActivities =
@@ -385,7 +386,7 @@ export default function GroupProfileScreen() {
               const isBotUser = member.handle === 'fk';
               const isBlocked = (blockedData?.blocks?.map((block: any) => block.blocked?.id).filter(Boolean) || []).includes(member.id);
               const isTouchable = !isCurrentUser && !isBotUser;
-              
+
               return (
                 <TouchableOpacity
                   key={member.id}
@@ -442,7 +443,7 @@ export default function GroupProfileScreen() {
                     <View style={styles.memberDetails}>
                       <View style={styles.memberNameRow}>
                         <Text style={[
-                          styles.memberName, 
+                          styles.memberName,
                           { color: colors.text },
                           isBlocked && styles.blockedMemberName,
                         ]}>

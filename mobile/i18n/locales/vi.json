@@ -263,6 +263,8 @@
     "groupNotFound": "Không tìm thấy nhóm",
     "shareLinkCopied": "Đã sao chép liên kết chia sẻ",
     "shareLinkCopiedMessage": "Liên kết mời nhóm đã được sao chép vào clipboard!",
+    "joinGroupMessage": "Tham gia nhóm {{groupName}} trên FutKui bằng cách sử dụng link câu lạc bộ:",
+    "downloadAppMessage": "Tải ứng dụng:",
     "failedToCopyLink": "Không thể sao chép liên kết chia sẻ",
     "memberCount": "{{count}} thành viên",
     "recentActivities": "Hoạt động gần đây",

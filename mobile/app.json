@@ -18,7 +18,8 @@
         "tinted": "./assets/images/ios-tinted.png"
       },
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "LSApplicationQueriesSchemes": ["itms-appss"]
       }
     },
     "android": {

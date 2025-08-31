@@ -88,7 +88,8 @@ export default function ChatScreen() {
 
     if (group?.shareLink) {
       try {
-        await Clipboard.setStringAsync(group.shareLink);
+        const shareMessage = `${t('groupProfile.joinGroupMessage', { groupName: group.name })}\n\n${group.shareLink}\n\n${t('groupProfile.downloadAppMessage')}\nhttps://futkui.com/download`;
+        await Clipboard.setStringAsync(shareMessage);
         showSuccess(
           t('groupProfile.shareLinkCopied'),
           t('groupProfile.shareLinkCopiedMessage')
@@ -98,7 +99,7 @@ export default function ChatScreen() {
         showError(t('common.error'), t('groupProfile.shareError'));
       }
     }
-  }, [group?.shareLink, isBotGroup, t, showSuccess, showError]);
+  }, [group?.shareLink, group?.name, isBotGroup, t, showSuccess, showError]);
 
   // Process chat data
   const { messages: allMessages, polls, matches, hasMoreMessages } = useChatData({

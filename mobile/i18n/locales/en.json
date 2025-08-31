@@ -263,6 +263,8 @@
     "groupNotFound": "Group not found",
     "shareLinkCopied": "Share Link Copied",
     "shareLinkCopiedMessage": "The group invite link has been copied to your clipboard!",
+    "joinGroupMessage": "Join me in {{groupName}} on FutKui by using the link below:",
+    "downloadAppMessage": "Get the app:",
     "failedToCopyLink": "Failed to copy share link",
     "memberCount": "{{count}} member",
     "memberCount_other": "{{count}} members",
