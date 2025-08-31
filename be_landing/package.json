@@ -10,7 +10,7 @@
   "scripts": {
     "test": "node --test test/**/*.test.js",
     "start": "fastify start -l info app.js",
-    "dev": "fastify start -w -l info -P app.js",
+    "dev": "fastify start -w -l info -P app.js & npm run build-css",
     "build-css": "postcss ./public/styles.css -o ./public/dist/styles.css --watch",
     "build-css-prod": "postcss ./public/styles.css -o ./public/dist/styles.css"
   },
