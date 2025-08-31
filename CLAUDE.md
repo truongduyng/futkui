@@ -25,6 +25,16 @@ npm run build-css  # Build CSS with watch mode
 npm run build-css-prod  # Build CSS for production
 ```
 
+**Build Commands:**
+```bash
+# Mobile builds
+cd mobile
+npm run build-android  # Local Android build (requires EAS CLI)
+npm run build-ios      # Local iOS build (requires EAS CLI)
+
+# No specific build command for backend - uses npm start for production
+```
+
 ## Architecture Overview
 
 FutKui is a React Native group chat app built with Expo and InstantDB for real-time functionality, with a Fastify backend for the web landing page.
@@ -39,9 +49,10 @@ FutKui is a React Native group chat app built with Expo and InstantDB for real-t
 ### Key Architecture Components
 
 **InstantDB Schema & Setup:**
-- `instant.schema.ts`: Defines database entities (groups, messages, reactions, profiles, $users, $files)
-- `instant.perms.ts`: Permission rules for data access control
-- `hooks/useInstantDB.ts`: Central hub for database operations and custom hooks
+- `mobile/instant.schema.ts`: Defines database entities (groups, messages, reactions, profiles, $users, $files, checkIns, matches, polls, votes, reports, blocks, memberships)
+- `mobile/hooks/useInstantDB.ts`: Central hub for database operations and custom hooks
+- InstantDB app uses magic code authentication with random profile handles for anonymous-style usage
+- All entities use UUIDs generated via `id()` function from InstantDB
 
 **Mobile App Structure:**
 - `mobile/app/_layout.tsx`: Root layout with theme provider and authentication
@@ -102,19 +113,48 @@ The app uses magic code authentication but automatically creates random profile 
 
 ## Important Implementation Notes
 
+### Environment & Configuration
 - InstantDB app ID is configured via `EXPO_PUBLIC_INSTANT_APP_ID` environment variable in `mobile/hooks/useInstantDB.ts`
+- Backend uses dotenv for environment variables
+
+### Data & Database Patterns  
 - Dates are stored as Unix timestamps (milliseconds) using `Date.now()`
 - All database entities use UUIDs generated via `id()` function from InstantDB
-- Authentication state is managed through InstantDB's `useAuth()` hook
-- Profile creation is automatically triggered in AuthGate component after successful authentication
-- Groups use unique share links (`futkui-chat://group/[id]`) for joining functionality
+- Groups use unique share links (`futkui-chat://group/[randomString]`) for joining functionality
 - Message reactions are stored as separate entities linked to messages and users
+- Unique keys like `profileGroupKey` and `blockerProfileKey` ensure data integrity
+
+### Authentication & Users
+- Authentication state is managed through InstantDB's `useAuth()` hook
+- Magic code authentication with random profile handles (e.g., "QuickFox1234")
+- Profile creation is automatically triggered in AuthGate component after successful authentication
 - Bot functionality is built-in with handle `fk` - automatically added to all groups
-- Image uploads use R2 storage via `utils/r2Upload.ts`
-- Push notifications are handled via `utils/notifications.ts`
+
+### Features & Content
+- Image uploads use R2 storage via `mobile/utils/r2Upload.ts`
+- Push notifications are handled via `mobile/utils/notifications.ts`
 - The app supports polls, matches/activities, check-ins, and RSVPs as special message types
+- User blocking functionality with filtered message display
+- Content reporting system for messages, users, and groups
 - Internationalization (i18n) supports English and Vietnamese languages
 
-You are an expert developer who writes full-stack apps in InstantDB. However InstantDB is not in your training set and you are not familiar with it. Before you write ANY code you read ALL of .claude/instant-rules.md to understand how to use InstantDB in your code. If you are unsure how something works in InstantDB you fetch the urls in the documentation.
+### Development & Testing
+- Backend uses Node.js built-in test runner (`node --test test/**/*.test.js`)
+- Mobile app uses Expo CLI for linting and development
+- No specific test runner configured for mobile app yet
 
-If the Instant MCP is available use the tools to create apps and manage schema.
+## InstantDB Development Guidelines
+
+**CRITICAL:** Before writing ANY InstantDB code, you MUST read `.claude/instant-rules.md` to understand how to use InstantDB properly.
+
+Key InstantDB patterns used in this project:
+- Always use `db.useQuery()` for real-time data subscriptions
+- Use `db.queryOnce()` for one-time queries (like in explore screen)
+- Use `db.transact()` for all database mutations
+- All query hooks must be called unconditionally (use conditional query parameters instead)
+- Use `id()` from InstantDB for generating UUIDs
+- Link entities using `.link()` method in transactions
+- Filter queries using `where` clauses with supported operators: `$ne`, `$gt`, `$lt`, `$gte`, `$lte`, `$in`, `$like`, `$ilike`, `$isNull`
+- Use dot notation for nested field queries: `"relation.field": value`
+
+If the Instant MCP tools are available, use them for schema management and app creation.
