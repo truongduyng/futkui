@@ -612,6 +612,7 @@ export function useInstantDB() {
       authorId: string;
       authorName: string;
       allowMultiple: boolean;
+      allowMembersToAddOptions: boolean;
       expiresAt?: number;
     }) => {
       const messageId = id();
@@ -633,6 +634,7 @@ export function useInstantDB() {
           options: pollData.options,
           createdAt: Date.now(),
           allowMultiple: pollData.allowMultiple,
+          allowMembersToAddOptions: pollData.allowMembersToAddOptions,
           expiresAt: pollData.expiresAt,
         }).link({
           message: messageId,
@@ -720,6 +722,46 @@ export function useInstantDB() {
       const result = await db.transact([
         db.tx.polls[pollId].update({
           closedAt: Date.now(),
+        }),
+      ]);
+      return result;
+    },
+    [db]
+  );
+
+  const addOptionToPoll = useCallback(
+    async (pollId: string, optionText: string) => {
+      // First, get the current poll options
+      const pollData = await db.queryOnce({
+        polls: {
+          $: { where: { id: pollId } },
+        },
+      });
+
+      const poll = pollData.data.polls[0];
+      if (!poll || !poll.allowMembersToAddOptions) {
+        throw new Error('Cannot add option to this poll');
+      }
+
+      // Check if poll has expired or is closed
+      if (poll.closedAt || (poll.expiresAt && poll.expiresAt < Date.now())) {
+        throw new Error('Cannot add option to expired or closed poll');
+      }
+
+      // Check if we've reached the maximum options
+      const currentOptions = poll.options as { id: string; text: string }[];
+      if (currentOptions.length >= 6) {
+        throw new Error('Maximum number of options reached');
+      }
+
+      // Generate a new option ID
+      const newOptionId = id();
+      const newOption = { id: newOptionId, text: optionText };
+      const updatedOptions = [...currentOptions, newOption];
+
+      const result = await db.transact([
+        db.tx.polls[pollId].update({
+          options: updatedOptions,
         }),
       ]);
       return result;
@@ -1189,11 +1231,11 @@ export function useInstantDB() {
 
     return db.useQuery({
       blocks: {
-        $: { 
-          where: { 
+        $: {
+          where: {
             "blocker.user.id": user.id,
             "blocked.user.id": targetUserId
-          } 
+          }
         },
       },
     });
@@ -1253,8 +1295,8 @@ export function useInstantDB() {
       // Find the block relationship using the unique blockerProfileKey
       const blockQuery = await db.queryOnce({
         blocks: {
-          $: { 
-            where: { 
+          $: {
+            where: {
               blockerProfileKey: blockerProfileKey
             }
           }
@@ -1279,7 +1321,7 @@ export function useInstantDB() {
   // Helper function to filter messages from blocked users
   const filterBlockedMessages = useCallback((messages: any[], blockedUserIds: string[]) => {
     if (!blockedUserIds.length) return messages;
-    
+
     return messages.filter((message: any) => {
       const authorUserId = message.author?.user?.id;
       return !blockedUserIds.includes(authorUserId);
@@ -1326,6 +1368,7 @@ export function useInstantDB() {
     sendPoll,
     vote,
     closePoll,
+    addOptionToPoll,
     createMatch,
     rsvpToMatch,
     checkInToMatch,

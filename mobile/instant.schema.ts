@@ -54,6 +54,7 @@ const _schema = i.schema({
     }),
     polls: i.entity({
       allowMultiple: i.boolean().optional(),
+      allowMembersToAddOptions: i.boolean().optional(),
       closedAt: i.number().optional(),
       createdAt: i.number(),
       expiresAt: i.number().optional(),

@@ -13,7 +13,7 @@ interface PollOption {
 interface CreatePollModalProps {
   visible: boolean;
   onClose: () => void;
-  onCreatePoll: (question: string, options: PollOption[], allowMultiple: boolean, expiresAt?: number) => void;
+  onCreatePoll: (question: string, options: PollOption[], allowMultiple: boolean, allowMembersToAddOptions: boolean, expiresAt?: number) => void;
 }
 
 export function CreatePollModal({ visible, onClose, onCreatePoll }: CreatePollModalProps) {
@@ -24,6 +24,7 @@ export function CreatePollModal({ visible, onClose, onCreatePoll }: CreatePollMo
     { id: '2', text: '' }
   ]);
   const [allowMultiple, setAllowMultiple] = useState(false);
+  const [allowMembersToAddOptions, setAllowMembersToAddOptions] = useState(false);
   const { isDark } = useTheme();
 const colors = isDark ? Colors.dark : Colors.light;
 
@@ -65,7 +66,7 @@ const colors = isDark ? Colors.dark : Colors.light;
     const threeDaysInMs = 3 * 24 * 60 * 60 * 1000;
     const expiresAt = Date.now() + threeDaysInMs;
 
-    onCreatePoll(question.trim(), validOptions, allowMultiple, expiresAt);
+    onCreatePoll(question.trim(), validOptions, allowMultiple, allowMembersToAddOptions, expiresAt);
 
     // Reset form
     setQuestion('');
@@ -74,6 +75,7 @@ const colors = isDark ? Colors.dark : Colors.light;
       { id: '2', text: '' }
     ]);
     setAllowMultiple(false);
+    setAllowMembersToAddOptions(false);
     onClose();
   };
 
@@ -85,6 +87,7 @@ const colors = isDark ? Colors.dark : Colors.light;
       { id: '2', text: '' }
     ]);
     setAllowMultiple(false);
+    setAllowMembersToAddOptions(false);
     onClose();
   };
 
@@ -183,6 +186,29 @@ const colors = isDark ? Colors.dark : Colors.light;
                 <View style={[
                   styles.toggleThumb,
                   allowMultiple && styles.toggleThumbActive
+                ]} />
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.settingItem}
+              onPress={() => setAllowMembersToAddOptions(!allowMembersToAddOptions)}
+            >
+              <View style={styles.settingLeft}>
+                <Text style={[styles.settingText, { color: colors.text }]}>
+                  {t('chat.allowMembersToAddOptions')}
+                </Text>
+                <Text style={[styles.settingDescription, { color: colors.tabIconDefault }]}>
+                  Let members add new options after creation
+                </Text>
+              </View>
+              <View style={[
+                styles.toggle,
+                { backgroundColor: allowMembersToAddOptions ? colors.tint : colors.tabIconDefault }
+              ]}>
+                <View style={[
+                  styles.toggleThumb,
+                  allowMembersToAddOptions && styles.toggleThumbActive
                 ]} />
               </View>
             </TouchableOpacity>

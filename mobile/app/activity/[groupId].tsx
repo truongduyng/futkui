@@ -31,6 +31,7 @@ const colors = isDark ? Colors.dark : Colors.light;
     useUserMembership,
     vote,
     closePoll,
+    addOptionToPoll,
     rsvpToMatch,
     checkInToMatch,
     closeMatch,
@@ -206,12 +207,14 @@ const colors = isDark ? Colors.dark : Colors.light;
                 question: poll.question || '',
                 options: poll.options || [],
                 allowMultiple: poll.allowMultiple || false,
+                allowMembersToAddOptions: poll.allowMembersToAddOptions || false,
                 expiresAt: poll.expiresAt,
                 closedAt: poll.closedAt,
                 votes: (poll.votes || []).filter((vote: { user: null; }): vote is any => vote.user != null),
               }}
               currentUserId={currentProfile?.id || ''}
               onVote={(optionId) => handleVote(poll.id || '', optionId, poll.votes || [], poll.allowMultiple || false)}
+              onAddOption={(pollId, optionText) => handleAddOptionToPoll(pollId, optionText)}
               onClosePoll={handleClosePoll}
               isOwnMessage={isOwnPoll}
               author={poll.message?.author}
@@ -297,6 +300,16 @@ const colors = isDark ? Colors.dark : Colors.light;
       await closePoll(pollId);
     } catch (error) {
       console.error("Error closing poll:", error);
+    }
+  };
+
+  const handleAddOptionToPoll = async (pollId: string, optionText: string) => {
+    if (!currentProfile) return;
+
+    try {
+      await addOptionToPoll(pollId, optionText);
+    } catch (error) {
+      console.error("Error adding option to poll:", error);
     }
   };
 

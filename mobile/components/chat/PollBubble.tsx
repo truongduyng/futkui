@@ -1,7 +1,7 @@
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/contexts/ThemeContext';
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AvatarStack } from './AvatarStack';
 
@@ -26,6 +26,7 @@ interface PollData {
   question: string;
   options: PollOption[];
   allowMultiple: boolean;
+  allowMembersToAddOptions?: boolean;
   expiresAt?: number;
   closedAt?: number;
   votes: Vote[];
@@ -35,6 +36,7 @@ interface PollBubbleProps {
   poll: PollData;
   currentUserId: string;
   onVote: (optionId: string) => void;
+  onAddOption?: (pollId: string, optionText: string) => void;
   onClosePoll?: (pollId: string) => void;
   isOwnMessage: boolean;
   author?: {
@@ -51,6 +53,7 @@ export const PollBubble = React.memo(function PollBubble({
   poll,
   currentUserId,
   onVote,
+  onAddOption,
   onClosePoll,
   isOwnMessage,
   author,
@@ -62,13 +65,16 @@ export const PollBubble = React.memo(function PollBubble({
   const { isDark } = useTheme();
 const colors = isDark ? Colors.dark : Colors.light;
 
+  const [showAddOption, setShowAddOption] = useState(false);
+  const [newOptionText, setNewOptionText] = useState('');
+
   // Calculate vote counts and user votes
   const voteCounts = poll.options.reduce((acc, option) => {
     acc[option.id] = poll.votes.filter(vote => vote.optionId === option.id).length;
     return acc;
   }, {} as Record<string, number>);
 
-  const totalVotes = totalMembers;
+  const totalVotes = totalMembers - 1; // Exclude the bot member
   const userVotes = poll.votes.filter(vote => vote.user.id === currentUserId).map(vote => vote.optionId);
 
   const formatTime = (date: Date) => {
@@ -91,6 +97,19 @@ const colors = isDark ? Colors.dark : Colors.light;
     if (onClosePoll) {
       onClosePoll(poll.id);
     }
+  };
+
+  const handleAddOption = () => {
+    if (newOptionText.trim() && onAddOption) {
+      onAddOption(poll.id, newOptionText.trim());
+      setNewOptionText('');
+      setShowAddOption(false);
+    }
+  };
+
+  const handleCancelAddOption = () => {
+    setNewOptionText('');
+    setShowAddOption(false);
   };
 
   const isExpired = (poll.expiresAt && poll.expiresAt < Date.now()) || !!poll.closedAt;
@@ -283,17 +302,85 @@ const colors = isDark ? Colors.dark : Colors.light;
               </TouchableOpacity>
             );
           })}
+
+          {/* Add new option UI */}
+          {poll.allowMembersToAddOptions && !isExpired && poll.options.length < 6 && (
+            <View style={styles.addOptionContainer}>
+              {showAddOption ? (
+                <View style={[
+                  styles.addOptionInput,
+                  {
+                    backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                    borderColor: isOwnMessage ? 'rgba(255,255,255,0.3)' : colors.tabIconDefault,
+                  }
+                ]}>
+                  <TextInput
+                    style={[
+                      styles.newOptionTextInput,
+                      { color: isOwnMessage ? 'white' : colors.text }
+                    ]}
+                    value={newOptionText}
+                    onChangeText={setNewOptionText}
+                    placeholder={t('chat.newOptionPlaceholder')}
+                    placeholderTextColor={isOwnMessage ? 'rgba(255,255,255,0.6)' : colors.tabIconDefault}
+                    maxLength={100}
+                    autoFocus
+                  />
+                  <View style={styles.addOptionButtons}>
+                    <TouchableOpacity
+                      style={[
+                        styles.addOptionButton,
+                        styles.cancelButton,
+                        { backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }
+                      ]}
+                      onPress={handleCancelAddOption}
+                    >
+                      <Text style={[
+                        styles.addOptionButtonText,
+                        { color: isOwnMessage ? 'white' : colors.text }
+                      ]}>
+                        {t('chat.cancelAddOption')}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.addOptionButton,
+                        styles.confirmButton,
+                        { backgroundColor: colors.tint }
+                      ]}
+                      onPress={handleAddOption}
+                      disabled={!newOptionText.trim()}
+                    >
+                      <Text style={styles.confirmButtonText}>
+                        {t('chat.confirmAddOption')}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={[
+                    styles.addOptionTrigger,
+                    {
+                      backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                      borderColor: isOwnMessage ? 'rgba(255,255,255,0.3)' : colors.tabIconDefault,
+                    }
+                  ]}
+                  onPress={() => setShowAddOption(true)}
+                >
+                  <Text style={[
+                    styles.addOptionTriggerText,
+                    { color: isOwnMessage ? 'rgba(255,255,255,0.8)' : colors.tabIconDefault }
+                  ]}>
+                    + {t('chat.addNewOption')}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
         </View>
 
         <View style={styles.pollFooter}>
-          <Text
-            style={[
-              styles.totalVotes,
-              isOwnMessage ? styles.ownText : { color: colors.tabIconDefault },
-            ]}
-          >
-            {totalVotes} {totalVotes === 1 ? t('chat.vote') : t('chat.votes')} {t('chat.total')}
-          </Text>
           {isExpired && (
             <Text
               style={[
@@ -496,5 +583,52 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 10,
+  },
+  addOptionContainer: {
+    marginTop: 4,
+  },
+  addOptionTrigger: {
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addOptionTriggerText: {
+    fontSize: 14,
+    fontStyle: 'italic',
+  },
+  addOptionInput: {
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+  },
+  newOptionTextInput: {
+    fontSize: 14,
+    padding: 0,
+    marginBottom: 12,
+    minHeight: 20,
+  },
+  addOptionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  addOptionButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  cancelButton: {},
+  confirmButton: {},
+  addOptionButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  confirmButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'white',
   },
 });

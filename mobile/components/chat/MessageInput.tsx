@@ -41,6 +41,7 @@ interface MessageInputProps {
     question: string,
     options: PollOption[],
     allowMultiple: boolean,
+    allowMembersToAddOptions: boolean,
     expiresAt?: number,
   ) => Promise<void>;
   onCreateMatch?: (matchData: {
@@ -169,6 +170,7 @@ export function MessageInput({
     question: string,
     options: PollOption[],
     allowMultiple: boolean,
+    allowMembersToAddOptions: boolean,
     expiresAt?: number,
   ) => {
     if (onSendPoll && !isSending) {
@@ -206,7 +208,7 @@ export function MessageInput({
 
       setIsSending(true);
       try {
-        await onSendPoll(questionFilter.filteredContent, filteredOptions, allowMultiple, expiresAt);
+        await onSendPoll(questionFilter.filteredContent, filteredOptions, allowMultiple, allowMembersToAddOptions, expiresAt);
       } catch (error) {
         console.error("Failed to send poll:", error);
       } finally {

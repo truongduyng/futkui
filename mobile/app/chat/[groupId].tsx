@@ -52,6 +52,7 @@ export default function ChatScreen() {
     sendPoll,
     vote,
     closePoll,
+    addOptionToPoll,
     createMatch,
     rsvpToMatch,
     checkInToMatch,
@@ -76,7 +77,7 @@ export default function ChatScreen() {
   const isBotGroup = group?.creator?.handle === 'fk';
 
   // Get blocked profile IDs instead of user IDs
-  const blockedProfileIds = useMemo(() => 
+  const blockedProfileIds = useMemo(() =>
     blockedData?.blocks?.map((block: any) => block.blocked?.id).filter(Boolean) || [],
     [blockedData?.blocks]
   );
@@ -112,7 +113,7 @@ export default function ChatScreen() {
   });
 
   // Filter out reported messages and messages from blocked users
-  const messages = useMemo(() => 
+  const messages = useMemo(() =>
     allMessages
       .filter((message: any) => !reportedMessageIds.has(message.id))
       .filter((message: any) => !blockedProfileIds.includes(message.author?.id)),
@@ -121,7 +122,7 @@ export default function ChatScreen() {
 
 
   // Extract members for mentions
-  const members = useMemo(() => 
+  const members = useMemo(() =>
     group?.memberships
       ?.map((membership) => ({
         id: membership.profile?.id || "",
@@ -221,6 +222,7 @@ export default function ChatScreen() {
     handleRsvp,
     handleCheckIn,
     handleCloseMatch,
+    handleAddOptionToPoll,
   } = useChatHandlers({
     currentProfile,
     group,
@@ -232,6 +234,7 @@ export default function ChatScreen() {
     addReaction,
     vote,
     closePoll,
+    addOptionToPoll,
     rsvpToMatch,
     checkInToMatch,
     closeMatch,
@@ -306,6 +309,7 @@ export default function ChatScreen() {
     handleRsvp,
     handleCheckIn,
     handleCloseMatch,
+    handleAddOptionToPoll,
     handleReportMessage,
   });
 

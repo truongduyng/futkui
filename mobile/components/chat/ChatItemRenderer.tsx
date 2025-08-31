@@ -23,6 +23,7 @@ interface ChatItemRendererProps {
   totalMembers: number;
   stableHandleVote: (pollId: string, optionId: string, votes: any[], allowMultiple: boolean) => void;
   stableHandleClosePoll: (pollId: string) => void;
+  handleAddOptionToPoll: (pollId: string, optionText: string) => void;
   stableHandleReaction: (messageId: string, emoji: string, reactions: any[]) => void;
   stableHandleAddReaction: (messageId: string, emoji: string, reactions: any[]) => void;
   handleImagePress: (imageUrl: string) => void;
@@ -39,6 +40,7 @@ export function useChatItemRenderer({
   totalMembers,
   stableHandleVote,
   stableHandleClosePoll,
+  handleAddOptionToPoll,
   stableHandleReaction,
   stableHandleAddReaction,
   handleImagePress,
@@ -101,12 +103,14 @@ const colors = isDark ? Colors.dark : Colors.light;
               question: message.poll.question,
               options: message.poll.options,
               allowMultiple: message.poll.allowMultiple || false,
+              allowMembersToAddOptions: message.poll.allowMembersToAddOptions || false,
               expiresAt: message.poll.expiresAt,
               closedAt: message.poll.closedAt,
               votes: message.poll.votes || [],
             }}
             currentUserId={currentProfile?.id || ''}
             onVote={(optionId) => stableHandleVote(message.poll.id, optionId, message.poll.votes || [], message.poll.allowMultiple || false)}
+            onAddOption={(pollId, optionText) => handleAddOptionToPoll(pollId, optionText)}
             onClosePoll={(pollId) => stableHandleClosePoll(pollId)}
             isOwnMessage={isOwnMessage}
             author={message.author}

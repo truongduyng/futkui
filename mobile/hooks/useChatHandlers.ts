@@ -33,6 +33,7 @@ interface UseChatHandlersProps {
   addReaction: (params: any) => Promise<any>;
   vote: (params: any) => Promise<any>;
   closePoll: (pollId: string) => Promise<any>;
+  addOptionToPoll: (pollId: string, optionText: string) => Promise<any>;
   rsvpToMatch: (params: any) => Promise<any>;
   checkInToMatch: (params: any) => Promise<any>;
   closeMatch: (matchId: string) => Promise<any>;
@@ -54,6 +55,7 @@ export function useChatHandlers({
   addReaction,
   vote,
   closePoll,
+  addOptionToPoll,
   rsvpToMatch,
   checkInToMatch,
   closeMatch,
@@ -137,7 +139,7 @@ export function useChatHandlers({
     }
   };
 
-  const handleSendPoll = async (question: string, options: { id: string; text: string }[], allowMultiple: boolean, expiresAt?: number) => {
+  const handleSendPoll = async (question: string, options: { id: string; text: string }[], allowMultiple: boolean, allowMembersToAddOptions: boolean, expiresAt?: number) => {
     if (!currentProfile) {
       showError(t('hooks.sendPoll.errorTitle'), t('hooks.sendPoll.waitProfile'));
       return;
@@ -151,6 +153,7 @@ export function useChatHandlers({
         authorId: currentProfile.id,
         authorName: currentProfile.handle,
         allowMultiple,
+        allowMembersToAddOptions,
         expiresAt,
       });
 
@@ -344,6 +347,20 @@ export function useChatHandlers({
     );
   }, [currentProfile, closeMatch, showError, t]);
 
+  const handleAddOptionToPoll = useCallback(async (pollId: string, optionText: string) => {
+    if (!currentProfile) {
+      showError(t('common.error'), 'Please wait for your profile to load.');
+      return;
+    }
+
+    try {
+      await addOptionToPoll(pollId, optionText);
+    } catch (error) {
+      console.error("Error adding option to poll:", error);
+      showError(t('common.error'), 'Failed to add option to poll. Please try again.');
+    }
+  }, [currentProfile, addOptionToPoll, showError, t]);
+
   return {
     handleShareGroup,
     handleLeaveGroup,
@@ -358,6 +375,7 @@ export function useChatHandlers({
     handleRsvp,
     handleCheckIn,
     handleCloseMatch,
+    handleAddOptionToPoll,
     handleReportMessage,
   };
 }
