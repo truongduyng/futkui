@@ -297,7 +297,8 @@
     "failedToLeaveGroup": "Không thể rời nhóm",
     "cannotShareBotGroup": "Không thể chia sẻ nhóm bot",
     "cannotLeaveBotGroup": "Không thể rời khỏi trợ lý bot cá nhân của bạn",
-    "rule": "Quy tắc"
+    "rule": "Quy tắc",
+    "noRules": "Chưa có quy tắc nào cho nhóm này"
   },
   "hooks": {
     "shareGroup": {

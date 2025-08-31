@@ -284,24 +284,6 @@ export default function GroupProfileScreen() {
               {group.description}
             </Text>
           )}
-          {group.rule && (
-            <View style={[styles.ruleContainer, { backgroundColor: colors.card + "50", borderColor: colors.tint + "30" }]}>
-              <View style={styles.ruleHeader}>
-                <Ionicons name="library-outline" size={16} color={colors.tint} />
-                <Text style={[styles.ruleTitle, { color: colors.tint }]}>
-                  {t('groupProfile.rule')}
-                </Text>
-              </View>
-              <Text
-                style={[
-                  styles.ruleText,
-                  { color: colors.text },
-                ]}
-              >
-                {group.rule}
-              </Text>
-            </View>
-          )}
           <Text style={[styles.memberCount, { color: colors.tabIconDefault }]}>
             {t('groupProfile.memberCount', { count: members.length })}
           </Text>
@@ -392,6 +374,21 @@ export default function GroupProfileScreen() {
             </View>
           </View>
         )}
+
+        {/* Group Rule Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            {t('groupProfile.rule')}
+          </Text>
+          <View style={[styles.ruleCard, { backgroundColor: colors.card }]}>
+            <View style={[styles.ruleIconContainer, { backgroundColor: colors.tint + '15' }]}>
+              <Ionicons name="library-outline" size={20} color={colors.tint} />
+            </View>
+            <Text style={[styles.ruleContent, { color: group.rule ? colors.text : colors.tabIconDefault }]}>
+              {group.rule || t('groupProfile.noRules')}
+            </Text>
+          </View>
+        </View>
 
         {/* Members Section */}
         <View style={styles.section}>
@@ -672,27 +669,26 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     lineHeight: 22,
   },
-  ruleContainer: {
+  ruleCard: {
     marginHorizontal: 20,
-    marginBottom: 16,
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  ruleHeader: {
+    borderRadius: 12,
+    padding: 16,
     flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  ruleIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 8,
+    marginRight: 12,
+    marginTop: 2,
   },
-  ruleTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginLeft: 6,
-    textTransform: "uppercase",
-  },
-  ruleText: {
-    fontSize: 14,
-    lineHeight: 20,
+  ruleContent: {
+    flex: 1,
+    fontSize: 16,
+    lineHeight: 22,
   },
   memberCount: {
     fontSize: 14,
