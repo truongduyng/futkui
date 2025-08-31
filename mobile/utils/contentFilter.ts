@@ -61,7 +61,7 @@ export function filterContent(content: string): ContentFilterResult {
   let filteredContent = trimmedContent;
 
   for (const word of BLOCKED_WORDS) {
-    const regex = new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    const regex = new RegExp('\\b' + word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
     if (regex.test(filteredContent)) {
       filteredContent = filteredContent.replace(regex, '***');
     }
