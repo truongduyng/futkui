@@ -672,7 +672,8 @@ const styles = StyleSheet.create({
   ruleCard: {
     marginHorizontal: 20,
     borderRadius: 12,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     flexDirection: "row",
     alignItems: "flex-start",
   },
@@ -683,12 +684,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
-    marginTop: 2,
   },
   ruleContent: {
     flex: 1,
     fontSize: 16,
     lineHeight: 22,
+    marginTop: 2,
   },
   memberCount: {
     fontSize: 14,
