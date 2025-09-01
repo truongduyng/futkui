@@ -76,9 +76,10 @@ export function MessageInput({
 
   const handleSend = async () => {
     if ((message.trim() || selectedImage) && !disabled && !isSending) {
+      setIsSending(true);
       // Filter message content
       const filterResult = filterContent(message.trim());
-      
+
       if (filterResult.isBlocked) {
         Alert.alert(
           t('common.error'),
@@ -96,8 +97,6 @@ export function MessageInput({
       // Store values before clearing state
       const messageToSend = messageToProcess;
       const imageToSend = selectedImage || undefined;
-
-      setIsSending(true);
 
       try {
         await onSendMessage(messageToSend, imageToSend, mentions);
@@ -265,6 +264,8 @@ export function MessageInput({
   };
 
   const handleTextChange = (text: string) => {
+    if (isSending) return; // Prevent input changes while sending
+
     setMessage(text);
 
     // Check for mention trigger (@)
@@ -375,7 +376,7 @@ export function MessageInput({
           placeholderTextColor={colors.tabIconDefault}
           multiline
           maxLength={1000}
-          editable={!disabled && !isSending}
+          editable={!disabled}
           textAlignVertical="top"
           scrollEnabled={true}
           returnKeyType="default"
