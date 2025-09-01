@@ -50,6 +50,7 @@ interface MessageBubbleProps {
   onImagePress?: (imageUrl: string) => void;
   messageId?: string;
   onReportMessage?: (messageId: string, reason: string, description: string) => void;
+  onDeleteMessage?: (messageId: string) => void;
 }
 
 export const MessageBubble = React.memo(function MessageBubble({
@@ -65,6 +66,7 @@ export const MessageBubble = React.memo(function MessageBubble({
   onImagePress,
   messageId,
   onReportMessage,
+  onDeleteMessage,
 }: MessageBubbleProps) {
   const { t } = useTranslation();
   const { isDark } = useTheme();
@@ -112,6 +114,7 @@ export const MessageBubble = React.memo(function MessageBubble({
   }, [reactions]);
 
   const hasTextContent = content && content.trim();
+  const isDeletedMessage = content === 'message deleted';
   const hasReactions = Object.keys(groupedReactions).length > 0;
 
   const handleCopyText = useCallback(async () => {
@@ -128,11 +131,14 @@ export const MessageBubble = React.memo(function MessageBubble({
   }, [content, hasTextContent, showSuccess, showError, t]);
 
   const handleLongPress = useCallback((event: any) => {
+    // Don't show options for deleted messages
+    if (isDeletedMessage) return;
+
     event.target.measure(
       (_x: number, _y: number, width: number, height: number, pageX: number, pageY: number) => {
         setMessagePosition({ x: pageX, y: pageY, width, height });
 
-        if (hasTextContent) {
+        if (hasTextContent || imageUrl) {
           if (onAddReaction && !isOwnMessage) {
             setShowReactionOptions(true);
           }
@@ -142,7 +148,7 @@ export const MessageBubble = React.memo(function MessageBubble({
         }
       },
     );
-  }, [hasTextContent, onAddReaction, isOwnMessage]);
+  }, [hasTextContent, imageUrl, onAddReaction, isOwnMessage, isDeletedMessage]);
 
   const handleAddReaction = useCallback((emoji: string) => {
     if (onAddReaction) {
@@ -187,6 +193,12 @@ export const MessageBubble = React.memo(function MessageBubble({
     }, 100);
   }, []);
 
+  const handleDeleteMessage = useCallback(() => {
+    if (messageId && onDeleteMessage) {
+      onDeleteMessage(messageId);
+    }
+  }, [messageId, onDeleteMessage]);
+
 
   return (
     <>
@@ -217,7 +229,7 @@ export const MessageBubble = React.memo(function MessageBubble({
 
         <View style={styles.messageContainer}>
           {/* Image without background */}
-          {imageUrl && (
+          {imageUrl && !isDeletedMessage && (
             <MessageImage
               imageUrl={imageUrl}
               onImagePress={onImagePress}
@@ -228,30 +240,34 @@ export const MessageBubble = React.memo(function MessageBubble({
           {/* Text content with background bubble */}
           {hasTextContent && (
             <TouchableOpacity
-              onLongPress={handleLongPress}
+              onLongPress={isDeletedMessage ? undefined : handleLongPress}
               activeOpacity={1}
               style={[
                 styles.bubble,
-                isOwnMessage
+                isDeletedMessage
+                  ? [styles.deletedBubble, { backgroundColor: isDark ? "#1A1A1A" : "#F5F5F5" }]
+                  : isOwnMessage
                   ? [styles.ownBubble, { backgroundColor: colors.tint }]
                   : [styles.otherBubble, { backgroundColor: isDark ? "#2A2A2A" : "#F0F0F0" }],
               ]}
             >
               <MentionText
-                text={content}
+                text={isDeletedMessage ? t('chat.messageDeleted') : content}
                 style={StyleSheet.flatten([
-                  styles.messageText,
-                  isOwnMessage ? styles.ownMessageText : { color: colors.text },
-                ])}
+                  isDeletedMessage ? {} : styles.messageText,
+                  isDeletedMessage
+                    ? [styles.deletedMessageText, { color: colors.tabIconDefault }]
+                    : isOwnMessage ? styles.ownMessageText : { color: colors.text },
+                ] as any)}
                 mentionStyle={
-                  isOwnMessage
+                  isOwnMessage && !isDeletedMessage
                     ? {
                         color: "white",
                         fontWeight: "700",
                       }
                     : undefined
                 }
-                onLinkPress={handleLinkPress}
+                onLinkPress={isDeletedMessage ? undefined : handleLinkPress}
               />
             </TouchableOpacity>
           )}
@@ -272,6 +288,7 @@ export const MessageBubble = React.memo(function MessageBubble({
           onAddReaction={handleAddReaction}
           onCopyText={handleCopyText}
           onReportMessage={handleShowReport}
+          onDeleteMessage={handleDeleteMessage}
           messageId={messageId}
           messagePosition={messagePosition}
         />
@@ -436,6 +453,15 @@ const styles = StyleSheet.create({
   },
   ownMessageText: {
     color: "white",
+  },
+  deletedBubble: {
+    borderWidth: 1,
+    borderColor: "rgba(150, 150, 150, 0.3)",
+    borderStyle: "dashed",
+  },
+  deletedMessageText: {
+    fontStyle: "italic",
+    fontSize: 14,
   },
   messageFooter: {
     flexDirection: "row",

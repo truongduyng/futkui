@@ -62,6 +62,7 @@ export default function ChatScreen() {
     markMessagesAsRead,
     reportMessage,
     useBlockedUsers,
+    deleteMessage,
   } = useInstantDB();
 
   // Data queries
@@ -209,6 +210,17 @@ export default function ChatScreen() {
     }
   }, [currentProfile?.id, reportMessage, saveReportedMessage, showError, t]);
 
+  // Delete handler
+  const handleDeleteMessage = useCallback(async (messageId: string) => {
+    try {
+      await deleteMessage(messageId);
+      showSuccess(t('chat.messageDeleted'), t('chat.messageDeletedSuccess'));
+    } catch (error) {
+      console.error('Failed to delete message:', error);
+      showError(t('common.error'), t('chat.deleteError'));
+    }
+  }, [deleteMessage, showSuccess, showError, t]);
+
   // Event handlers
   const {
     handleSendMessage,
@@ -311,6 +323,7 @@ export default function ChatScreen() {
     handleCloseMatch,
     handleAddOptionToPoll,
     handleReportMessage,
+    handleDeleteMessage,
   });
 
   // Reset limit when group changes

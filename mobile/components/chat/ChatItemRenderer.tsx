@@ -31,6 +31,7 @@ interface ChatItemRendererProps {
   handleCheckIn: (matchId: string) => void;
   handleCloseMatch: (matchId: string) => void;
   handleReportMessage?: (messageId: string, reason: string, description: string) => void;
+  handleDeleteMessage?: (messageId: string) => void;
 }
 
 export function useChatItemRenderer({
@@ -48,6 +49,7 @@ export function useChatItemRenderer({
   handleCheckIn,
   handleCloseMatch,
   handleReportMessage,
+  handleDeleteMessage,
 }: ChatItemRendererProps) {
   const { isDark } = useTheme();
 const colors = isDark ? Colors.dark : Colors.light;
@@ -147,6 +149,7 @@ const colors = isDark ? Colors.dark : Colors.light;
             onImagePress={handleImagePress}
             messageId={message.id}
             onReportMessage={handleReportMessage}
+            onDeleteMessage={handleDeleteMessage}
           />
         )}
         {showTimestamp && (
@@ -165,7 +168,7 @@ const colors = isDark ? Colors.dark : Colors.light;
         )}
       </>
     );
-  }, [currentProfile?.id, chatItems, shouldShowTimestamp, totalMembers, userMembership?.role, handleImagePress, handleReportMessage, colors.tabIconDefault, stableHandleVote, handleAddOptionToPoll, stableHandleClosePoll, handleRsvp, handleCheckIn, handleCloseMatch, stableHandleReaction, stableHandleAddReaction]);
+  }, [currentProfile?.id, chatItems, shouldShowTimestamp, totalMembers, userMembership?.role, handleImagePress, handleReportMessage, handleDeleteMessage, colors.tabIconDefault, stableHandleVote, handleAddOptionToPoll, stableHandleClosePoll, handleRsvp, handleCheckIn, handleCloseMatch, stableHandleReaction, stableHandleAddReaction]);
 
   const keyExtractor = useCallback((item: any) => item.id, []);
 

@@ -1,3 +1,4 @@
+/* eslint-disable import/no-named-as-default-member */
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
@@ -17,7 +18,7 @@ const resources = {
 
 const initI18n = async () => {
   let savedLanguage = 'en';
-  
+
   try {
     const storedLanguage = await AsyncStorage.getItem('selectedLanguage');
     if (storedLanguage && resources[storedLanguage as keyof typeof resources]) {
@@ -37,12 +38,12 @@ const initI18n = async () => {
       resources,
       lng: savedLanguage,
       fallbackLng: 'en',
-      
+
       interpolation: {
         escapeValue: false,
       },
-      
-      compatibilityJSON: 'v3',
+
+      compatibilityJSON: 'v4',
     });
 };
 

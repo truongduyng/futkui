@@ -17,10 +17,10 @@ export const MentionText = React.memo(function MentionText({ text, style, mentio
   // URL regex pattern to match http/https URLs
   const urlPattern = /(https?:\/\/[^\s]+)/g;
   const mentionPattern = /(@\w+)/g;
-  
+
   // First split by URLs, then by mentions
   const urlParts = text.split(urlPattern);
-  
+
   const renderPart = (part: string, partIndex: number) => {
     // Check if this part is a URL
     if (urlPattern.test(part)) {
@@ -45,10 +45,10 @@ export const MentionText = React.memo(function MentionText({ text, style, mentio
         </TouchableOpacity>
       );
     }
-    
+
     // Split by mentions for non-URL parts
     const mentionParts = part.split(mentionPattern);
-    
+
     return mentionParts.map((mentionPart, mentionIndex) => {
       if (mentionPart.startsWith('@')) {
         // This is a mention

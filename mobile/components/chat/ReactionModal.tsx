@@ -46,6 +46,7 @@ interface ReactionModalProps {
   onAddReaction?: (emoji: string) => void;
   onCopyText: () => void;
   onReportMessage?: () => void;
+  onDeleteMessage?: () => void;
   messageId?: string;
   messagePosition?: { x: number; y: number; width: number; height: number };
 }
@@ -67,6 +68,7 @@ export function ReactionModal({
   onAddReaction,
   onCopyText,
   onReportMessage,
+  onDeleteMessage,
   messageId,
   messagePosition,
 }: ReactionModalProps) {
@@ -97,6 +99,11 @@ export function ReactionModal({
       color: "#FF4444",
       fontWeight: "bold" as const,
     },
+    deleteOptionText: {
+      ...styles.messageOptionText,
+      color: "#FF4444",
+      fontWeight: "bold" as const,
+    },
   }), [isDark]);
 
   const handleAddReaction = (emoji: string) => {
@@ -114,6 +121,13 @@ export function ReactionModal({
   const handleReportMessage = () => {
     if (onReportMessage) {
       onReportMessage();
+    }
+    onClose();
+  };
+
+  const handleDeleteMessage = () => {
+    if (onDeleteMessage) {
+      onDeleteMessage();
     }
     onClose();
   };
@@ -219,21 +233,35 @@ export function ReactionModal({
               </View>
 
               {/* Message options below the message */}
-              {showMessageOptions && hasTextContent && (
+              {showMessageOptions && (hasTextContent || imageUrl) && (
                 <View style={[
                   dynamicStyles.messageOptionsContainer,
                   styles.centeredMessageOptions,
                   isOwnMessage ? { alignSelf: 'flex-end' } : { alignSelf: 'flex-start' }
                 ]}>
-                  <TouchableOpacity
-                    style={styles.messageOptionButton}
-                    onPress={handleCopyText}
-                  >
-                    <View style={styles.messageOptionContent}>
-                      <Ionicons name="copy-outline" size={18} color={isDark ? "#999" : "#666"} />
-                      <Text style={dynamicStyles.messageOptionText}>{t('chat.copyText')}</Text>
-                    </View>
-                  </TouchableOpacity>
+                  {hasTextContent && (
+                    <TouchableOpacity
+                      style={styles.messageOptionButton}
+                      onPress={handleCopyText}
+                    >
+                      <View style={styles.messageOptionContent}>
+                        <Ionicons name="copy-outline" size={18} color={isDark ? "#999" : "#666"} />
+                        <Text style={dynamicStyles.messageOptionText}>{t('chat.copyText')}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+
+                  {isOwnMessage && onDeleteMessage && messageId && (
+                    <TouchableOpacity
+                      style={styles.deleteOptionButton}
+                      onPress={handleDeleteMessage}
+                    >
+                      <View style={styles.messageOptionContent}>
+                        <Ionicons name="trash" size={18} color="#FF4444" />
+                        <Text style={dynamicStyles.deleteOptionText}>{t('chat.deleteMessage')}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
 
                   {!isOwnMessage && onReportMessage && messageId && (
                     <TouchableOpacity
@@ -381,6 +409,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   reportOptionButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    borderRadius: 8,
+  },
+  deleteOptionButton: {
     paddingVertical: 12,
     paddingHorizontal: 4,
     borderRadius: 8,

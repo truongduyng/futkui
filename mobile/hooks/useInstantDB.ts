@@ -1348,6 +1348,20 @@ export function useInstantDB() {
     return blocksQuery.data.blocks?.map((block: any) => block.blocked?.user?.id).filter(Boolean) || [];
   }, [db]);
 
+  const deleteMessage = useCallback(
+    async (messageId: string) => {
+      const result = await db.transact([
+        db.tx.messages[messageId].update({
+          content: 'message deleted',
+          imageUrl: '', // Clear the image URL when deleting
+          updatedAt: Date.now(),
+        }),
+      ]);
+      return result;
+    },
+    [db]
+  );
+
   return {
     instantClient,
     useGroups,
@@ -1393,6 +1407,7 @@ export function useInstantDB() {
     reportGroup,
     blockUser,
     unblockUser,
+    deleteMessage,
     filterBlockedMessages,
     getBlockedUserIds,
   };
