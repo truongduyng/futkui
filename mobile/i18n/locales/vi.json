@@ -185,7 +185,7 @@
     "mediaPermissionMessage": "Chúng tôi cần quyền truy cập thư viện ảnh để chọn hình ảnh.",
     "errorSelectingImage": "Lỗi chọn hình ảnh",
     "failedProcessImage": "Không thể xử lý hình ảnh. Vui lòng thử lại.",
-    "poll": "bình chọn",
+    "poll": "Bình chọn",
     "createPollTitle": "Tạo bình chọn",
     "question": "Câu hỏi",
     "questionPlaceholder": "Đặt câu hỏi...",
@@ -291,7 +291,8 @@
     "send": "Gửi",
     "loadingGroup": "Đang tải nhóm...",
     "loadingMessages": "Đang tải tin nhắn...",
-    "groupNotFound": "Không tìm thấy nhóm"
+    "groupNotFound": "Không tìm thấy nhóm",
+    "image": "Hình ảnh"
   },
   "groupOptions": {
     "title": "Tùy chọn nhóm",

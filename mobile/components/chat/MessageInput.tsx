@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   StyleSheet,
   Text,
   TextInput,
@@ -69,6 +70,7 @@ export function MessageInput({
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [currentMentionSearch, setCurrentMentionSearch] = useState<string>("");
   const [showMentionPicker, setShowMentionPicker] = useState(false);
+  const [showActionMenu, setShowActionMenu] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const inputRef = useRef<TextInput>(null);
   const { isDark } = useTheme();
@@ -297,6 +299,22 @@ export function MessageInput({
     inputRef.current?.focus();
   };
 
+  const handleActionMenuSelect = (action: 'image' | 'poll' | 'match') => {
+    setShowActionMenu(false);
+    
+    switch (action) {
+      case 'image':
+        pickImage();
+        break;
+      case 'poll':
+        setShowPollModal(true);
+        break;
+      case 'match':
+        setShowMatchModal(true);
+        break;
+    }
+  };
+
   return (
     <View style={styles.container}>
       {selectedImage && (
@@ -322,47 +340,17 @@ export function MessageInput({
         style={[styles.inputContainer, { backgroundColor: colors.card }]}
       >
         <TouchableOpacity
-          style={styles.imageButton}
-          onPress={pickImage}
+          style={styles.addButton}
+          onPress={() => setShowActionMenu(true)}
           disabled={disabled || isSending}
           activeOpacity={0.6}
         >
           <Ionicons
-            name="camera"
+            name="add"
             size={20}
             color={disabled || isSending ? colors.tabIconDefault + "40" : colors.tabIconDefault}
           />
         </TouchableOpacity>
-
-        {onSendPoll && (
-          <TouchableOpacity
-            style={styles.pollButton}
-            onPress={() => setShowPollModal(true)}
-            disabled={disabled || isSending}
-            activeOpacity={0.6}
-          >
-            <Ionicons
-              name="bar-chart"
-              size={20}
-              color={disabled || isSending ? colors.tabIconDefault + "40" : colors.tabIconDefault}
-            />
-          </TouchableOpacity>
-        )}
-
-        {onCreateMatch && (
-          <TouchableOpacity
-            style={styles.matchButton}
-            onPress={() => setShowMatchModal(true)}
-            disabled={disabled || isSending}
-            activeOpacity={0.6}
-          >
-            <Ionicons
-              name="football"
-              size={20}
-              color={disabled || isSending ? colors.tabIconDefault + "40" : colors.tabIconDefault}
-            />
-          </TouchableOpacity>
-        )}
 
         <TextInput
           ref={inputRef}
@@ -415,6 +403,58 @@ export function MessageInput({
         onClose={() => setShowMatchModal(false)}
         onCreateMatch={handleCreateMatch}
       />
+
+      <Modal
+        visible={showActionMenu}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowActionMenu(false)}
+      >
+        <TouchableOpacity
+          style={styles.actionMenuOverlay}
+          activeOpacity={1}
+          onPress={() => setShowActionMenu(false)}
+        >
+          <View style={[styles.actionMenu, { backgroundColor: colors.card }]}>
+            <TouchableOpacity
+              style={styles.actionMenuItem}
+              onPress={() => handleActionMenuSelect('image')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="camera" size={24} color={colors.text} />
+              <Text style={[styles.actionMenuText, { color: colors.text }]}>
+                {t('chat.image')}
+              </Text>
+            </TouchableOpacity>
+
+            {onSendPoll && (
+              <TouchableOpacity
+                style={styles.actionMenuItem}
+                onPress={() => handleActionMenuSelect('poll')}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="bar-chart" size={24} color={colors.text} />
+                <Text style={[styles.actionMenuText, { color: colors.text }]}>
+                  {t('chat.poll')}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {onCreateMatch && (
+              <TouchableOpacity
+                style={styles.actionMenuItem}
+                onPress={() => handleActionMenuSelect('match')}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="football" size={24} color={colors.text} />
+                <Text style={[styles.actionMenuText, { color: colors.text }]}>
+                  {t('chat.match')}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -461,7 +501,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
-  imageButton: {
+  addButton: {
     width: 26,
     height: 36,
     borderRadius: 18,
@@ -469,23 +509,36 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  pollButton: {
-    width: 26,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "transparent",
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 4,
+  actionMenuOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+    paddingLeft: 16,
+    paddingBottom: 88,
   },
-  matchButton: {
-    width: 26,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "transparent",
-    justifyContent: "center",
+  actionMenu: {
+    borderRadius: 16,
+    padding: 8,
+    minWidth: 150,
+    maxWidth: 200,
+    alignSelf: "flex-start",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  actionMenuItem: {
+    flexDirection: "row",
     alignItems: "center",
-    marginLeft: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  actionMenuText: {
+    fontSize: 16,
+    marginLeft: 12,
+    fontWeight: "500",
   },
   imagePreviewContainer: {
     position: "relative",

@@ -292,7 +292,8 @@
     "send": "Send",
     "loadingGroup": "Loading group...",
     "loadingMessages": "Loading messages...",
-    "groupNotFound": "Group not found"
+    "groupNotFound": "Group not found",
+    "image": "Image"
   },
   "groupOptions": {
     "title": "Group Options",
