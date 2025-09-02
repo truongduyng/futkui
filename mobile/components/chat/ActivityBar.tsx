@@ -49,12 +49,14 @@ const colors = isDark ? Colors.dark : Colors.light;
     return true;
   });
 
-  // Filter upcoming matches (active and in the future)
-  const upcomingMatches = matches.filter((match) => {
-    return match.isActive && match.matchDate > Date.now();
+  // Filter active matches (active and today or in the future)
+  const activeMatches = matches.filter((match) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return match.isActive && match.matchDate >= today.getTime();
   });
 
-  const totalActivities = activePolls.length + upcomingMatches.length;
+  const totalActivities = activePolls.length + activeMatches.length;
 
   if (totalActivities === 0) {
     return null;
@@ -72,9 +74,9 @@ const colors = isDark ? Colors.dark : Colors.light;
       parts.push(`${activePolls.length} ${pollText}`);
     }
 
-    if (upcomingMatches.length > 0) {
-      const matchText = upcomingMatches.length === 1 ? t('chat.upcomingMatch') : t('chat.upcomingMatches');
-      parts.push(`${upcomingMatches.length} ${matchText}`);
+    if (activeMatches.length > 0) {
+      const matchText = activeMatches.length === 1 ? t('chat.activeMatch') : t('chat.activeMatches');
+      parts.push(`${activeMatches.length} ${matchText}`);
     }
 
     return parts.join(' · ');

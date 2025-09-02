@@ -85,7 +85,9 @@ const colors = isDark ? Colors.dark : Colors.light;
   // Filter matches based on toggle state
   const filteredMatches = matches.filter((match) => {
     if (showActiveMatchesOnly) {
-      return match.isActive && match.matchDate > Date.now();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return match.isActive && match.matchDate >= today.getTime();
     }
     return true; // Show all matches when toggle is off
   });
@@ -127,7 +129,7 @@ const colors = isDark ? Colors.dark : Colors.light;
       type: 'section',
       id: 'matches-header',
       sectionType: 'matches',
-      title: showActiveMatchesOnly ? t('chat.upcomingMatches') : t('chat.allMatches'),
+      title: showActiveMatchesOnly ? t('chat.activeMatches') : t('chat.allMatches'),
       count: filteredMatches.length,
       showActiveOnly: showActiveMatchesOnly,
       setShowActiveOnly: setShowActiveMatchesOnly,
@@ -146,7 +148,7 @@ const colors = isDark ? Colors.dark : Colors.light;
         type: 'empty',
         id: 'matches-empty',
         sectionType: 'matches',
-        message: showActiveMatchesOnly ? t('chat.noUpcomingMatches') : t('chat.noMatches'),
+        message: showActiveMatchesOnly ? t('chat.noActiveMatches') : t('chat.noMatches'),
       });
     }
 
