@@ -18,9 +18,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/useToast";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LocationSelector } from "./LocationSelector";
+import provinces from '@/utils/data/provinces.json';
 
 interface ExistingProfile {
   id: string;
@@ -58,12 +61,12 @@ interface SportWithLevel {
   level: string;
 }
 
-export function ProfileSetup({ 
-  userId, 
-  existingProfile, 
-  onProfileCreated, 
-  onProfileUpdated, 
-  mode = 'create' 
+export function ProfileSetup({
+  userId,
+  existingProfile,
+  onProfileCreated,
+  onProfileUpdated,
+  mode = 'create'
 }: ProfileSetupProps) {
   const { t } = useTranslation();
   const [handle, setHandle] = useState("");
@@ -72,6 +75,8 @@ export function ProfileSetup({
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [sportsWithLevels, setSportsWithLevels] = useState<SportWithLevel[]>([]);
   const [location, setLocation] = useState("");
+  const [selectedLocationCode, setSelectedLocationCode] = useState<string>("");
+  const [isLocationSelectorVisible, setIsLocationSelectorVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
@@ -85,7 +90,17 @@ export function ProfileSetup({
       // Pre-fill form with existing profile data
       setHandle(existingProfile.handle || '');
       setDisplayName(existingProfile.displayName || '');
-      setLocation(existingProfile.location || '');
+
+      // Handle location - find the province code if location is stored as label
+      const existingLocation = existingProfile.location || '';
+      const foundProvince = provinces.find(p => p.label === existingLocation || p.code === existingLocation);
+      if (foundProvince) {
+        setSelectedLocationCode(foundProvince.code);
+        setLocation(foundProvince.label);
+      } else {
+        setLocation(existingLocation);
+      }
+
       setSportsWithLevels(existingProfile.sports || []);
       setSelectedPhotos(existingProfile.photos || []);
       if (existingProfile.avatarUrl) {
@@ -205,7 +220,21 @@ export function ProfileSetup({
   };
 
   const isSportSelected = (sport: string) => {
-    return sportsWithLevels.some(s => s.sport === sport);
+    return sportsWithLevels.some(s => s.sport.toLocaleLowerCase() === sport);
+  };
+
+  const handleLocationSelect = (province: { code: string; label: string }) => {
+    setSelectedLocationCode(province.code);
+    setLocation(province.label);
+  };
+
+  const openLocationSelector = () => {
+    setIsLocationSelectorVisible(true);
+  };
+
+  const clearLocation = () => {
+    setSelectedLocationCode('');
+    setLocation('');
   };
 
   const handleSubmit = async () => {
@@ -234,10 +263,10 @@ export function ProfileSetup({
 
     try {
       let profileId: string;
-      
+
       if (mode === 'edit' && existingProfile) {
         profileId = existingProfile.id;
-        
+
         // Check if handle is already taken (exclude current profile)
         if (handle.toLowerCase() !== existingProfile.handle.toLowerCase()) {
           const existingProfileCheck = await instantClient.queryOnce({
@@ -271,7 +300,7 @@ export function ProfileSetup({
           setIsSubmitting(false);
           return;
         }
-        
+
         profileId = id();
       }
       let avatarUrl = null;
@@ -298,7 +327,7 @@ export function ProfileSetup({
         try {
           const newPhotos = selectedPhotos.filter(photo => photo.startsWith('file://'));
           const existingPhotos = selectedPhotos.filter(photo => !photo.startsWith('file://'));
-          
+
           let newPhotoUrls: string[] = [];
           if (newPhotos.length > 0) {
             const uploadPromises = newPhotos.map(async (photo, index) => {
@@ -307,7 +336,7 @@ export function ProfileSetup({
             });
             newPhotoUrls = await Promise.all(uploadPromises);
           }
-          
+
           photoUrls = [...existingPhotos, ...newPhotoUrls];
         } catch (error) {
           console.error("Error uploading photos:", error);
@@ -381,7 +410,7 @@ export function ProfileSetup({
             <Text style={[styles.subtitle, { color: colors.text }]}>
               {mode === 'edit' ? t("profile.setupSubtitle") : t("profile.setupSubtitle")}
             </Text>
-            
+
             {mode === 'edit' && existingProfile?.email && (
               <Text style={[styles.emailText, { color: colors.tabIconDefault }]}>
                 {existingProfile.email}
@@ -463,6 +492,90 @@ export function ProfileSetup({
             />
 
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {t("profile.location")}
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.locationSelector,
+                {
+                  borderColor: colors.icon,
+                  backgroundColor: colors.background,
+                },
+              ]}
+              onPress={openLocationSelector}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.locationText,
+                  {
+                    color: location ? colors.text : colors.tabIconDefault,
+                  },
+                ]}
+              >
+                {location || t("profile.selectLocationPlaceholder")}
+              </Text>
+              <View style={styles.locationSelectorRight}>
+                {location && (
+                  <TouchableOpacity
+                    onPress={clearLocation}
+                    style={styles.clearLocationButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons name="close-circle" size={20} color={colors.tabIconDefault} />
+                  </TouchableOpacity>
+                )}
+                <Ionicons name="chevron-down" size={20} color={colors.tabIconDefault} />
+              </View>
+            </TouchableOpacity>
+
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {t("profile.additionalPhotos")}
+            </Text>
+            <View style={styles.photosSection}>
+              <TouchableOpacity
+                style={[
+                  styles.addPhotoButton,
+                  { borderColor: colors.icon },
+                ]}
+                onPress={pickMultiplePhotos}
+                disabled={selectedPhotos.length >= 5}
+              >
+                <Text
+                  style={[
+                    styles.addPhotoText,
+                    { color: colors.tabIconDefault },
+                  ]}
+                >
+                  {selectedPhotos.length >= 5 ? t("profile.maxPhotos") : t("profile.addPhotos")}
+                </Text>
+              </TouchableOpacity>
+
+              {selectedPhotos.length > 0 && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.photosScroll}
+                >
+                  {selectedPhotos.map((photo, index) => (
+                    <View key={index} style={styles.photoContainer}>
+                      <Image
+                        source={{ uri: photo }}
+                        style={styles.additionalPhoto}
+                      />
+                      <TouchableOpacity
+                        style={[styles.removePhotoButton, { backgroundColor: colors.accent }]}
+                        onPress={() => removePhoto(index)}
+                      >
+                        <Text style={styles.removePhotoText}>×</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
+              )}
+            </View>
+
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
               {t("profile.sportsAndLevels")}
             </Text>
             <Text style={[styles.inputHint, { color: colors.tabIconDefault }]}>
@@ -470,9 +583,6 @@ export function ProfileSetup({
             </Text>
 
             <View style={styles.addSportsContainer}>
-              <Text style={[styles.subsectionTitle, { color: colors.text }]}>
-                {t("profile.availableSports")}
-              </Text>
               <View style={styles.availableSportsContainer}>
                 {SPORTS_KEYS.map((sportKey) => (
                   <TouchableOpacity
@@ -482,9 +592,8 @@ export function ProfileSetup({
                       {
                         borderColor: colors.icon,
                         backgroundColor: isSportSelected(sportKey)
-                          ? colors.tabIconDefault
+                          ? colors.tint
                           : colors.background,
-                        opacity: isSportSelected(sportKey) ? 0.5 : 1,
                       },
                     ]}
                     onPress={() => isSportSelected(sportKey) ? removeSport(sportKey) : addSport(sportKey)}
@@ -509,18 +618,15 @@ export function ProfileSetup({
 
             {sportsWithLevels.length > 0 && (
               <View style={styles.selectedSportsContainer}>
-                <Text style={[styles.subsectionTitle, { color: colors.text }]}>
-                  {t("profile.yourSportsLevels")}
-                </Text>
                 {sportsWithLevels.map((sportWithLevel) => (
-                  <View key={sportWithLevel.sport} style={styles.sportLevelRow}>
+                  <View key={sportWithLevel.sport} style={[styles.sportLevelRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
                     <View style={styles.sportLevelHeader}>
                       <Text style={[styles.sportName, { color: colors.text }]}>
-                        {t(`sports.${sportWithLevel.sport}`)}
+                        {t(`sports.${sportWithLevel.sport.toLocaleLowerCase()}`)}
                       </Text>
                       <TouchableOpacity
                         onPress={() => removeSport(sportWithLevel.sport)}
-                        style={styles.removeSportButton}
+                        style={[styles.removeSportButton, { backgroundColor: colors.accent }]}
                       >
                         <Text style={styles.removeSportText}>×</Text>
                       </TouchableOpacity>
@@ -560,71 +666,6 @@ export function ProfileSetup({
               </View>
             )}
 
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              {t("profile.location")}
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  borderColor: colors.icon,
-                  color: colors.text,
-                  backgroundColor: colors.background,
-                },
-              ]}
-              placeholder={t("profile.locationPlaceholder")}
-              placeholderTextColor={colors.tabIconDefault}
-              value={location}
-              onChangeText={setLocation}
-              maxLength={100}
-            />
-
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              {t("profile.additionalPhotos")}
-            </Text>
-            <View style={styles.photosSection}>
-              <TouchableOpacity
-                style={[
-                  styles.addPhotoButton,
-                  { borderColor: colors.icon },
-                ]}
-                onPress={pickMultiplePhotos}
-                disabled={selectedPhotos.length >= 5}
-              >
-                <Text
-                  style={[
-                    styles.addPhotoText,
-                    { color: colors.tabIconDefault },
-                  ]}
-                >
-                  {selectedPhotos.length >= 5 ? t("profile.maxPhotos") : t("profile.addPhotos")}
-                </Text>
-              </TouchableOpacity>
-
-              {selectedPhotos.length > 0 && (
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.photosScroll}
-                >
-                  {selectedPhotos.map((photo, index) => (
-                    <View key={index} style={styles.photoContainer}>
-                      <Image
-                        source={{ uri: photo }}
-                        style={styles.additionalPhoto}
-                      />
-                      <TouchableOpacity
-                        style={styles.removePhotoButton}
-                        onPress={() => removePhoto(index)}
-                      >
-                        <Text style={styles.removePhotoText}>×</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ))}
-                </ScrollView>
-              )}
-            </View>
-
             <TouchableOpacity
               style={[styles.button, { backgroundColor: colors.tint }]}
               onPress={handleSubmit}
@@ -639,6 +680,13 @@ export function ProfileSetup({
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <LocationSelector
+        visible={isLocationSelectorVisible}
+        onClose={() => setIsLocationSelectorVisible(false)}
+        onSelect={handleLocationSelect}
+        selectedLocation={selectedLocationCode}
+      />
     </SafeAreaView>
   );
 }
@@ -761,7 +809,6 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
   },
   sportLevelHeader: {
     flexDirection: "row",
@@ -777,7 +824,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "red",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -837,7 +883,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "red",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -852,5 +897,27 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: "center",
     opacity: 0.8,
+  },
+  locationSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    height: 48,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  locationText: {
+    fontSize: 16,
+    flex: 1,
+  },
+  locationSelectorRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  clearLocationButton: {
+    padding: 4,
   },
 });

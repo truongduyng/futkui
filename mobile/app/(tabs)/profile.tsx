@@ -18,6 +18,19 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 
+const getSportEmoji = (sport: string) => {
+  switch (sport.toLowerCase()) {
+    case 'football':
+      return '⚽';
+    case 'pickleball':
+      return '🏓';
+    case 'badminton':
+      return '🏸';
+    default:
+      return '🏃';
+  }
+};
+
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const { isDark } = useTheme();
@@ -62,7 +75,7 @@ export default function ProfileScreen() {
             {currentProfile.avatarUrl ? (
               <CachedAvatar
                 uri={currentProfile.avatarUrl}
-                size={120}
+                size={100}
                 fallbackComponent={
                   <View style={[styles.avatarFallback, { backgroundColor: colors.tint }]}>
                     <Text style={styles.avatarFallbackText}>
@@ -84,89 +97,59 @@ export default function ProfileScreen() {
             )}
           </View>
 
-          <Text style={[styles.displayName, { color: colors.text }]}>
-            {currentProfile.displayName}
-          </Text>
+          <View style={styles.nameContainer}>
+            <Text style={[styles.displayName, { color: colors.text }]}>
+              {currentProfile.displayName}
+            </Text>
+            <TouchableOpacity
+              style={[styles.editButtonSmall, { backgroundColor: colors.card }]}
+              onPress={handleEditProfile}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="create-outline" size={20} color={colors.text} />
+            </TouchableOpacity>
+          </View>
           <Text style={[styles.handle, { color: colors.tabIconDefault }]}>
             @{currentProfile.handle}
           </Text>
-          {user?.email && (
-            <Text style={[styles.email, { color: colors.tabIconDefault }]}>
-              {user.email}
-            </Text>
+
+          {/* Location Badge */}
+          {currentProfile.location && (
+            <View style={[styles.locationBadge, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Ionicons name="location-outline" size={14} color={colors.icon} />
+              <Text style={[styles.badgeText, { color: colors.text }]}>
+                {currentProfile.location}
+              </Text>
+            </View>
           )}
 
-          <TouchableOpacity
-            style={[styles.editButton, { backgroundColor: colors.tint }]}
-            onPress={handleEditProfile}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="create-outline" size={18} color="white" />
-            <Text style={styles.editButtonText}>{t('profile.editProfile')}</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Location Section */}
-        {currentProfile.location && (
-          <View style={[styles.section, { backgroundColor: colors.background }]}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="location-outline" size={20} color={colors.tint} />
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                {t('profile.location')}
-              </Text>
-            </View>
-            <Text style={[styles.locationText, { color: colors.tabIconDefault }]}>
-              {currentProfile.location}
-            </Text>
-          </View>
-        )}
-
-        {/* Sports & Levels Section */}
-        {currentProfile.sports && currentProfile.sports.length > 0 && (
-          <View style={[styles.section, { backgroundColor: colors.background }]}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="fitness-outline" size={20} color={colors.tint} />
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                {t('profile.sportsAndLevels')}
-              </Text>
-            </View>
-            <View style={styles.sportsContainer}>
+          {/* Sports Badges */}
+          {currentProfile.sports && currentProfile.sports.length > 0 && (
+            <View style={styles.badgesContainer}>
               {currentProfile.sports.map((sportWithLevel: { sport: string; level: string }, index: number) => (
-                <View key={index} style={[styles.sportTag, { backgroundColor: colors.tabIconDefault }]}>
-                  <Text style={[styles.sportName, { color: colors.text }]}>
-                    {t(`sports.${sportWithLevel.sport.toLowerCase()}`)}
-                  </Text>
-                  <Text style={[styles.sportLevel, { color: colors.tabIconDefault }]}>
-                    {t(`profile.skillLevels.${sportWithLevel.level}`)}
+                <View key={index} style={[styles.badge, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  <Text style={styles.sportEmoji}>{getSportEmoji(sportWithLevel.sport)}</Text>
+                  <Text style={[styles.badgeText, { color: colors.text }]}>
+                    {t(`sports.${sportWithLevel.sport.toLowerCase()}`)} • {t(`profile.skillLevels.${sportWithLevel.level.toLowerCase()}`)}
                   </Text>
                 </View>
               ))}
             </View>
-          </View>
-        )}
+          )}
+        </View>
 
-        {/* Photos Section */}
+        {/* Photos Grid */}
         {currentProfile.photos && currentProfile.photos.length > 0 && (
-          <View style={[styles.section, { backgroundColor: colors.background }]}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="images-outline" size={20} color={colors.tint} />
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                {t('profile.additionalPhotos')}
-              </Text>
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.photosScrollContainer}
-            >
-              {currentProfile.photos.map((photo: string, index: number) => (
+          <View style={styles.photosGrid}>
+            {currentProfile.photos.map((photo: string, index: number) => (
+              <View key={index} style={styles.photoContainer}>
                 <Image
-                  key={index}
                   source={{ uri: photo }}
-                  style={styles.photo}
+                  style={styles.gridPhoto}
+                  resizeMode="cover"
                 />
-              ))}
-            </ScrollView>
+              </View>
+            ))}
           </View>
         )}
       </ScrollView>
@@ -215,7 +198,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   profileAvatarContainer: {
-    marginBottom: 16,
+    marginBottom: 6,
   },
   avatarFallback: {
     width: 120,
@@ -229,34 +212,66 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
   },
+  nameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
   displayName: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 4,
-    textAlign: 'center',
+    marginLeft: 32,
+    marginRight: 8,
   },
   handle: {
     fontSize: 16,
     marginBottom: 4,
     textAlign: 'center',
   },
-  email: {
-    fontSize: 14,
-    marginBottom: 16,
-    textAlign: 'center',
+  editButtonSmall: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  editButton: {
+  locationBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignSelf: 'center',
   },
-  editButtonText: {
-    color: 'white',
+  badgesContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+    paddingHorizontal: 20,
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '500',
+    letterSpacing: 0.2,
+  },
+  sportEmoji: {
     fontSize: 16,
-    fontWeight: '600',
   },
   section: {
     marginTop: 4,
@@ -281,38 +296,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  locationText: {
-    fontSize: 16,
-    marginLeft: 28,
-  },
-  sportsContainer: {
+  photosGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
-    marginLeft: 28,
+    paddingHorizontal: 10,
+    justifyContent: 'space-between',
   },
-  sportTag: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+  photoContainer: {
+    width: '33%',
+    aspectRatio: 0.7,
+    marginBottom: 2,
   },
-  sportName: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  sportLevel: {
-    fontSize: 12,
-    opacity: 0.7,
-  },
-  photosScrollContainer: {
-    paddingLeft: 28,
-    gap: 12,
-  },
-  photo: {
-    width: 100,
-    height: 100,
-    borderRadius: 12,
+  gridPhoto: {
+    width: '100%',
+    height: '100%',
   },
   menuContainer: {
     marginLeft: 28,
