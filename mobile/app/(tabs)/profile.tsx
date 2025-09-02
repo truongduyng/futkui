@@ -153,20 +153,19 @@ export default function ProfileScreen() {
               <Ionicons name="create-outline" size={20} color={colors.text} />
             </TouchableOpacity>
           </View>
-          {/* Handle and Location Row */}
-          <View style={styles.handleLocationRow}>
-            <Text style={[styles.handle, { color: colors.tabIconDefault }]}>
-              @{currentProfile.handle}
-            </Text>
-            {currentProfile.location && (
-              <View style={styles.locationContainer}>
-                <Ionicons name="location-outline" size={16} color={colors.tabIconDefault} />
-                <Text style={[styles.locationText, { color: colors.tabIconDefault }]}>
-                  {currentProfile.location}
-                </Text>
-              </View>
-            )}
-          </View>
+          <Text style={[styles.handle, { color: colors.tabIconDefault }]}>
+            @{currentProfile.handle}
+          </Text>
+
+          {/* Location */}
+          {currentProfile.location && (
+            <View style={styles.locationContainer}>
+              <Ionicons name="location-outline" size={16} color={colors.tabIconDefault} />
+              <Text style={[styles.locationText, { color: colors.tabIconDefault }]}>
+                {currentProfile.location}
+              </Text>
+            </View>
+          )}
 
           {/* Sports Badges */}
           {currentProfile.sports && currentProfile.sports.length > 0 && (
@@ -301,21 +300,17 @@ const styles = StyleSheet.create({
     marginLeft: 32,
     marginRight: 8,
   },
-  handleLocationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    marginBottom: 22,
-  },
   handle: {
     fontSize: 16,
-    marginLeft: 12,
+    marginBottom: 8,
+    textAlign: "center",
   },
   locationContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 4,
+    marginBottom: 16,
   },
   locationText: {
     fontSize: 16,
