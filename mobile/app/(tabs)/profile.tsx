@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   profileHeader: {
     alignItems: "center",
     marginTop: -30,
-    paddingBottom: 24,
+    paddingBottom: 12,
     paddingHorizontal: 20,
   },
   profileAvatarContainer: {
@@ -286,7 +286,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 4,
   },
   displayName: {
     fontSize: 24,
