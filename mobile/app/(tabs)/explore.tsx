@@ -7,7 +7,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useInstantDB } from "@/hooks/useInstantDB";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Alert,
   SafeAreaView,
@@ -27,36 +27,16 @@ export default function ExploreScreen() {
   const { isDark, themeMode } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
-  const { queryAllGroupsOnce, useProfile, instantClient } =
+  const { useProfile, instantClient } =
     useInstantDB();
   const { data: profileData } = useProfile();
   const { user } = instantClient.useAuth();
 
-  const [allGroups, setAllGroups] = useState<any[]>([]);
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
   const [isThemeSwitcherVisible, setIsThemeSwitcherVisible] = useState(false);
   const [isLanguageSelectorVisible, setIsLanguageSelectorVisible] = useState(false);
 
-  useEffect(() => {
-    const fetchGroups = async () => {
-      try {
-        const result = await queryAllGroupsOnce();
-        const groups =
-          result?.data?.groups?.filter((g: any) => g && g.id) || [];
-        setAllGroups(groups);
-      } catch (error) {
-        console.error("Error fetching groups:", error);
-      }
-    };
-
-    fetchGroups();
-  }, [queryAllGroupsOnce]);
   const currentProfile = profileData?.profiles?.[0];
-
-  // Show newest groups for showcase (bot groups already filtered at DB level)
-  const showcaseGroups = allGroups.filter(
-    (group: any) => group && group.id
-  );
 
   const handleSignOut = async () => {
     Alert.alert(t('explore.signOut'), t('explore.signOutConfirm'), [
@@ -127,13 +107,6 @@ export default function ExploreScreen() {
     );
   };
 
-  const handleGroupTap = (group: any) => {
-    Alert.alert(
-      t('explore.joinByLinkOnly'),
-      t('explore.joinByLinkOnlyMessage'),
-      [{ text: t('common.cancel'), style: "cancel" }]
-    );
-  };
 
   return (
     <SafeAreaView
@@ -384,95 +357,6 @@ export default function ExploreScreen() {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {t('explore.communities')}
-          </Text>
-          <Text
-            style={[
-              styles.sectionDescription,
-              { color: colors.tabIconDefault },
-            ]}
-          >
-            {t('explore.communitiesDescription')}
-          </Text>
-          <View style={styles.groupList}>
-            {showcaseGroups.length === 0 ? (
-              <Text
-                style={[styles.emptyText, { color: colors.tabIconDefault }]}
-              >
-                {t('explore.noCommunitiesYet')}
-              </Text>
-            ) : (
-              showcaseGroups.map((group: any) => {
-                return (
-                  <TouchableOpacity
-                    key={group.id}
-                    style={[
-                      styles.groupItem,
-                      { backgroundColor: colors.background },
-                    ]}
-                    onPress={() => handleGroupTap(group)}
-                    activeOpacity={0.8}
-                  >
-                    <View
-                      style={[
-                        styles.avatarContainer,
-                        group.avatarUrl &&
-                          styles.avatarContainerWithImage,
-                      ]}
-                    >
-                      {group.avatarUrl ? (
-                        <CachedAvatar
-                          uri={group.avatarUrl}
-                          size={40}
-                          fallbackComponent={
-                            <Text style={styles.groupEmoji}>
-                              {group.name.charAt(0).toUpperCase()}
-                            </Text>
-                          }
-                        />
-                      ) : (
-                        <Text style={styles.groupEmoji}>
-                          {group.name.charAt(0).toUpperCase()}
-                        </Text>
-                      )}
-                    </View>
-                    <View style={styles.groupInfo}>
-                      <Text style={[styles.groupName, { color: colors.text }]}>
-                        {group.name}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.groupDescription,
-                          { color: colors.tabIconDefault },
-                        ]}
-                      >
-                        {group.description}
-                      </Text>
-                    </View>
-                    <View style={styles.memberCountContainer}>
-                      <Text
-                        style={[
-                          styles.memberCount,
-                          { color: colors.tabIconDefault },
-                        ]}
-                      >
-                        {group.memberships?.length || 0}
-                      </Text>
-                      <Ionicons
-                        name="person-outline"
-                        size={24}
-                        color={colors.tabIconDefault}
-                        style={styles.memberIcon}
-                      />
-                    </View>
-                  </TouchableOpacity>
-                );
-              })
-            )}
-          </View>
-        </View>
       </ScrollView>
 
       {currentProfile && (
@@ -595,100 +479,5 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 8,
-  },
-  sectionDescription: {
-    fontSize: 14,
-    marginBottom: 16,
-    fontStyle: "italic",
-  },
-  emptyText: {
-    textAlign: "center",
-    fontSize: 16,
-    fontStyle: "italic",
-    marginTop: 20,
-  },
-  groupItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginVertical: 4,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  avatarContainer: {
-    width: 40,
-    height: 40,
-    marginRight: 12,
-    borderRadius: 20,
-    overflow: "hidden",
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarContainerWithImage: {
-    backgroundColor: "transparent",
-  },
-  groupEmoji: {
-    fontSize: 20,
-    textAlign: "center",
-    width: "100%",
-    height: "100%",
-    lineHeight: 40,
-    backgroundColor: Colors.light.tint,
-    color: "white",
-  },
-  groupInfo: {
-    flex: 1,
-  },
-  groupHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  memberBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  memberBadgeText: {
-    color: "white",
-    fontSize: 10,
-    fontWeight: "600",
-  },
-  groupName: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 4,
-    letterSpacing: 0.3,
-  },
-  groupDescription: {
-    fontSize: 14,
-    marginBottom: 4,
-    lineHeight: 20,
-  },
-  memberCountContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 50,
-    paddingHorizontal: 8,
-  },
-  memberIcon: {
-    marginLeft: 4,
-    opacity: 0.7,
-  },
-  memberCount: {
-    fontSize: 20,
-    fontWeight: "600",
-    opacity: 0.8,
-  },
-  groupList: {
-    paddingHorizontal: 16,
   },
 });
