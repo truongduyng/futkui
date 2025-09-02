@@ -74,8 +74,15 @@
   },
   "sports": {
     "football": "Bóng đá",
+    "basketball": "Bóng rổ",
+    "tennis": "Tennis",
     "pickleball": "Pickleball",
-    "badminton": "Cầu lông"
+    "volleyball": "Bóng chuyền",
+    "badminton": "Cầu lông",
+    "table_tennis": "Bóng bàn",
+    "swimming": "Bơi lội",
+    "running": "Chạy bộ",
+    "cycling": "Đạp xe"
   },
   "profile": {
     "createProfile": "Tạo hồ sơ",
@@ -108,7 +115,22 @@
     "handleAvailable": "Tên người dùng có sẵn",
     "checkingHandle": "Đang kiểm tra tính khả dụng của tên người dùng...",
     "permissionRequired": "Cần quyền truy cập",
-    "permissionMessage": "Xin lỗi, chúng tôi cần quyền truy cập thư viện ảnh để tải lên ảnh đại diện."
+    "permissionMessage": "Xin lỗi, chúng tôi cần quyền truy cập thư viện ảnh để tải lên ảnh đại diện.",
+    "sportsAndLevels": "Môn thể thao & Trình độ",
+    "sportsAndLevelsHint": "Chọn môn thể thao và thiết lập trình độ cho từng môn",
+    "availableSports": "Môn thể thao có sẵn:",
+    "yourSportsLevels": "Môn thể thao & Trình độ của bạn:",
+    "location": "Địa điểm",
+    "locationPlaceholder": "Nhập địa điểm của bạn",
+    "additionalPhotos": "Ảnh bổ sung (Tùy chọn)",
+    "addPhotos": "Thêm ảnh",
+    "maxPhotos": "Tối đa 5 ảnh",
+    "skillLevels": {
+      "beginner": "Mới bắt đầu",
+      "intermediate": "Trung bình",
+      "advanced": "Nâng cao",
+      "expert": "Chuyên gia"
+    }
   },
   "empty": {
     "noGroupsYet": "Chưa có nhóm nào",

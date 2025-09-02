@@ -22,16 +22,56 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/useToast";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-interface ProfileSetupProps {
-  userId: string;
-  onProfileCreated: () => void;
+interface ExistingProfile {
+  id: string;
+  handle: string;
+  displayName?: string;
+  avatarUrl?: string;
+  sports?: { sport: string; level: string; }[];
+  location?: string;
+  photos?: string[];
+  email?: string;
 }
 
-export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
+interface ProfileSetupProps {
+  userId?: string;
+  existingProfile?: ExistingProfile;
+  onProfileCreated?: () => void;
+  onProfileUpdated?: () => void;
+  mode?: 'create' | 'edit';
+}
+
+const SPORTS_KEYS = [
+  'football', 'basketball', 'tennis', 'pickleball', 'volleyball',
+  'badminton', 'table_tennis', 'swimming', 'running', 'cycling',
+];
+
+const LEVEL_OPTIONS = [
+  { value: 'beginner', labelKey: 'profile.skillLevels.beginner' },
+  { value: 'intermediate', labelKey: 'profile.skillLevels.intermediate' },
+  { value: 'advanced', labelKey: 'profile.skillLevels.advanced' },
+  { value: 'expert', labelKey: 'profile.skillLevels.expert' }
+];
+
+interface SportWithLevel {
+  sport: string;
+  level: string;
+}
+
+export function ProfileSetup({ 
+  userId, 
+  existingProfile, 
+  onProfileCreated, 
+  onProfileUpdated, 
+  mode = 'create' 
+}: ProfileSetupProps) {
   const { t } = useTranslation();
   const [handle, setHandle] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
+  const [sportsWithLevels, setSportsWithLevels] = useState<SportWithLevel[]>([]);
+  const [location, setLocation] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
@@ -39,40 +79,53 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
   const { showError } = useToast();
 
 
-  // Check for Apple Sign-In data and prefill display name if available
+  // Initialize form data based on mode
   useEffect(() => {
-    const checkAppleUserInfo = async () => {
-      try {
-        const appleUserInfoStr = await AsyncStorage.getItem("appleUserInfo");
-        if (appleUserInfoStr) {
-          const appleUserInfo = JSON.parse(appleUserInfoStr);
-
-          // Clear the stored data
-          await AsyncStorage.removeItem("appleUserInfo");
-
-          // Prefill display name if we have Apple name data
-          const fullName = appleUserInfo.fullName;
-          let prefillName = "";
-
-          if (fullName?.givenName && fullName?.familyName) {
-            prefillName = `${fullName.givenName} ${fullName.familyName}`.trim();
-          } else if (fullName?.givenName) {
-            prefillName = fullName.givenName;
-          } else if (fullName?.familyName) {
-            prefillName = fullName.familyName;
-          }
-
-          if (prefillName) {
-            setDisplayName(prefillName);
-          }
-        }
-      } catch (error) {
-        console.error("Error checking Apple user info:", error);
+    if (mode === 'edit' && existingProfile) {
+      // Pre-fill form with existing profile data
+      setHandle(existingProfile.handle || '');
+      setDisplayName(existingProfile.displayName || '');
+      setLocation(existingProfile.location || '');
+      setSportsWithLevels(existingProfile.sports || []);
+      setSelectedPhotos(existingProfile.photos || []);
+      if (existingProfile.avatarUrl) {
+        setSelectedImage(existingProfile.avatarUrl);
       }
-    };
+    } else if (mode === 'create') {
+      // Check for Apple Sign-In data and prefill display name if available
+      const checkAppleUserInfo = async () => {
+        try {
+          const appleUserInfoStr = await AsyncStorage.getItem("appleUserInfo");
+          if (appleUserInfoStr) {
+            const appleUserInfo = JSON.parse(appleUserInfoStr);
 
-    checkAppleUserInfo();
-  }, []);
+            // Clear the stored data
+            await AsyncStorage.removeItem("appleUserInfo");
+
+            // Prefill display name if we have Apple name data
+            const fullName = appleUserInfo.fullName;
+            let prefillName = "";
+
+            if (fullName?.givenName && fullName?.familyName) {
+              prefillName = `${fullName.givenName} ${fullName.familyName}`.trim();
+            } else if (fullName?.givenName) {
+              prefillName = fullName.givenName;
+            } else if (fullName?.familyName) {
+              prefillName = fullName.familyName;
+            }
+
+            if (prefillName) {
+              setDisplayName(prefillName);
+            }
+          }
+        } catch (error) {
+          console.error("Error checking Apple user info:", error);
+        }
+      };
+
+      checkAppleUserInfo();
+    }
+  }, [mode, existingProfile]);
 
   const isValidHandle = (handle: string) => {
     return /^[a-zA-Z0-9_]{3,20}$/.test(handle);
@@ -100,6 +153,61 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
     }
   };
 
+  const pickMultiplePhotos = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      showError(
+        t("profile.permissionRequired"),
+        t("profile.permissionMessage"),
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: false,
+      allowsMultipleSelection: true,
+      selectionLimit: 5,
+      quality: 0.5,
+    });
+
+    if (!result.canceled && result.assets) {
+      const newPhotos = result.assets.map(asset => asset.uri);
+      setSelectedPhotos(prev => [...prev, ...newPhotos].slice(0, 5));
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    setSelectedPhotos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addSport = (sport: string) => {
+    setSportsWithLevels(prev => {
+      if (prev.find(s => s.sport === sport)) {
+        return prev; // Sport already exists
+      }
+      return [...prev, { sport, level: 'beginner' }];
+    });
+  };
+
+  const removeSport = (sport: string) => {
+    setSportsWithLevels(prev => prev.filter(s => s.sport !== sport));
+  };
+
+  const updateSportLevel = (sport: string, level: string) => {
+    setSportsWithLevels(prev =>
+      prev.map(s => s.sport === sport ? { ...s, level } : s)
+    );
+  };
+
+  const getSportLevel = (sport: string) => {
+    return sportsWithLevels.find(s => s.sport === sport)?.level || 'beginner';
+  };
+
+  const isSportSelected = (sport: string) => {
+    return sportsWithLevels.some(s => s.sport === sport);
+  };
+
   const handleSubmit = async () => {
     if (!handle.trim()) {
       showError(t("common.error"), t("profile.errorHandle"));
@@ -125,28 +233,52 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
     setIsSubmitting(true);
 
     try {
-      // Check if handle is already taken
-      const existingProfile = await instantClient.queryOnce({
-        profiles: {
-          $: { where: { handle: handle.toLowerCase() } },
-        },
-      });
+      let profileId: string;
+      
+      if (mode === 'edit' && existingProfile) {
+        profileId = existingProfile.id;
+        
+        // Check if handle is already taken (exclude current profile)
+        if (handle.toLowerCase() !== existingProfile.handle.toLowerCase()) {
+          const existingProfileCheck = await instantClient.queryOnce({
+            profiles: {
+              $: { where: { handle: handle.toLowerCase() } },
+            },
+          });
 
-      if (
-        existingProfile.data.profiles &&
-        existingProfile.data.profiles.length > 0
-      ) {
-        showError(t("common.error"), t("profile.handleTaken"));
-        setIsSubmitting(false);
-        return;
+          if (
+            existingProfileCheck.data.profiles &&
+            existingProfileCheck.data.profiles.length > 0
+          ) {
+            showError(t("common.error"), t("profile.handleTaken"));
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      } else {
+        // Check if handle is already taken
+        const existingProfileCheck = await instantClient.queryOnce({
+          profiles: {
+            $: { where: { handle: handle.toLowerCase() } },
+          },
+        });
+
+        if (
+          existingProfileCheck.data.profiles &&
+          existingProfileCheck.data.profiles.length > 0
+        ) {
+          showError(t("common.error"), t("profile.handleTaken"));
+          setIsSubmitting(false);
+          return;
+        }
+        
+        profileId = id();
       }
-
-      // Create profile with avatar
-      const profileId = id();
       let avatarUrl = null;
+      let photoUrls: string[] = [];
 
-      // Upload image if provided
-      if (selectedImage) {
+      // Upload avatar image if provided and it's a new local image (not existing URL)
+      if (selectedImage && selectedImage.startsWith('file://')) {
         try {
           const fileName = `avatar-${profileId}-${Date.now()}.jpg`;
           avatarUrl = await uploadToR2(selectedImage, fileName);
@@ -156,25 +288,69 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
           setIsSubmitting(false);
           return;
         }
+      } else if (selectedImage && !selectedImage.startsWith('file://')) {
+        // Keep existing avatar URL
+        avatarUrl = selectedImage;
       }
 
-      // Get push notification token
-      const pushToken = await registerForPushNotificationsAsync();
+      // Handle additional photos - separate new uploads from existing URLs
+      if (selectedPhotos.length > 0) {
+        try {
+          const newPhotos = selectedPhotos.filter(photo => photo.startsWith('file://'));
+          const existingPhotos = selectedPhotos.filter(photo => !photo.startsWith('file://'));
+          
+          let newPhotoUrls: string[] = [];
+          if (newPhotos.length > 0) {
+            const uploadPromises = newPhotos.map(async (photo, index) => {
+              const fileName = `photo-${profileId}-${Date.now()}-${index}.jpg`;
+              return await uploadToR2(photo, fileName);
+            });
+            newPhotoUrls = await Promise.all(uploadPromises);
+          }
+          
+          photoUrls = [...existingPhotos, ...newPhotoUrls];
+        } catch (error) {
+          console.error("Error uploading photos:", error);
+          showError(t("common.error"), t("profile.failedUploadPhoto"));
+          setIsSubmitting(false);
+          return;
+        }
+      }
 
-      // Create profile
-      const profileTransaction = instantClient.tx.profiles[profileId]
-        .update({
+      if (mode === 'edit') {
+        // Update existing profile
+        const profileTransaction = instantClient.tx.profiles[profileId].update({
           handle: handle.toLowerCase(),
           displayName: displayName.trim(),
-          createdAt: Date.now(),
-          pushToken: pushToken || undefined,
-          avatarUrl: avatarUrl || undefined,
-        })
-        .link({ user: userId });
+          ...(avatarUrl && { avatarUrl }),
+          sports: sportsWithLevels.length > 0 ? sportsWithLevels : undefined,
+          location: location.trim() || undefined,
+          photos: photoUrls.length > 0 ? photoUrls : undefined,
+        });
 
-      await instantClient.transact([profileTransaction]);
+        await instantClient.transact([profileTransaction]);
+        onProfileUpdated?.();
+      } else {
+        // Get push notification token for new profiles
+        const pushToken = await registerForPushNotificationsAsync();
 
-      onProfileCreated();
+        // Create new profile
+        const profileTransaction = instantClient.tx.profiles[profileId]
+          .update({
+            handle: handle.toLowerCase(),
+            displayName: displayName.trim(),
+            createdAt: Date.now(),
+            pushToken: pushToken || undefined,
+            avatarUrl: avatarUrl || undefined,
+            sports: sportsWithLevels.length > 0 ? sportsWithLevels : undefined,
+            location: location.trim() || undefined,
+            photos: photoUrls.length > 0 ? photoUrls : undefined,
+          })
+          .link({ user: userId! });
+
+        await instantClient.transact([profileTransaction]);
+        onProfileCreated?.();
+      }
     } catch (error) {
       console.error("Error creating profile:", error);
       showError(t("common.error"), t("profile.failedCreateProfile"));
@@ -200,11 +376,17 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
         >
           <View style={styles.content}>
             <Text style={[styles.title, { color: colors.text }]}>
-              {t("profile.setupProfile")}
+              {mode === 'edit' ? t("profile.editProfile") : t("profile.setupProfile")}
             </Text>
             <Text style={[styles.subtitle, { color: colors.text }]}>
-              {t("profile.setupSubtitle")}
+              {mode === 'edit' ? t("profile.setupSubtitle") : t("profile.setupSubtitle")}
             </Text>
+            
+            {mode === 'edit' && existingProfile?.email && (
+              <Text style={[styles.emailText, { color: colors.tabIconDefault }]}>
+                {existingProfile.email}
+              </Text>
+            )}
 
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
               {t("profile.profilePhoto")}
@@ -280,6 +462,169 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
               maxLength={50}
             />
 
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {t("profile.sportsAndLevels")}
+            </Text>
+            <Text style={[styles.inputHint, { color: colors.tabIconDefault }]}>
+              {t("profile.sportsAndLevelsHint")}
+            </Text>
+
+            <View style={styles.addSportsContainer}>
+              <Text style={[styles.subsectionTitle, { color: colors.text }]}>
+                {t("profile.availableSports")}
+              </Text>
+              <View style={styles.availableSportsContainer}>
+                {SPORTS_KEYS.map((sportKey) => (
+                  <TouchableOpacity
+                    key={sportKey}
+                    style={[
+                      styles.availableSportButton,
+                      {
+                        borderColor: colors.icon,
+                        backgroundColor: isSportSelected(sportKey)
+                          ? colors.tabIconDefault
+                          : colors.background,
+                        opacity: isSportSelected(sportKey) ? 0.5 : 1,
+                      },
+                    ]}
+                    onPress={() => isSportSelected(sportKey) ? removeSport(sportKey) : addSport(sportKey)}
+                    disabled={isSportSelected(sportKey)}
+                  >
+                    <Text
+                      style={[
+                        styles.availableSportButtonText,
+                        {
+                          color: isSportSelected(sportKey)
+                            ? "white"
+                            : colors.text,
+                        },
+                      ]}
+                    >
+                      {t(`sports.${sportKey}`)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {sportsWithLevels.length > 0 && (
+              <View style={styles.selectedSportsContainer}>
+                <Text style={[styles.subsectionTitle, { color: colors.text }]}>
+                  {t("profile.yourSportsLevels")}
+                </Text>
+                {sportsWithLevels.map((sportWithLevel) => (
+                  <View key={sportWithLevel.sport} style={styles.sportLevelRow}>
+                    <View style={styles.sportLevelHeader}>
+                      <Text style={[styles.sportName, { color: colors.text }]}>
+                        {t(`sports.${sportWithLevel.sport}`)}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => removeSport(sportWithLevel.sport)}
+                        style={styles.removeSportButton}
+                      >
+                        <Text style={styles.removeSportText}>×</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <View style={styles.levelOptionsRow}>
+                      {LEVEL_OPTIONS.map((levelOption) => (
+                        <TouchableOpacity
+                          key={levelOption.value}
+                          style={[
+                            styles.levelOptionButton,
+                            {
+                              borderColor: colors.icon,
+                              backgroundColor: getSportLevel(sportWithLevel.sport) === levelOption.value
+                                ? colors.tint
+                                : colors.background,
+                            },
+                          ]}
+                          onPress={() => updateSportLevel(sportWithLevel.sport, levelOption.value)}
+                        >
+                          <Text
+                            style={[
+                              styles.levelOptionText,
+                              {
+                                color: getSportLevel(sportWithLevel.sport) === levelOption.value
+                                  ? "white"
+                                  : colors.text,
+                              },
+                            ]}
+                          >
+                            {t(levelOption.labelKey)}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {t("profile.location")}
+            </Text>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  borderColor: colors.icon,
+                  color: colors.text,
+                  backgroundColor: colors.background,
+                },
+              ]}
+              placeholder={t("profile.locationPlaceholder")}
+              placeholderTextColor={colors.tabIconDefault}
+              value={location}
+              onChangeText={setLocation}
+              maxLength={100}
+            />
+
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {t("profile.additionalPhotos")}
+            </Text>
+            <View style={styles.photosSection}>
+              <TouchableOpacity
+                style={[
+                  styles.addPhotoButton,
+                  { borderColor: colors.icon },
+                ]}
+                onPress={pickMultiplePhotos}
+                disabled={selectedPhotos.length >= 5}
+              >
+                <Text
+                  style={[
+                    styles.addPhotoText,
+                    { color: colors.tabIconDefault },
+                  ]}
+                >
+                  {selectedPhotos.length >= 5 ? t("profile.maxPhotos") : t("profile.addPhotos")}
+                </Text>
+              </TouchableOpacity>
+
+              {selectedPhotos.length > 0 && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.photosScroll}
+                >
+                  {selectedPhotos.map((photo, index) => (
+                    <View key={index} style={styles.photoContainer}>
+                      <Image
+                        source={{ uri: photo }}
+                        style={styles.additionalPhoto}
+                      />
+                      <TouchableOpacity
+                        style={styles.removePhotoButton}
+                        onPress={() => removePhoto(index)}
+                      >
+                        <Text style={styles.removePhotoText}>×</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
+              )}
+            </View>
+
             <TouchableOpacity
               style={[styles.button, { backgroundColor: colors.tint }]}
               onPress={handleSubmit}
@@ -287,8 +632,8 @@ export function ProfileSetup({ userId, onProfileCreated }: ProfileSetupProps) {
             >
               <Text style={styles.buttonText}>
                 {isSubmitting
-                  ? t("profile.creatingProfile")
-                  : t("profile.createProfile")}
+                  ? (mode === 'edit' ? t("profile.updatingProfile") : t("profile.creatingProfile"))
+                  : (mode === 'edit' ? t("profile.updateProfile") : t("profile.createProfile"))}
               </Text>
             </TouchableOpacity>
           </View>
@@ -383,5 +728,129 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "600",
+  },
+  subsectionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  addSportsContainer: {
+    marginBottom: 16,
+  },
+  availableSportsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  availableSportButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  availableSportButtonText: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  selectedSportsContainer: {
+    marginBottom: 16,
+  },
+  sportLevelRow: {
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  sportLevelHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  sportName: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  removeSportButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "red",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  removeSportText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  levelOptionsRow: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  levelOptionButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    minWidth: 70,
+  },
+  levelOptionText: {
+    fontSize: 12,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  photosSection: {
+    marginBottom: 16,
+  },
+  addPhotoButton: {
+    height: 48,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  addPhotoText: {
+    fontSize: 14,
+  },
+  photosScroll: {
+    maxHeight: 100,
+  },
+  photoContainer: {
+    position: "relative",
+    marginRight: 8,
+  },
+  additionalPhoto: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+  },
+  removePhotoButton: {
+    position: "absolute",
+    top: -8,
+    right: -8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "red",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  removePhotoText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  emailText: {
+    fontSize: 14,
+    marginTop: 8,
+    marginBottom: 16,
+    textAlign: "center",
+    opacity: 0.8,
   },
 });

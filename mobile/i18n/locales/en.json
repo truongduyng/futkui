@@ -74,8 +74,15 @@
   },
   "sports": {
     "football": "Football",
+    "basketball": "Basketball",
+    "tennis": "Tennis",
     "pickleball": "Pickleball",
-    "badminton": "Badminton"
+    "volleyball": "Volleyball",
+    "badminton": "Badminton",
+    "table_tennis": "Table Tennis",
+    "swimming": "Swimming",
+    "running": "Running",
+    "cycling": "Cycling"
   },
   "profile": {
     "createProfile": "Create Profile",
@@ -108,7 +115,22 @@
     "handleAvailable": "Handle is available",
     "checkingHandle": "Checking handle availability...",
     "permissionRequired": "Permission required",
-    "permissionMessage": "Sorry, we need camera roll permissions to upload avatar images."
+    "permissionMessage": "Sorry, we need camera roll permissions to upload avatar images.",
+    "sportsAndLevels": "Sports & Skill Levels",
+    "sportsAndLevelsHint": "Select your sports and set your skill level for each",
+    "availableSports": "Available Sports:",
+    "yourSportsLevels": "Your Sports & Levels:",
+    "location": "Location",
+    "locationPlaceholder": "Enter your location",
+    "additionalPhotos": "Additional Photos (Optional)",
+    "addPhotos": "Add Photos",
+    "maxPhotos": "Max 5 photos",
+    "skillLevels": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate", 
+      "advanced": "Advanced",
+      "expert": "Expert"
+    }
   },
   "empty": {
     "noGroupsYet": "No Groups Yet",

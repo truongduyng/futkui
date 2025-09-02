@@ -68,6 +68,10 @@ const _schema = i.schema({
       displayName: i.string().optional(),
       handle: i.string().unique().indexed(),
       pushToken: i.string().optional(),
+      sports: i.json().optional(),
+      level: i.string().optional(),
+      location: i.string().optional(),
+      photos: i.json().optional(),
     }),
     reactions: i.entity({
       createdAt: i.number(),
