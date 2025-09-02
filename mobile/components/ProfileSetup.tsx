@@ -30,7 +30,7 @@ interface ExistingProfile {
   handle: string;
   displayName?: string;
   avatarUrl?: string;
-  sports?: string[];
+  sports?: string[] | { sport: string; level: string; }[]; // Support both old and new format
   location?: string;
   photos?: string[];
   email?: string;
@@ -95,7 +95,15 @@ export function ProfileSetup({
         setLocation(existingLocation);
       }
 
-      setSelectedSports(existingProfile.sports || []);
+      // Handle both old format (objects with sport property) and new format (strings)
+      if (existingProfile.sports) {
+        const convertedSports = existingProfile.sports.map((sportItem: any) => {
+          return typeof sportItem === 'string' ? sportItem : sportItem.sport;
+        }).filter(sport => sport); // Remove any undefined/null values
+        setSelectedSports(convertedSports);
+      } else {
+        setSelectedSports([]);
+      }
       setSelectedPhotos(existingProfile.photos || []);
       if (existingProfile.avatarUrl) {
         setSelectedImage(existingProfile.avatarUrl);
