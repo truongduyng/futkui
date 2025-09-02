@@ -42,6 +42,8 @@ interface ProfileSetupProps {
   onProfileCreated?: () => void;
   onProfileUpdated?: () => void;
   mode?: 'create' | 'edit';
+  showHeader?: boolean;
+  onSubmitPress?: (submitFn: () => void) => void;
 }
 
 const SPORTS_KEYS = [
@@ -66,7 +68,9 @@ export function ProfileSetup({
   existingProfile,
   onProfileCreated,
   onProfileUpdated,
-  mode = 'create'
+  mode = 'create',
+  showHeader = true,
+  onSubmitPress
 }: ProfileSetupProps) {
   const { t } = useTranslation();
   const [handle, setHandle] = useState("");
@@ -237,7 +241,7 @@ export function ProfileSetup({
     setLocation('');
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = React.useCallback(async () => {
     if (!handle.trim()) {
       showError(t("common.error"), t("profile.errorHandle"));
       return;
@@ -313,8 +317,12 @@ export function ProfileSetup({
           avatarUrl = await uploadToR2(selectedImage, fileName);
         } catch (error) {
           console.error("Error uploading avatar:", error);
-          showError(t("common.error"), t("profile.failedUploadPhoto"));
+          showError(
+            t("common.error"), 
+            t("profile.failedUploadPhoto") + " Your selected image is still available - please try again."
+          );
           setIsSubmitting(false);
+          // Keep the selected image so user can try again
           return;
         }
       } else if (selectedImage && !selectedImage.startsWith('file://')) {
@@ -340,8 +348,12 @@ export function ProfileSetup({
           photoUrls = [...existingPhotos, ...newPhotoUrls];
         } catch (error) {
           console.error("Error uploading photos:", error);
-          showError(t("common.error"), t("profile.failedUploadPhoto"));
+          showError(
+            t("common.error"), 
+            t("profile.failedUploadPhoto") + " Your selected image is still available - please try again."
+          );
           setIsSubmitting(false);
+          // Keep the selected photos so user can try again
           return;
         }
       }
@@ -386,13 +398,40 @@ export function ProfileSetup({
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [handle, displayName, selectedImage, selectedPhotos, sportsWithLevels, location, mode, existingProfile, instantClient, showError, t, onProfileCreated, onProfileUpdated, userId]);
 
+  // Expose handleSubmit to parent if onSubmitPress is provided
+  React.useEffect(() => {
+    if (onSubmitPress) {
+      onSubmitPress(handleSubmit);
+    }
+  }, [onSubmitPress, handleSubmit]);
 
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
+      {/* Custom Header */}
+      {showHeader && (
+        <View style={[styles.header, { borderBottomColor: colors.border }]}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>
+            {mode === 'edit' ? t("profile.editProfile") : t("profile.setupProfile")}
+          </Text>
+          <TouchableOpacity
+            style={[styles.saveButton, { backgroundColor: colors.tint }]}
+            onPress={handleSubmit}
+            disabled={isSubmitting}
+          >
+            <Text style={styles.saveButtonText}>
+              {isSubmitting
+                ? (mode === 'edit' ? t("profile.updatingProfile") : t("profile.creatingProfile"))
+                : (mode === 'edit' ? t("profile.updateProfile") : t("profile.createProfile"))}
+              {(selectedImage?.startsWith('file://') || selectedPhotos.some(p => p.startsWith('file://'))) && !isSubmitting ? " 📁" : ""}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -404,19 +443,6 @@ export function ProfileSetup({
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.content}>
-            <Text style={[styles.title, { color: colors.text }]}>
-              {mode === 'edit' ? t("profile.editProfile") : t("profile.setupProfile")}
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.text }]}>
-              {mode === 'edit' ? t("profile.setupSubtitle") : t("profile.setupSubtitle")}
-            </Text>
-
-            {mode === 'edit' && existingProfile?.email && (
-              <Text style={[styles.emailText, { color: colors.tabIconDefault }]}>
-                {existingProfile.email}
-              </Text>
-            )}
-
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
               {t("profile.profilePhoto")}
             </Text>
@@ -665,18 +691,6 @@ export function ProfileSetup({
                 ))}
               </View>
             )}
-
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: colors.tint }]}
-              onPress={handleSubmit}
-              disabled={isSubmitting}
-            >
-              <Text style={styles.buttonText}>
-                {isSubmitting
-                  ? (mode === 'edit' ? t("profile.updatingProfile") : t("profile.creatingProfile"))
-                  : (mode === 'edit' ? t("profile.updateProfile") : t("profile.createProfile"))}
-              </Text>
-            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -694,6 +708,28 @@ export function ProfileSetup({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  saveButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  saveButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -870,6 +906,8 @@ const styles = StyleSheet.create({
   photoContainer: {
     position: "relative",
     marginRight: 8,
+    marginTop: 8,
+    marginBottom: 8,
   },
   additionalPhoto: {
     width: 80,
@@ -878,17 +916,17 @@ const styles = StyleSheet.create({
   },
   removePhotoButton: {
     position: "absolute",
-    top: -8,
-    right: -8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    top: -4,
+    right: -4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
   },
   removePhotoText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
   },
   emailText: {

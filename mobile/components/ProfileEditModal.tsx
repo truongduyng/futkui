@@ -26,11 +26,23 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
+  
+  const submitFunctionRef = React.useRef<(() => void) | null>(null);
 
   const handleProfileUpdated = () => {
     onProfileUpdated();
     onClose();
   };
+
+  const handleSave = () => {
+    if (submitFunctionRef.current) {
+      submitFunctionRef.current();
+    }
+  };
+
+  const setSubmitFunction = React.useCallback((fn: () => void) => {
+    submitFunctionRef.current = fn;
+  }, []);
 
   return (
     <Modal
@@ -45,13 +57,17 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
             <Ionicons name="close" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.text }]}>{t('profile.editProfile')}</Text>
-          <View style={styles.placeholder} />
+          <TouchableOpacity onPress={handleSave} style={[styles.saveButton, { backgroundColor: colors.tint }]}>
+            <Text style={styles.saveButtonText}>{t('common.save')}</Text>
+          </TouchableOpacity>
         </View>
 
         <ProfileSetup
           existingProfile={profile}
           onProfileUpdated={handleProfileUpdated}
           mode="edit"
+          showHeader={false}
+          onSubmitPress={setSubmitFunction}
         />
       </SafeAreaView>
     </Modal>
@@ -80,7 +96,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  placeholder: {
-    width: 32,
+  saveButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  saveButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
