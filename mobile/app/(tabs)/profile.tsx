@@ -23,10 +23,24 @@ const getSportEmoji = (sport: string) => {
   switch (sport.toLowerCase()) {
     case "football":
       return "⚽";
+    case "basketball":
+      return "🏀";
+    case "tennis":
+      return "🎾";
     case "pickleball":
       return "🏓";
+    case "volleyball":
+      return "🏐";
     case "badminton":
       return "🏸";
+    case "table_tennis":
+      return "🏓";
+    case "swimming":
+      return "🏊";
+    case "running":
+      return "🏃";
+    case "cycling":
+      return "🚴";
     default:
       return "🏃";
   }
@@ -148,7 +162,6 @@ export default function ProfileScreen() {
             <View
               style={[
                 styles.locationBadge,
-                { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
               <Ionicons name="location-outline" size={14} color={colors.icon} />
@@ -161,11 +174,12 @@ export default function ProfileScreen() {
           {/* Sports Badges */}
           {currentProfile.sports && currentProfile.sports.length > 0 && (
             <View style={styles.badgesContainer}>
-              {currentProfile.sports.map(
-                (
-                  sportWithLevel: { sport: string; level: string },
-                  index: number,
-                ) => (
+              {currentProfile.sports.map((sportItem: any, index: number) => {
+                // Handle both old format (object with sport property) and new format (string)
+                const sport = typeof sportItem === 'string' ? sportItem : sportItem.sport;
+                if (!sport) return null;
+
+                return (
                   <View
                     key={index}
                     style={[
@@ -177,17 +191,14 @@ export default function ProfileScreen() {
                     ]}
                   >
                     <Text style={styles.sportEmoji}>
-                      {getSportEmoji(sportWithLevel.sport)}
+                      {getSportEmoji(sport)}
                     </Text>
                     <Text style={[styles.badgeText, { color: colors.text }]}>
-                      {t(`sports.${sportWithLevel.sport.toLowerCase()}`)} •{" "}
-                      {t(
-                        `profile.skillLevels.${sportWithLevel.level.toLowerCase()}`,
-                      )}
+                      {t(`sports.${sport.toLowerCase()}`)}
                     </Text>
                   </View>
-                ),
-              )}
+                );
+              })}
             </View>
           )}
         </View>
@@ -310,21 +321,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
     alignSelf: "center",
     marginBottom: 8,
   },
   badgesContainer: {
     flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: 20,
+    justifyContent: "center",
+    flexWrap: "wrap",
+    columnGap: 8,
+    rowGap: 4,
   },
   badge: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 3,
     borderRadius: 16,
     borderWidth: 1,
     gap: 4,
@@ -335,7 +346,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   badgeText: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "500",
     letterSpacing: 0.2,
   },

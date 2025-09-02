@@ -30,7 +30,7 @@ interface ExistingProfile {
   handle: string;
   displayName?: string;
   avatarUrl?: string;
-  sports?: { sport: string; level: string; }[];
+  sports?: string[];
   location?: string;
   photos?: string[];
   email?: string;
@@ -51,17 +51,7 @@ const SPORTS_KEYS = [
   'badminton', 'table_tennis', 'swimming', 'running', 'cycling',
 ];
 
-const LEVEL_OPTIONS = [
-  { value: 'beginner', labelKey: 'profile.skillLevels.beginner' },
-  { value: 'intermediate', labelKey: 'profile.skillLevels.intermediate' },
-  { value: 'advanced', labelKey: 'profile.skillLevels.advanced' },
-  { value: 'expert', labelKey: 'profile.skillLevels.expert' }
-];
 
-interface SportWithLevel {
-  sport: string;
-  level: string;
-}
 
 export function ProfileSetup({
   userId,
@@ -77,7 +67,7 @@ export function ProfileSetup({
   const [displayName, setDisplayName] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
-  const [sportsWithLevels, setSportsWithLevels] = useState<SportWithLevel[]>([]);
+  const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [location, setLocation] = useState("");
   const [selectedLocationCode, setSelectedLocationCode] = useState<string>("");
   const [isLocationSelectorVisible, setIsLocationSelectorVisible] = useState(false);
@@ -105,7 +95,7 @@ export function ProfileSetup({
         setLocation(existingLocation);
       }
 
-      setSportsWithLevels(existingProfile.sports || []);
+      setSelectedSports(existingProfile.sports || []);
       setSelectedPhotos(existingProfile.photos || []);
       if (existingProfile.avatarUrl) {
         setSelectedImage(existingProfile.avatarUrl);
@@ -201,30 +191,22 @@ export function ProfileSetup({
   };
 
   const addSport = (sport: string) => {
-    setSportsWithLevels(prev => {
-      if (prev.find(s => s.sport === sport)) {
+    setSelectedSports(prev => {
+      if (prev.includes(sport)) {
         return prev; // Sport already exists
       }
-      return [...prev, { sport, level: 'beginner' }];
+      return [...prev, sport];
     });
   };
 
   const removeSport = (sport: string) => {
-    setSportsWithLevels(prev => prev.filter(s => s.sport !== sport));
+    setSelectedSports(prev => prev.filter(s => s !== sport));
   };
 
-  const updateSportLevel = (sport: string, level: string) => {
-    setSportsWithLevels(prev =>
-      prev.map(s => s.sport === sport ? { ...s, level } : s)
-    );
-  };
 
-  const getSportLevel = (sport: string) => {
-    return sportsWithLevels.find(s => s.sport === sport)?.level || 'beginner';
-  };
 
   const isSportSelected = (sport: string) => {
-    return sportsWithLevels.some(s => s.sport.toLocaleLowerCase() === sport);
+    return selectedSports.includes(sport);
   };
 
   const handleLocationSelect = (province: { code: string; label: string }) => {
@@ -364,7 +346,7 @@ export function ProfileSetup({
           handle: handle.toLowerCase(),
           displayName: displayName.trim(),
           ...(avatarUrl && { avatarUrl }),
-          sports: sportsWithLevels.length > 0 ? sportsWithLevels : undefined,
+          sports: selectedSports.length > 0 ? selectedSports : undefined,
           location: location.trim() || undefined,
           photos: photoUrls.length > 0 ? photoUrls : undefined,
         });
@@ -383,7 +365,7 @@ export function ProfileSetup({
             createdAt: Date.now(),
             pushToken: pushToken || undefined,
             avatarUrl: avatarUrl || undefined,
-            sports: sportsWithLevels.length > 0 ? sportsWithLevels : undefined,
+            sports: selectedSports.length > 0 ? selectedSports : undefined,
             location: location.trim() || undefined,
             photos: photoUrls.length > 0 ? photoUrls : undefined,
           })
@@ -398,7 +380,7 @@ export function ProfileSetup({
     } finally {
       setIsSubmitting(false);
     }
-  }, [handle, displayName, selectedImage, selectedPhotos, sportsWithLevels, location, mode, existingProfile, instantClient, showError, t, onProfileCreated, onProfileUpdated, userId]);
+  }, [handle, displayName, selectedImage, selectedPhotos, selectedSports, location, mode, existingProfile, instantClient, showError, t, onProfileCreated, onProfileUpdated, userId]);
 
   // Expose handleSubmit to parent if onSubmitPress is provided
   React.useEffect(() => {
@@ -602,10 +584,7 @@ export function ProfileSetup({
             </View>
 
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              {t("profile.sportsAndLevels")}
-            </Text>
-            <Text style={[styles.inputHint, { color: colors.tabIconDefault }]}>
-              {t("profile.sportsAndLevelsHint")}
+              {t("profile.sports")}
             </Text>
 
             <View style={styles.addSportsContainer}>
@@ -642,53 +621,23 @@ export function ProfileSetup({
               </View>
             </View>
 
-            {sportsWithLevels.length > 0 && (
+            {selectedSports.length > 0 && (
               <View style={styles.selectedSportsContainer}>
-                {sportsWithLevels.map((sportWithLevel) => (
-                  <View key={sportWithLevel.sport} style={[styles.sportLevelRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
-                    <View style={styles.sportLevelHeader}>
-                      <Text style={[styles.sportName, { color: colors.text }]}>
-                        {t(`sports.${sportWithLevel.sport.toLocaleLowerCase()}`)}
+                <View style={styles.selectedSportsRow}>
+                  {selectedSports.map((sport) => (
+                    <View key={sport} style={[styles.selectedSportBadge, { borderColor: colors.border, backgroundColor: colors.card }]}>
+                      <Text style={[styles.selectedSportText, { color: colors.text }]}>
+                        {t(`sports.${sport.toLowerCase()}`)}
                       </Text>
                       <TouchableOpacity
-                        onPress={() => removeSport(sportWithLevel.sport)}
+                        onPress={() => removeSport(sport)}
                         style={[styles.removeSportButton, { backgroundColor: colors.accent }]}
                       >
                         <Text style={styles.removeSportText}>×</Text>
                       </TouchableOpacity>
                     </View>
-                    <View style={styles.levelOptionsRow}>
-                      {LEVEL_OPTIONS.map((levelOption) => (
-                        <TouchableOpacity
-                          key={levelOption.value}
-                          style={[
-                            styles.levelOptionButton,
-                            {
-                              borderColor: colors.icon,
-                              backgroundColor: getSportLevel(sportWithLevel.sport) === levelOption.value
-                                ? colors.tint
-                                : colors.background,
-                            },
-                          ]}
-                          onPress={() => updateSportLevel(sportWithLevel.sport, levelOption.value)}
-                        >
-                          <Text
-                            style={[
-                              styles.levelOptionText,
-                              {
-                                color: getSportLevel(sportWithLevel.sport) === levelOption.value
-                                  ? "white"
-                                  : colors.text,
-                              },
-                            ]}
-                          >
-                            {t(levelOption.labelKey)}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </View>
-                ))}
+                  ))}
+                </View>
               </View>
             )}
           </View>
@@ -840,21 +789,23 @@ const styles = StyleSheet.create({
   selectedSportsContainer: {
     marginBottom: 16,
   },
-  sportLevelRow: {
-    marginBottom: 16,
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  sportLevelHeader: {
+  selectedSportsRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
+    flexWrap: "wrap",
+    gap: 8,
   },
-  sportName: {
-    fontSize: 16,
-    fontWeight: "600",
+  selectedSportBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    gap: 6,
+  },
+  selectedSportText: {
+    fontSize: 14,
+    fontWeight: "500",
   },
   removeSportButton: {
     width: 24,
@@ -867,23 +818,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
-  },
-  levelOptionsRow: {
-    flexDirection: "row",
-    gap: 8,
-    flexWrap: "wrap",
-  },
-  levelOptionButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    minWidth: 70,
-  },
-  levelOptionText: {
-    fontSize: 12,
-    fontWeight: "500",
-    textAlign: "center",
   },
   photosSection: {
     marginBottom: 16,

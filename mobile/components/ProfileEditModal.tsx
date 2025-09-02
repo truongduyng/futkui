@@ -14,7 +14,7 @@ interface ProfileEditModalProps {
     handle: string;
     displayName?: string;
     avatarUrl?: string;
-    sports?: { sport: string; level: string; }[];
+    sports?: string[];
     location?: string;
     photos?: string[];
     email?: string;
@@ -26,7 +26,7 @@ export function ProfileEditModal({ visible, onClose, profile, onProfileUpdated }
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
-  
+
   const submitFunctionRef = React.useRef<(() => void) | null>(null);
 
   const handleProfileUpdated = () => {
