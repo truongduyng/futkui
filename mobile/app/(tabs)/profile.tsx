@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   profileAvatarContainer: {
-    marginBottom: 6,
+    marginBottom: 8,
   },
   avatarFallback: {
     width: 120,
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   },
   handle: {
     fontSize: 16,
-    marginBottom: 4,
+    marginBottom: 8,
     textAlign: 'center',
   },
   editButtonSmall: {
@@ -244,11 +244,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     alignSelf: 'center',
+    marginBottom: 8,
   },
   badgesContainer: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 12,
     paddingHorizontal: 20,
   },
   badge: {
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
   photoContainer: {
     width: '33%',
     aspectRatio: 0.7,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   gridPhoto: {
     width: '100%',
