@@ -52,6 +52,7 @@ interface MatchCardProps {
   currentUserId: string;
   onRsvp: (response: 'yes' | 'no' | 'maybe') => void;
   onCheckIn: () => void;
+  onUnCheckIn: () => void;
   onCloseMatch?: () => void;
   isOwnMessage: boolean;
   author?: {
@@ -71,6 +72,7 @@ export const MatchCard = React.memo(function MatchCard({
   currentUserId,
   onRsvp,
   onCheckIn,
+  onUnCheckIn,
   onCloseMatch,
   isOwnMessage,
   author,
@@ -293,10 +295,13 @@ const colors = isDark ? Colors.dark : Colors.light;
               {t('chat.matchDayCheckIn')}
             </Text>
             {userCheckedIn ? (
-              <View style={[styles.checkedInBadge, { backgroundColor: '#22C55E' }]}>
-                <Ionicons name="checkmark-circle" size={16} color="white" />
-                <Text style={styles.checkedInText}>{t('chat.checkedIn')}</Text>
-              </View>
+              <TouchableOpacity
+                style={[styles.unCheckInButton, { backgroundColor: '#EF4444' }]}
+                onPress={onUnCheckIn}
+              >
+                <Ionicons name="log-out" size={16} color="white" />
+                <Text style={styles.unCheckInButtonText}>{t('chat.unCheckIn')}</Text>
+              </TouchableOpacity>
             ) : canCheckIn ? (
               <TouchableOpacity
                 style={[styles.checkInButton, { backgroundColor: '#22C55E' }]}
@@ -334,6 +339,8 @@ const colors = isDark ? Colors.dark : Colors.light;
               </Text>
             )}
           </View>
+
+          {/* RSVP Responses */}
           <View style={styles.rsvpCounts}>
             {(['yes', 'no', 'maybe'] as const).map((response) => {
               const count = rsvpCounts[response] || 0;
@@ -371,12 +378,16 @@ const colors = isDark ? Colors.dark : Colors.light;
                 </View>
               );
             })}
-            {match.checkIns.length > 0 && (
+          </View>
+
+          {/* Check-in Status */}
+          {match.checkIns.length > 0 && (
+            <View style={styles.checkInSummary}>
               <View style={styles.rsvpCountSection}>
                 <View style={styles.rsvpCount}>
                   <Ionicons
                     name="checkmark-circle"
-                    size={12}
+                    size={14}
                     color={isOwnMessage ? 'white' : colors.text}
                   />
                   <Text style={[
@@ -390,14 +401,14 @@ const colors = isDark ? Colors.dark : Colors.light;
                   <AvatarStack
                     users={match.checkIns.map(checkIn => checkIn.user)}
                     maxVisible={3}
-                    avatarSize={20}
+                    avatarSize={25}
                     overlap={6}
                     showCount={true}
                   />
                 </View>
               </View>
-            )}
-          </View>
+            </View>
+          )}
         </View>
       </View>
 
@@ -562,6 +573,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  unCheckInButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 6,
+  },
+  unCheckInButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
   checkInDisabled: {
     fontSize: 12,
     fontStyle: 'italic',
@@ -590,6 +615,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
+  checkInSummary: {
+    marginTop: 12,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+  },
   rsvpCountSection: {
     alignItems: 'center',
     gap: 6,
@@ -603,11 +635,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   rsvpCountEmoji: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '500',
   },
   rsvpCountText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
   },
   messageFooter: {

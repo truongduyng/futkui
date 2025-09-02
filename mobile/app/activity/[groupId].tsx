@@ -34,6 +34,7 @@ const colors = isDark ? Colors.dark : Colors.light;
     addOptionToPoll,
     rsvpToMatch,
     checkInToMatch,
+    unCheckInFromMatch,
     closeMatch,
   } = useInstantDB();
 
@@ -254,6 +255,7 @@ const colors = isDark ? Colors.dark : Colors.light;
               currentUserId={currentProfile?.id || ''}
               onRsvp={(response) => handleRsvp(match.id, response)}
               onCheckIn={() => handleCheckIn(match.id)}
+              onUnCheckIn={() => handleUnCheckIn(match.id)}
               onCloseMatch={() => handleCloseMatch(match.id)}
               isOwnMessage={isOwnMatch}
               author={match.creator}
@@ -341,6 +343,26 @@ const colors = isDark ? Colors.dark : Colors.light;
       });
     } catch (error) {
       console.error("Error check-in:", error);
+    }
+  };
+
+  const handleUnCheckIn = async (matchId: string) => {
+    if (!currentProfile) return;
+
+    const match = matches.find(m => m.id === matchId);
+    if (!match) {
+      console.error("Match not found:", matchId);
+      return;
+    }
+
+    try {
+      await unCheckInFromMatch({
+        matchId,
+        userId: currentProfile.id,
+        existingCheckIns: match.checkIns || [],
+      });
+    } catch (error) {
+      console.error("Error unchecking:", error);
     }
   };
 

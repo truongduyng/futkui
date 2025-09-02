@@ -894,6 +894,29 @@ export function useInstantDB() {
     [db]
   );
 
+  const unCheckInFromMatch = useCallback(
+    async (unCheckInData: {
+      matchId: string;
+      userId: string;
+      existingCheckIns: any[];
+    }) => {
+      // Find the checkIn entry for this user
+      const existingCheckIn = unCheckInData.existingCheckIns.find(
+        (checkIn: any) => checkIn.user?.id === unCheckInData.userId
+      );
+
+      if (existingCheckIn) {
+        const result = await db.transact([
+          db.tx.checkIns[existingCheckIn.id].delete(),
+        ]);
+        return result;
+      }
+      
+      return null;
+    },
+    [db]
+  );
+
   const closeMatch = useCallback(
     async (matchId: string) => {
       const result = await db.transact([
@@ -1390,6 +1413,7 @@ export function useInstantDB() {
     createMatch,
     rsvpToMatch,
     checkInToMatch,
+    unCheckInFromMatch,
     closeMatch,
     addReaction: addOrUpdateReaction,
     removeReaction,

@@ -20,6 +20,7 @@ interface Group {
 interface Match {
   id: string;
   rsvps?: any[];
+  checkIns?: any[];
 }
 
 interface UseChatHandlersProps {
@@ -36,6 +37,7 @@ interface UseChatHandlersProps {
   addOptionToPoll: (pollId: string, optionText: string) => Promise<any>;
   rsvpToMatch: (params: any) => Promise<any>;
   checkInToMatch: (params: any) => Promise<any>;
+  unCheckInFromMatch: (params: any) => Promise<any>;
   closeMatch: (matchId: string) => Promise<any>;
   leaveGroup: (membershipId: string) => Promise<any>;
   setIsNearBottom: (value: boolean) => void;
@@ -58,6 +60,7 @@ export function useChatHandlers({
   addOptionToPoll,
   rsvpToMatch,
   checkInToMatch,
+  unCheckInFromMatch,
   closeMatch,
   leaveGroup,
   setIsNearBottom,
@@ -320,6 +323,31 @@ export function useChatHandlers({
     }
   }, [currentProfile, checkInToMatch, showSuccess, showError, t]);
 
+  const handleUnCheckIn = useCallback(async (matchId: string) => {
+    if (!currentProfile) {
+      showError(t('hooks.checkIn.errorTitle'), t('hooks.checkIn.waitProfile'));
+      return;
+    }
+
+    const match = matches.find(m => m.id === matchId);
+    if (!match) {
+      showError(t('hooks.unCheckIn.errorTitle'), 'Match not found');
+      return;
+    }
+
+    try {
+      await unCheckInFromMatch({
+        matchId,
+        userId: currentProfile.id,
+        existingCheckIns: match.checkIns || [],
+      });
+      showSuccess(t('hooks.unCheckIn.successTitle'), t('hooks.unCheckIn.successMessage'));
+    } catch (error) {
+      showError(t('hooks.unCheckIn.errorTitle'), t('hooks.unCheckIn.failedUnCheckIn'));
+      console.error("Error unchecking from match:", error);
+    }
+  }, [currentProfile, matches, unCheckInFromMatch, showSuccess, showError, t]);
+
   const handleCloseMatch = useCallback(async (matchId: string) => {
     if (!currentProfile) {
       showError(t('hooks.closeMatch.errorTitle'), t('hooks.closeMatch.waitProfile'));
@@ -374,6 +402,7 @@ export function useChatHandlers({
     handleClosePoll,
     handleRsvp,
     handleCheckIn,
+    handleUnCheckIn,
     handleCloseMatch,
     handleAddOptionToPoll,
     handleReportMessage,

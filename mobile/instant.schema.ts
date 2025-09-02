@@ -16,7 +16,6 @@ const _schema = i.schema({
     }),
     checkIns: i.entity({
       checkedInAt: i.number(),
-      location: i.string().optional(),
     }),
     groups: i.entity({
       avatarUrl: i.string().optional(),

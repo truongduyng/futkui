@@ -290,11 +290,11 @@ export default function GroupProfileScreen() {
         </View>
 
         {/* Recent Activities Section */}
-        {recentActivities.length > 0 && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              {t('groupProfile.recentActivities')}
-            </Text>
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            {t('groupProfile.recentActivities')}
+          </Text>
+          {recentActivities.length > 0 ? (
             <View
               style={[styles.activitiesList, { backgroundColor: colors.card }]}
             >
@@ -372,8 +372,16 @@ export default function GroupProfileScreen() {
                 />
               </TouchableOpacity>
             </View>
-          </View>
-        )}
+          ) : (
+            <View
+              style={[styles.activitiesList, { backgroundColor: colors.card }]}
+            >
+              <Text style={[styles.emptyText, { color: colors.tabIconDefault }]}>
+                {t('groupProfile.noActivities')}
+              </Text>
+            </View>
+          )}
+        </View>
 
         {/* Group Rule Section */}
         <View style={styles.section}>
@@ -884,5 +892,12 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 16,
     fontWeight: "500",
+  },
+  emptyText: {
+    fontSize: 14,
+    textAlign: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    fontStyle: 'italic',
   },
 });
