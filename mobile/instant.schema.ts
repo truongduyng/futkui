@@ -100,6 +100,29 @@ const _schema = i.schema({
       createdAt: i.number(),
       blockerProfileKey: i.string().unique().indexed(), // "blockerId_blockedId" for uniqueness
     }),
+    duesCycles: i.entity({
+      periodKey: i.string(),
+      amountPerMember: i.number(),
+      status: i.string(), // 'active', 'closed'
+      deadline: i.number(),
+      createdAt: i.number(),
+    }),
+    ledgerEntries: i.entity({
+      refId: i.string(), // Reference to duesCycle ID
+      amount: i.number(),
+      type: i.string(), // 'dues_payment', 'dues_refund'
+      status: i.string(), // 'pending', 'confirmed', 'rejected'
+      billImageUrl: i.string().optional(),
+      adminNotes: i.string().optional(),
+      confirmedAt: i.number().optional(),
+      createdAt: i.number(),
+      updatedAt: i.number(),
+    }),
+    duesMembers: i.entity({
+      status: i.string(), // 'unpaid', 'pending', 'paid', 'overdue'
+      createdAt: i.number(),
+      updatedAt: i.number(),
+    }),
   },
   links: {
     checkInsUser: {
@@ -401,6 +424,78 @@ const _schema = i.schema({
         on: "profiles",
         has: "many",
         label: "blockedMe",
+      },
+    },
+    duesCycleGroup: {
+      forward: {
+        on: "duesCycles",
+        has: "one",
+        label: "group",
+      },
+      reverse: {
+        on: "groups",
+        has: "many",
+        label: "duesCycles",
+      },
+    },
+    duesCycleCreator: {
+      forward: {
+        on: "duesCycles",
+        has: "one",
+        label: "creator",
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "createdDuesCycles",
+      },
+    },
+    duesCycleMessage: {
+      forward: {
+        on: "duesCycles",
+        has: "one",
+        label: "message",
+      },
+      reverse: {
+        on: "messages",
+        has: "one",
+        label: "duesCycle",
+      },
+    },
+    ledgerProfile: {
+      forward: {
+        on: "ledgerEntries",
+        has: "one",
+        label: "profile",
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "ledgerEntries",
+      },
+    },
+    duesMembersCycle: {
+      forward: {
+        on: "duesMembers",
+        has: "one",
+        label: "duesCycle",
+      },
+      reverse: {
+        on: "duesCycles",
+        has: "many",
+        label: "duesMembers",
+      },
+    },
+    duesMembersProfile: {
+      forward: {
+        on: "duesMembers",
+        has: "one",
+        label: "profile",
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "duesMembers",
       },
     },
   },

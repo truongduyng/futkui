@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { filterContent } from '@/utils/contentFilter';
 import { CreatePollModal } from "./CreatePollModal";
 import { CreateMatchModal } from "./CreateMatchModal";
+import { CreateDuesCycleModal } from "./CreateDuesCycleModal";
 import { MentionPicker } from "./MentionPicker";
 
 interface PollOption {
@@ -52,22 +53,33 @@ interface MessageInputProps {
     location: string;
     matchDate: number;
   }) => Promise<void>;
+  onCreateDuesCycle?: (duesData: {
+    periodKey: string;
+    amountPerMember: number;
+    deadline: number;
+  }) => Promise<void>;
   members?: Member[];
   disabled?: boolean;
+  userMembership?: {
+    role?: string;
+  };
 }
 
 export function MessageInput({
   onSendMessage,
   onSendPoll,
   onCreateMatch,
+  onCreateDuesCycle,
   members = [],
   disabled,
+  userMembership,
 }: MessageInputProps) {
   const { t } = useTranslation();
   const [message, setMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showPollModal, setShowPollModal] = useState(false);
   const [showMatchModal, setShowMatchModal] = useState(false);
+  const [showDuesModal, setShowDuesModal] = useState(false);
   const [currentMentionSearch, setCurrentMentionSearch] = useState<string>("");
   const [showMentionPicker, setShowMentionPicker] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
@@ -299,7 +311,24 @@ export function MessageInput({
     inputRef.current?.focus();
   };
 
-  const handleActionMenuSelect = (action: 'image' | 'poll' | 'match') => {
+  const handleCreateDuesCycle = async (duesData: {
+    periodKey: string;
+    amountPerMember: number;
+    deadline: number;
+  }) => {
+    if (onCreateDuesCycle && !isSending) {
+      setIsSending(true);
+      try {
+        await onCreateDuesCycle(duesData);
+      } catch (error) {
+        console.error("Failed to create dues cycle:", error);
+      } finally {
+        setIsSending(false);
+      }
+    }
+  };
+
+  const handleActionMenuSelect = (action: 'image' | 'poll' | 'match' | 'dues') => {
     setShowActionMenu(false);
     
     switch (action) {
@@ -311,6 +340,9 @@ export function MessageInput({
         break;
       case 'match':
         setShowMatchModal(true);
+        break;
+      case 'dues':
+        setShowDuesModal(true);
         break;
     }
   };
@@ -452,9 +484,28 @@ export function MessageInput({
                 </Text>
               </TouchableOpacity>
             )}
+
+            {onCreateDuesCycle && userMembership?.role === 'admin' && (
+              <TouchableOpacity
+                style={styles.actionMenuItem}
+                onPress={() => handleActionMenuSelect('dues')}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="cash" size={24} color={colors.text} />
+                <Text style={[styles.actionMenuText, { color: colors.text }]}>
+                  {t('chat.dues')}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </TouchableOpacity>
       </Modal>
+
+      <CreateDuesCycleModal
+        visible={showDuesModal}
+        onClose={() => setShowDuesModal(false)}
+        onCreateCycle={handleCreateDuesCycle}
+      />
     </View>
   );
 }

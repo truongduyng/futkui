@@ -119,6 +119,11 @@ export function useInstantDB() {
           },
           creator: {},
         },
+        duesCycle: {
+          duesMembers: {
+            profile: {},
+          },
+        },
         group: {},
       },
     });
@@ -911,7 +916,7 @@ export function useInstantDB() {
         ]);
         return result;
       }
-      
+
       return null;
     },
     [db]
@@ -1230,6 +1235,59 @@ export function useInstantDB() {
     });
   };
 
+  const useDuesCycles = (groupId: string) => {
+    if (!groupId) {
+      return { data: null, isLoading: false, error: null };
+    }
+
+    return db.useQuery({
+      duesCycles: {
+        $: {
+          where: { "group.id": groupId },
+          order: { serverCreatedAt: 'desc' },
+        },
+        creator: {},
+        group: {},
+        message: {},
+        duesMembers: {
+          profile: {},
+        },
+      },
+    });
+  };
+
+  const useDuesMembersStatus = (cycleId: string) => {
+    if (!cycleId) {
+      return { data: null, isLoading: false, error: null };
+    }
+
+    return db.useQuery({
+      duesMembers: {
+        $: {
+          where: { "duesCycle.id": cycleId },
+        },
+        profile: {},
+        duesCycle: {},
+      },
+    });
+  };
+
+  const useLedgerEntries = (refId: string) => {
+    if (!refId) {
+      return { data: null, isLoading: false, error: null };
+    }
+
+    return db.useQuery({
+      ledgerEntries: {
+        $: {
+          where: { refId: refId },
+          order: { serverCreatedAt: 'desc' },
+        },
+        profile: {},
+      },
+    });
+  };
+
   // Blocking functionality
   const useBlockedUsers = () => {
     const { user } = db.useAuth();
@@ -1385,6 +1443,227 @@ export function useInstantDB() {
     [db]
   );
 
+  // Dues cycle operations
+  const createDuesCycle = useCallback(
+    async (duesData: {
+      groupId: string;
+      periodKey: string;
+      amountPerMember: number;
+      deadline: number;
+      creatorId: string;
+      authorName: string;
+    }) => {
+      const cycleId = id();
+      const messageId = id();
+
+      // First create the dues cycle and message
+      const result = await db.transact([
+        db.tx.duesCycles[cycleId].update({
+          periodKey: duesData.periodKey,
+          amountPerMember: duesData.amountPerMember,
+          status: 'active',
+          deadline: duesData.deadline,
+          createdAt: Date.now(),
+        }).link({
+          group: duesData.groupId,
+          creator: duesData.creatorId,
+          message: messageId,
+        }),
+        db.tx.messages[messageId].update({
+          content: '',
+          authorName: duesData.authorName,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          type: 'dues',
+        }).link({
+          group: duesData.groupId,
+          author: duesData.creatorId,
+        }),
+      ]);
+
+      // Trigger notifications
+      try {
+        await triggerGroupNotifications({
+          groupId: duesData.groupId,
+          messageContent: '',
+          authorName: duesData.authorName,
+          authorId: duesData.creatorId,
+          mentions: [],
+          messageId: messageId,
+          messageType: 'text',
+        });
+      } catch (error) {
+        console.error('Failed to send dues notifications:', error);
+      }
+
+      return result;
+    },
+    [db, triggerGroupNotifications]
+  );
+
+  const submitDuesPayment = useCallback(
+    async (paymentData: {
+      cycleId: string;
+      profileId: string;
+      billImageUri?: string;
+    }) => {
+      // First get the dues cycle to get the amount
+      const duesCycleQuery = await db.queryOnce({
+        duesCycles: {
+          $: {
+            where: { id: paymentData.cycleId },
+          },
+        },
+      });
+
+      const duesCycle = duesCycleQuery.data?.duesCycles?.[0];
+      if (!duesCycle) {
+        throw new Error('Dues cycle not found');
+      }
+
+      let billImageUrl: string | undefined;
+
+      // Upload bill image if provided
+      if (paymentData.billImageUri) {
+        try {
+          const fileName = `dues-bill-${Date.now()}.jpg`;
+          billImageUrl = await uploadToR2(paymentData.billImageUri, fileName);
+        } catch (error) {
+          console.error('Error uploading bill image:', error);
+          throw new Error('Failed to upload bill image');
+        }
+      }
+
+      // Check if duesMembers entry exists, create or update it
+      const duesMemberQuery = await db.queryOnce({
+        duesMembers: {
+          $: {
+            where: {
+              "duesCycle.id": paymentData.cycleId,
+              "profile.id": paymentData.profileId,
+            },
+          },
+        },
+      });
+
+      const existingDuesMember = duesMemberQuery.data.duesMembers?.[0];
+
+      // Create ledger entry
+      const ledgerEntryId = id();
+      const result = await db.transact([
+        db.tx.ledgerEntries[ledgerEntryId].update({
+          refId: paymentData.cycleId,
+          amount: duesCycle.amountPerMember,
+          type: 'dues_payment',
+          status: 'pending',
+          billImageUrl: billImageUrl,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        }).link({
+          profile: paymentData.profileId,
+        }),
+      ]);
+
+      // Update or create duesMembers entry
+      if (existingDuesMember) {
+        await db.transact([
+          db.tx.duesMembers[existingDuesMember.id].update({
+            status: 'pending',
+            updatedAt: Date.now(),
+          })
+        ]);
+      } else {
+        const duesMemberId = id();
+        await db.transact([
+          db.tx.duesMembers[duesMemberId].update({
+            status: 'pending',
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          }).link({
+            duesCycle: paymentData.cycleId,
+            profile: paymentData.profileId,
+          })
+        ]);
+      }
+      return result;
+    },
+    [db]
+  );
+
+  const updateDuesMemberStatus = useCallback(
+    async (cycleId: string, profileId: string, status: string, adminNotes?: string) => {
+      // Find the duesMembers entry
+      const duesMemberQuery = await db.queryOnce({
+        duesMembers: {
+          $: {
+            where: {
+              "duesCycle.id": cycleId,
+              "profile.id": profileId,
+            },
+          },
+        },
+      });
+
+      const duesMember = duesMemberQuery.data.duesMembers?.[0];
+      if (!duesMember) {
+        throw new Error('Dues member entry not found');
+      }
+
+      const result = await db.transact([
+        db.tx.duesMembers[duesMember.id].update({
+          status: status,
+          updatedAt: Date.now(),
+        }),
+      ]);
+
+      return result;
+    },
+    [db]
+  );
+
+  const confirmPayment = useCallback(
+    async (ledgerEntryId: string, confirmed: boolean, adminNotes?: string) => {
+      const result = await db.transact([
+        db.tx.ledgerEntries[ledgerEntryId].update({
+          status: confirmed ? 'confirmed' : 'rejected',
+          confirmedAt: confirmed ? Date.now() : undefined,
+          adminNotes: adminNotes,
+          updatedAt: Date.now(),
+        }),
+      ]);
+
+      // If confirmed, update the member status to paid
+      if (confirmed) {
+        const ledgerQuery = await db.queryOnce({
+          ledgerEntries: {
+            $: { where: { id: ledgerEntryId } },
+            profile: {},
+          },
+        });
+
+        const entry = ledgerQuery.data.ledgerEntries?.[0];
+        if (entry && entry.profile) {
+          await updateDuesMemberStatus(entry.refId, entry.profile.id, 'paid');
+        }
+      }
+
+      return result;
+    },
+    [db, updateDuesMemberStatus]
+  );
+
+  const closeDuesCycle = useCallback(
+    async (cycleId: string) => {
+      const result = await db.transact([
+        db.tx.duesCycles[cycleId].update({
+          status: 'closed',
+        }),
+      ]);
+      return result;
+    },
+    [db]
+  );
+
   return {
     instantClient,
     useGroups,
@@ -1393,6 +1672,9 @@ export function useInstantDB() {
     useGroup,
     useMessages,
     useMatches,
+    useDuesCycles,
+    useDuesMembersStatus,
+    useLedgerEntries,
     useProfile,
     useUserMembership,
     useUnreadCount,
@@ -1415,6 +1697,11 @@ export function useInstantDB() {
     checkInToMatch,
     unCheckInFromMatch,
     closeMatch,
+    createDuesCycle,
+    submitDuesPayment,
+    updateDuesMemberStatus,
+    confirmPayment,
+    closeDuesCycle,
     addReaction: addOrUpdateReaction,
     removeReaction,
     joinGroup,

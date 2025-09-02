@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { MatchCard } from "./MatchCard";
 import { MessageBubble } from "./MessageBubble";
 import { PollBubble } from "./PollBubble";
+import { DuesBubble } from "./DuesBubble";
 
 interface ChatItemRendererProps {
   chatItems: any[];
@@ -33,6 +34,10 @@ interface ChatItemRendererProps {
   handleCloseMatch: (matchId: string) => void;
   handleReportMessage?: (messageId: string, reason: string, description: string) => void;
   handleDeleteMessage?: (messageId: string) => void;
+  handleSubmitDuesPayment?: (cycleId: string, billImageUri?: string) => Promise<void>;
+  handleConfirmDuesPayment?: (ledgerEntryId: string, confirmed: boolean, adminNotes?: string) => Promise<void>;
+  handleUpdateDuesMemberStatus?: (cycleId: string, profileId: string, status: string) => Promise<void>;
+  handleCloseDuesCycle?: (cycleId: string) => Promise<void>;
 }
 
 export function useChatItemRenderer({
@@ -52,6 +57,10 @@ export function useChatItemRenderer({
   handleCloseMatch,
   handleReportMessage,
   handleDeleteMessage,
+  handleSubmitDuesPayment,
+  handleConfirmDuesPayment,
+  handleUpdateDuesMemberStatus,
+  handleCloseDuesCycle,
 }: ChatItemRendererProps) {
   const { isDark } = useTheme();
 const colors = isDark ? Colors.dark : Colors.light;
@@ -137,6 +146,28 @@ const colors = isDark ? Colors.dark : Colors.light;
             isCreator={message.match?.creator?.id === currentProfile?.id}
             isGroupAdmin={userMembership?.role === "admin"}
           />
+        ) : message.type === 'dues' && message.duesCycle ? (
+          <DuesBubble
+            duesCycle={{
+              id: message.duesCycle.id,
+              periodKey: message.duesCycle.periodKey,
+              amountPerMember: message.duesCycle.amountPerMember,
+              status: message.duesCycle.status,
+              deadline: message.duesCycle.deadline,
+              createdAt: message.duesCycle.createdAt,
+              duesMembers: message.duesCycle.duesMembers || [],
+            }}
+            currentUserId={currentProfile?.id || ''}
+            onSubmitPayment={handleSubmitDuesPayment || (async () => {})}
+            onConfirmPayment={handleConfirmDuesPayment}
+            onUpdateMemberStatus={handleUpdateDuesMemberStatus}
+            onCloseCycle={handleCloseDuesCycle}
+            isOwnMessage={isOwnMessage}
+            isAdmin={userMembership?.role === "admin"}
+            author={message.author}
+            createdAt={new Date(message.createdAt)}
+            showAuthor={showAuthor}
+          />
         ) : (
           <MessageBubble
             content={message.content}
@@ -171,7 +202,7 @@ const colors = isDark ? Colors.dark : Colors.light;
         )}
       </>
     );
-  }, [currentProfile?.id, chatItems, shouldShowTimestamp, totalMembers, userMembership?.role, handleImagePress, handleReportMessage, handleDeleteMessage, colors.tabIconDefault, stableHandleVote, handleAddOptionToPoll, stableHandleClosePoll, handleRsvp, handleCheckIn, handleUnCheckIn, handleCloseMatch, stableHandleReaction, stableHandleAddReaction]);
+  }, [currentProfile?.id, chatItems, shouldShowTimestamp, totalMembers, userMembership?.role, handleImagePress, handleReportMessage, handleDeleteMessage, colors.tabIconDefault, stableHandleVote, handleAddOptionToPoll, stableHandleClosePoll, handleRsvp, handleCheckIn, handleUnCheckIn, handleCloseMatch, stableHandleReaction, stableHandleAddReaction, handleSubmitDuesPayment, handleConfirmDuesPayment, handleUpdateDuesMemberStatus, handleCloseDuesCycle]);
 
   const keyExtractor = useCallback((item: any) => item.id, []);
 

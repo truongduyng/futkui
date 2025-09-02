@@ -48,6 +48,11 @@ export default function ChatScreen() {
     useMessages,
     useProfile,
     useUserMembership,
+    createDuesCycle,
+    submitDuesPayment,
+    confirmPayment,
+    updateDuesMemberStatus,
+    closeDuesCycle,
     sendMessage,
     sendPoll,
     vote,
@@ -328,6 +333,10 @@ export default function ChatScreen() {
     handleAddOptionToPoll,
     handleReportMessage,
     handleDeleteMessage,
+    handleSubmitDuesPayment,
+    handleConfirmDuesPayment,
+    handleUpdateDuesMemberStatus,
+    handleCloseDuesCycle,
   });
 
   // Reset limit when group changes
@@ -349,6 +358,75 @@ export default function ChatScreen() {
       markAsRead();
     }
   }, [userMembership?.id, messages.length, markMessagesAsRead]);
+
+  // Dues handlers
+  const handleCreateDuesCycle = useCallback(async (duesData: {
+    periodKey: string;
+    amountPerMember: number;
+    deadline: number;
+  }) => {
+    if (!currentProfile || !groupId) return;
+    
+    try {
+      await createDuesCycle({
+        ...duesData,
+        groupId,
+        creatorId: currentProfile.id,
+        authorName: currentProfile.handle,
+      });
+      showSuccess(t('chat.duesCycleCreated') || 'Dues cycle created successfully');
+    } catch (error) {
+      console.error('Failed to create dues cycle:', error);
+      showError(t('chat.failedToCreateCycle') || 'Failed to create dues cycle');
+    }
+  }, [createDuesCycle, currentProfile, groupId, showSuccess, showError, t]);
+
+  const handleSubmitDuesPayment = useCallback(async (cycleId: string, billImageUri?: string) => {
+    if (!currentProfile) return;
+    
+    try {
+      await submitDuesPayment({
+        cycleId,
+        profileId: currentProfile.id,
+        billImageUri,
+      });
+      
+      showSuccess(t('chat.paymentSubmitted') || 'Payment submitted successfully');
+    } catch (error) {
+      console.error('Failed to submit payment:', error);
+      showError(t('chat.failedToSubmitPayment') || 'Failed to submit payment');
+    }
+  }, [submitDuesPayment, currentProfile, showSuccess, showError, t]);
+
+  const handleConfirmDuesPayment = useCallback(async (ledgerEntryId: string, confirmed: boolean, adminNotes?: string) => {
+    try {
+      await confirmPayment(ledgerEntryId, confirmed, adminNotes);
+      showSuccess(confirmed ? t('chat.paymentConfirmed') : t('chat.paymentRejected'));
+    } catch (error) {
+      console.error('Failed to confirm payment:', error);
+      showError(t('chat.failedToProcessPayment') || 'Failed to process payment');
+    }
+  }, [confirmPayment, showSuccess, showError, t]);
+
+  const handleUpdateDuesMemberStatus = useCallback(async (cycleId: string, profileId: string, status: string) => {
+    try {
+      await updateDuesMemberStatus(cycleId, profileId, status);
+      showSuccess(t('chat.statusUpdated') || 'Status updated successfully');
+    } catch (error) {
+      console.error('Failed to update member status:', error);
+      showError(t('chat.failedToUpdateStatus') || 'Failed to update status');
+    }
+  }, [updateDuesMemberStatus, showSuccess, showError, t]);
+
+  const handleCloseDuesCycle = useCallback(async (cycleId: string) => {
+    try {
+      await closeDuesCycle(cycleId);
+      showSuccess(t('chat.duesCycleClosed') || 'Dues cycle closed');
+    } catch (error) {
+      console.error('Failed to close dues cycle:', error);
+      showError('Failed to close dues cycle');
+    }
+  }, [closeDuesCycle, showSuccess, showError, t]);
 
   // Loading states
   if (!groupId) return <LoadingStates type="loading" />;
@@ -404,7 +482,9 @@ export default function ChatScreen() {
             onSendMessage={handleSendMessage}
             onSendPoll={handleSendPoll}
             onCreateMatch={handleCreateMatch}
+            onCreateDuesCycle={handleCreateDuesCycle}
             members={members}
+            userMembership={userMembership}
           />
         </KeyboardAvoidingView>
 
