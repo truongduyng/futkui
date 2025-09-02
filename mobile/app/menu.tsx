@@ -1,4 +1,3 @@
-import { CachedAvatar } from "@/components/chat/CachedAvatar";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
@@ -22,7 +21,7 @@ import {
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 
-export default function ExploreScreen() {
+export default function MenuScreen() {
   const { t } = useTranslation();
   const { isDark, themeMode } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
@@ -47,10 +46,6 @@ export default function ExploreScreen() {
         onPress: () => instantClient.auth.signOut(),
       },
     ]);
-  };
-
-  const handleProfile = () => {
-    setIsProfileModalVisible(true);
   };
 
   const handleAbout = () => {
@@ -119,77 +114,7 @@ export default function ExploreScreen() {
       >
         {/* Top Menu Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {t('explore.menu')}
-          </Text>
           <View style={[styles.menuContainer, { backgroundColor: colors.background }]}>
-            <TouchableOpacity
-              style={[styles.menuButton, styles.menuButtonFirst]}
-              onPress={handleProfile}
-              activeOpacity={0.8}
-            >
-              <View style={styles.menuButtonContent}>
-                <View
-                  style={[
-                    styles.menuAvatarContainer,
-                    { backgroundColor: "rgba(255, 255, 255, 0.1)" },
-                  ]}
-                >
-                  {currentProfile?.avatarUrl ? (
-                    <CachedAvatar
-                      uri={currentProfile.avatarUrl}
-                      size={32}
-                      fallbackComponent={
-                        <Text
-                          style={[
-                            styles.menuAvatarText,
-                            { backgroundColor: colors.tint },
-                          ]}
-                        >
-                          {currentProfile.displayName?.charAt(0) ||
-                            currentProfile.handle?.charAt(0) ||
-                            "U"}
-                        </Text>
-                      }
-                    />
-                  ) : (
-                    <Text
-                      style={[
-                        styles.menuAvatarText,
-                        { backgroundColor: colors.tint },
-                      ]}
-                    >
-                      {currentProfile?.displayName?.charAt(0) ||
-                        currentProfile?.handle?.charAt(0) ||
-                        "U"}
-                    </Text>
-                  )}
-                </View>
-                <View style={styles.menuTextContainer}>
-                  <Text
-                    style={[styles.menuButtonTitle, { color: colors.text }]}
-                  >
-                    {currentProfile?.displayName}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.menuButtonSubtitle,
-                      { color: colors.tabIconDefault },
-                    ]}
-                  >
-                    @{currentProfile?.handle}
-                  </Text>
-                </View>
-              </View>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={colors.tabIconDefault}
-              />
-            </TouchableOpacity>
-
-            <View style={[styles.menuSeparator, { backgroundColor: colors.tabIconDefault }]} />
-
             <TouchableOpacity
               style={styles.menuButton}
               onPress={handleLanguageSelection}
@@ -226,8 +151,6 @@ export default function ExploreScreen() {
                 color={colors.tabIconDefault}
               />
             </TouchableOpacity>
-
-            <View style={[styles.menuSeparator, { backgroundColor: colors.tabIconDefault }]} />
 
             <TouchableOpacity
               style={styles.menuButton}
@@ -266,8 +189,6 @@ export default function ExploreScreen() {
               />
             </TouchableOpacity>
 
-            <View style={[styles.menuSeparator, { backgroundColor: colors.tabIconDefault }]} />
-
             <TouchableOpacity
               style={styles.menuButton}
               onPress={handleAbout}
@@ -305,8 +226,6 @@ export default function ExploreScreen() {
               />
             </TouchableOpacity>
 
-            <View style={[styles.menuSeparator, { backgroundColor: colors.tabIconDefault }]} />
-
             <TouchableOpacity
               style={styles.menuButton}
               onPress={handleSignOut}
@@ -330,10 +249,8 @@ export default function ExploreScreen() {
               <Ionicons name="chevron-forward" size={20} color="#FF6B6B" />
             </TouchableOpacity>
 
-            <View style={[styles.menuSeparator, { backgroundColor: colors.tabIconDefault }]} />
-
             <TouchableOpacity
-              style={[styles.menuButton, styles.menuButtonLast]}
+              style={styles.menuButton}
               onPress={handleDeleteAccount}
               activeOpacity={0.8}
             >
@@ -393,34 +310,38 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "transparent",
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
   menuContainer: {
-    marginHorizontal: 20,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
   },
   menuButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(0,0,0,0.2)",
   },
   menuButtonFirst: {
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
-  },
-  menuButtonLast: {
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12,
-  },
-  menuSeparator: {
-    height: 0.5,
-    marginLeft: 68,
-    opacity: 0.3,
   },
   menuButtonContent: {
     flexDirection: "row",

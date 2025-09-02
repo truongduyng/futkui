@@ -53,6 +53,15 @@ function ThemedApp() {
                 headerBackTitle: t('explore.menu'),
               }}
             />
+            <Stack.Screen
+              name="menu"
+              options={{
+                title: t('explore.menu'),
+                presentation: 'card',
+                headerShown: true,
+                headerBackTitle: t('common.back'),
+              }}
+            />
             <Stack.Screen name="+not-found" />
           </Stack>
         </AuthGate>

@@ -1,9 +1,10 @@
 import { CachedAvatar } from "@/components/chat/CachedAvatar";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
 import { Colors } from "@/constants/Colors";
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from "@/contexts/ThemeContext";
 import { useInstantDB } from "@/hooks/useInstantDB";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   SafeAreaView,
@@ -20,14 +21,14 @@ import { useTranslation } from "react-i18next";
 
 const getSportEmoji = (sport: string) => {
   switch (sport.toLowerCase()) {
-    case 'football':
-      return '⚽';
-    case 'pickleball':
-      return '🏓';
-    case 'badminton':
-      return '🏸';
+    case "football":
+      return "⚽";
+    case "pickleball":
+      return "🏓";
+    case "badminton":
+      return "🏸";
     default:
-      return '🏃';
+      return "🏃";
   }
 };
 
@@ -35,6 +36,7 @@ export default function ProfileScreen() {
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
+  const router = useRouter();
 
   const { useProfile, instantClient } = useInstantDB();
   const { data: profileData } = useProfile();
@@ -50,10 +52,12 @@ export default function ProfileScreen() {
 
   if (!currentProfile) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+      >
         <View style={styles.loadingContainer}>
           <Text style={[styles.loadingText, { color: colors.text }]}>
-            {t('common.loading')}
+            {t("common.loading")}
           </Text>
         </View>
       </SafeAreaView>
@@ -62,13 +66,29 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background, paddingTop: Platform.OS === 'android' ? RNStatusBar.currentHeight : 0 }]}
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background,
+          paddingTop: Platform.OS === "android" ? RNStatusBar.currentHeight : 0,
+        },
+      ]}
     >
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.header}>
+          <View style={styles.headerSpacer} />
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => router.push("/menu")}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="menu" size={24} color={colors.text} />
+          </TouchableOpacity>
+        </View>
         {/* Profile Header Section */}
         <View style={styles.profileHeader}>
           <View style={styles.profileAvatarContainer}>
@@ -77,7 +97,12 @@ export default function ProfileScreen() {
                 uri={currentProfile.avatarUrl}
                 size={100}
                 fallbackComponent={
-                  <View style={[styles.avatarFallback, { backgroundColor: colors.tint }]}>
+                  <View
+                    style={[
+                      styles.avatarFallback,
+                      { backgroundColor: colors.tint },
+                    ]}
+                  >
                     <Text style={styles.avatarFallbackText}>
                       {currentProfile.displayName?.charAt(0) ||
                         currentProfile.handle?.charAt(0) ||
@@ -87,7 +112,12 @@ export default function ProfileScreen() {
                 }
               />
             ) : (
-              <View style={[styles.avatarFallback, { backgroundColor: colors.tint }]}>
+              <View
+                style={[
+                  styles.avatarFallback,
+                  { backgroundColor: colors.tint },
+                ]}
+              >
                 <Text style={styles.avatarFallbackText}>
                   {currentProfile.displayName?.charAt(0) ||
                     currentProfile.handle?.charAt(0) ||
@@ -115,7 +145,12 @@ export default function ProfileScreen() {
 
           {/* Location Badge */}
           {currentProfile.location && (
-            <View style={[styles.locationBadge, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.locationBadge,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
               <Ionicons name="location-outline" size={14} color={colors.icon} />
               <Text style={[styles.badgeText, { color: colors.text }]}>
                 {currentProfile.location}
@@ -126,14 +161,33 @@ export default function ProfileScreen() {
           {/* Sports Badges */}
           {currentProfile.sports && currentProfile.sports.length > 0 && (
             <View style={styles.badgesContainer}>
-              {currentProfile.sports.map((sportWithLevel: { sport: string; level: string }, index: number) => (
-                <View key={index} style={[styles.badge, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                  <Text style={styles.sportEmoji}>{getSportEmoji(sportWithLevel.sport)}</Text>
-                  <Text style={[styles.badgeText, { color: colors.text }]}>
-                    {t(`sports.${sportWithLevel.sport.toLowerCase()}`)} • {t(`profile.skillLevels.${sportWithLevel.level.toLowerCase()}`)}
-                  </Text>
-                </View>
-              ))}
+              {currentProfile.sports.map(
+                (
+                  sportWithLevel: { sport: string; level: string },
+                  index: number,
+                ) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.badge,
+                      {
+                        backgroundColor: colors.card,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <Text style={styles.sportEmoji}>
+                      {getSportEmoji(sportWithLevel.sport)}
+                    </Text>
+                    <Text style={[styles.badgeText, { color: colors.text }]}>
+                      {t(`sports.${sportWithLevel.sport.toLowerCase()}`)} •{" "}
+                      {t(
+                        `profile.skillLevels.${sportWithLevel.level.toLowerCase()}`,
+                      )}
+                    </Text>
+                  </View>
+                ),
+              )}
             </View>
           )}
         </View>
@@ -160,7 +214,7 @@ export default function ProfileScreen() {
           onClose={() => setIsProfileModalVisible(false)}
           profile={{
             ...currentProfile,
-            email: user?.email
+            email: user?.email,
           }}
           onProfileUpdated={() => {
             setIsProfileModalVisible(false);
@@ -176,10 +230,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "transparent",
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  headerSpacer: {
+    flex: 1,
+  },
+  menuButton: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     fontSize: 16,
@@ -192,8 +262,8 @@ const styles = StyleSheet.create({
     paddingBottom: 50,
   },
   profileHeader: {
-    alignItems: 'center',
-    paddingTop: 20,
+    alignItems: "center",
+    marginTop: -30,
     paddingBottom: 24,
     paddingHorizontal: 20,
   },
@@ -204,56 +274,56 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   avatarFallbackText: {
     fontSize: 48,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
   },
   nameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 4,
   },
   displayName: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginLeft: 32,
     marginRight: 8,
   },
   handle: {
     fontSize: 16,
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   editButtonSmall: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   locationBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    alignSelf: 'center',
+    alignSelf: "center",
     marginBottom: 8,
   },
   badgesContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
     paddingHorizontal: 20,
   },
   badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
@@ -267,7 +337,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: "500",
     letterSpacing: 0.2,
   },
   sportEmoji: {
@@ -287,29 +357,30 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
     gap: 8,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   photosGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     paddingHorizontal: 10,
-    justifyContent: 'space-between',
+    justifyContent: "flex-start",
+    gap: 2,
   },
   photoContainer: {
-    width: '33%',
+    width: "32.8%",
     aspectRatio: 0.7,
-    marginBottom: 4,
+    marginBottom: 1,
   },
   gridPhoto: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   menuContainer: {
     marginLeft: 28,
@@ -319,13 +390,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
-  },
-  menuButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
   },
   menuButtonFirst: {
     borderTopLeftRadius: 12,

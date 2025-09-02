@@ -130,7 +130,7 @@
     "maxPhotos": "Max 5 photos",
     "skillLevels": {
       "beginner": "Beginner",
-      "intermediate": "Intermediate", 
+      "intermediate": "Intermediate",
       "advanced": "Advanced",
       "expert": "Expert"
     }
@@ -150,7 +150,7 @@
     "clubs": "Clubs"
   },
   "explore": {
-    "menu": "Menu",
+    "menu": "Settings",
     "communities": "Communities",
     "communitiesDescription": "Most recent clubs on the platform",
     "about": "About",
