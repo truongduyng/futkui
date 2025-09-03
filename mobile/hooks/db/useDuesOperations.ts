@@ -197,8 +197,28 @@ export function useDuesOperations() {
         const existingLedgerEntry = existingLedgerQuery.data.ledgerEntries?.[0];
 
         if (!existingLedgerEntry) {
-          // Create ledger entry
+          // Create ledger entry and update group balance
           const ledgerEntryId = id();
+          
+          // Get group ID and current balance from the dues cycle
+          const groupQuery = await db.queryOnce({
+            groups: {
+              $: {
+                where: {
+                  "duesCycles.id": cycleId,
+                },
+              },
+            },
+          });
+
+          const group = groupQuery.data?.groups?.[0];
+          if (!group) {
+            throw new Error('Group not found for dues cycle');
+          }
+
+          const currentBalance = group.balance || 0;
+          const newBalance = currentBalance + duesCycle.amountPerMember;
+
           await db.transact([
             db.tx.ledgerEntries[ledgerEntryId].update({
               refId: cycleId,
@@ -210,6 +230,9 @@ export function useDuesOperations() {
               profileRefKey: profileRefKey,
             }).link({
               profile: profileId,
+            }),
+            db.tx.groups[group.id].update({
+              balance: newBalance,
             }),
           ]);
         }

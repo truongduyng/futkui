@@ -301,21 +301,6 @@ export function DuesManagementModal({
                           </Text>
                         </TouchableOpacity>
                       )}
-
-                      {member.status !== "unpaid" && (
-                        <TouchableOpacity
-                          style={[
-                            styles.actionButton,
-                            { backgroundColor: colors.tabIconDefault },
-                          ]}
-                          onPress={() => handleStatusUpdate(member, "unpaid")}
-                          disabled={isUpdating}
-                        >
-                          <Text style={styles.actionButtonText}>
-                            {t("chat.markUnpaid")}
-                          </Text>
-                        </TouchableOpacity>
-                      )}
                     </View>
                   </View>
 

@@ -287,6 +287,19 @@ export default function GroupProfileScreen() {
           <Text style={[styles.memberCount, { color: colors.tabIconDefault }]}>
             {t('groupProfile.memberCount', { count: members.length })}
           </Text>
+          {group.balance !== undefined && group.balance !== null && (
+            <View style={[styles.balanceContainer, { backgroundColor: colors.card }]}>
+              <Ionicons name="wallet-outline" size={16} color={colors.tint} />
+              <Text style={[styles.balanceText, { color: colors.text }]}>
+                {new Intl.NumberFormat('vi-VN', { 
+                  style: 'currency', 
+                  currency: 'VND',
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0
+                }).format(group.balance)}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Recent Activities Section */}
@@ -702,6 +715,21 @@ const styles = StyleSheet.create({
   memberCount: {
     fontSize: 14,
     fontWeight: "500",
+  },
+  balanceContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    alignSelf: "center",
+  },
+  balanceText: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 6,
   },
   section: {
     marginBottom: 32,

@@ -173,6 +173,24 @@ export function useMatchOperations() {
       const ledgerEntryId = id();
       const profileRefKey = `${expenseData.creatorId}_${expenseData.matchId}`;
 
+      // Get group ID and current balance from the match
+      const matchQuery = await db.queryOnce({
+        matches: {
+          $: {
+            where: { id: expenseData.matchId },
+          },
+          group: {},
+        },
+      });
+
+      const match = matchQuery.data?.matches?.[0];
+      if (!match || !match.group) {
+        throw new Error('Match or group not found');
+      }
+
+      const currentBalance = match.group.balance || 0;
+      const newBalance = currentBalance - expenseData.amount; // Subtract expense from balance
+
       const result = await db.transact([
         db.tx.ledgerEntries[ledgerEntryId].update({
           refId: expenseData.matchId,
@@ -185,6 +203,9 @@ export function useMatchOperations() {
           profileRefKey: profileRefKey,
         }).link({
           profile: expenseData.creatorId,
+        }),
+        db.tx.groups[match.group.id].update({
+          balance: newBalance,
         }),
       ]);
 
@@ -200,12 +221,49 @@ export function useMatchOperations() {
       billImageUrl?: string | null;
       note?: string;
     }) => {
+      // Get the current expense to calculate the difference
+      const ledgerQuery = await db.queryOnce({
+        ledgerEntries: {
+          $: {
+            where: { id: expenseData.expenseId },
+          },
+        },
+      });
+
+      const currentExpense = ledgerQuery.data?.ledgerEntries?.[0];
+      if (!currentExpense) {
+        throw new Error('Expense not found');
+      }
+
+      // Get group information through the match
+      const matchQuery = await db.queryOnce({
+        matches: {
+          $: {
+            where: { id: currentExpense.refId },
+          },
+          group: {},
+        },
+      });
+
+      const match = matchQuery.data?.matches?.[0];
+      if (!match || !match.group) {
+        throw new Error('Match or group not found');
+      }
+
+      // Calculate balance adjustment (difference between old and new amounts)
+      const amountDifference = expenseData.amount - currentExpense.amount;
+      const currentBalance = match.group.balance || 0;
+      const newBalance = currentBalance - amountDifference; // Subtract the difference
+
       const result = await db.transact([
         db.tx.ledgerEntries[expenseData.expenseId].update({
           amount: expenseData.amount,
           billImageUrl: expenseData.billImageUrl,
           note: expenseData.note,
           updatedAt: Date.now(),
+        }),
+        db.tx.groups[match.group.id].update({
+          balance: newBalance,
         }),
       ]);
 

@@ -26,6 +26,7 @@ const _schema = i.schema({
       rule: i.string().optional(),
       shareLink: i.string().unique(),
       sports: i.json().optional(),
+      balance: i.number().optional(),
     }),
     matches: i.entity({
       closedAt: i.number().optional(),
