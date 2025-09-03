@@ -28,6 +28,11 @@ export default function AboutScreen() {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
+  // Theme-aware app icon
+  const appIcon = isDark
+    ? require('@/assets/images/ios-dark.png')
+    : require('@/assets/images/ios-light.png');
+
   const [webViewModal, setWebViewModal] = useState<{visible: boolean; url: string; title: string}>({
     visible: false,
     url: '',
@@ -110,7 +115,7 @@ export default function AboutScreen() {
         <View style={styles.section}>
           <View style={styles.appHeader}>
             <Image
-              source={require('@/assets/images/icon.png')}
+              source={appIcon}
               style={styles.appIcon}
               resizeMode="contain"
             />
@@ -136,7 +141,7 @@ export default function AboutScreen() {
                 <View
                   style={[
                     styles.menuIconContainer,
-                    { backgroundColor: "rgba(255, 193, 7, 0.1)" },
+                    { backgroundColor: isDark ? "rgba(255, 215, 0, 0.15)" : "rgba(255, 193, 7, 0.1)" },
                   ]}
                 >
                   <Ionicons name="star-outline" size={20} color="#FFC107" />
