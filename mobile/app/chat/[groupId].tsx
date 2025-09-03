@@ -46,6 +46,7 @@ export default function ChatScreen() {
   const {
     useGroup,
     useMessages,
+    useDuesCycles,
     useProfile,
     useUserMembership,
     createDuesCycle,
@@ -73,6 +74,7 @@ export default function ChatScreen() {
   // Data queries
   const { data: groupData, isLoading: isLoadingGroup } = useGroup(groupId || "");
   const { data: messagesData, isLoading: isLoadingMessages } = useMessages(groupId || "", messageLimit);
+  const { data: duesCyclesData } = useDuesCycles(groupId || "");
   const { data: profileData } = useProfile();
   const { data: membershipData } = useUserMembership(groupId || "");
   const { data: blockedData } = useBlockedUsers();
@@ -80,6 +82,7 @@ export default function ChatScreen() {
   const currentProfile = profileData?.profiles?.[0];
   const userMembership = membershipData?.memberships?.[0];
   const group = groupData?.groups?.[0];
+  const duesCycles = duesCyclesData?.duesCycles || [];
   const isBotGroup = group?.creator?.handle === 'fk';
 
   // Get blocked profile IDs instead of user IDs
@@ -427,6 +430,7 @@ export default function ChatScreen() {
         <ActivityBar
           polls={polls}
           matches={matches}
+          duesCycles={duesCycles}
           groupId={groupId || ""}
         />
         <KeyboardAvoidingView

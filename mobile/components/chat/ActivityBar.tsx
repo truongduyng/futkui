@@ -29,13 +29,21 @@ interface Match {
   isActive: boolean;
 }
 
+interface DuesCycle {
+  id: string;
+  periodKey: string;
+  status: string;
+  deadline: number;
+}
+
 interface ActivityBarProps {
   polls: Poll[];
   matches: Match[];
+  duesCycles: DuesCycle[];
   groupId: string;
 }
 
-export function ActivityBar({ polls, matches, groupId }: ActivityBarProps) {
+export function ActivityBar({ polls, matches, duesCycles, groupId }: ActivityBarProps) {
   const { t } = useTranslation();
   const { isDark } = useTheme();
 const colors = isDark ? Colors.dark : Colors.light;
@@ -56,7 +64,12 @@ const colors = isDark ? Colors.dark : Colors.light;
     return match.isActive && match.matchDate >= today.getTime();
   });
 
-  const totalActivities = activePolls.length + activeMatches.length;
+  // Filter active dues cycles (active and not expired)
+  const activeDuesCycles = duesCycles.filter((duesCycle) => {
+    return duesCycle.status === 'active' && duesCycle.deadline >= Date.now();
+  });
+
+  const totalActivities = activePolls.length + activeMatches.length + activeDuesCycles.length;
 
   if (totalActivities === 0) {
     return null;
@@ -77,6 +90,11 @@ const colors = isDark ? Colors.dark : Colors.light;
     if (activeMatches.length > 0) {
       const matchText = activeMatches.length === 1 ? t('chat.activeMatch') : t('chat.activeMatches');
       parts.push(`${activeMatches.length} ${matchText}`);
+    }
+
+    if (activeDuesCycles.length > 0) {
+      const duesText = activeDuesCycles.length === 1 ? t('chat.activeDuesCycle') : t('chat.activeDuesCycles');
+      parts.push(`${activeDuesCycles.length} ${duesText}`);
     }
 
     return parts.join(' · ');

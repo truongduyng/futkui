@@ -1569,7 +1569,7 @@ export function useInstantDB() {
         console.log('Creating new duesMembers entry for cycle:', paymentData.cycleId, 'profile:', paymentData.profileId);
         const duesMemberId = id();
         result = await db.transact([
-          db.tx.duesMembers[duesMemberId].update({
+          db.tx.duesMembers[duesMemberId].create({
             billImageUrl: billImageUrl,
             createdAt: Date.now(),
             updatedAt: Date.now(),

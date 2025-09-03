@@ -1,5 +1,6 @@
 import { MatchCard } from "@/components/chat/MatchCard";
 import { PollBubble } from "@/components/chat/PollBubble";
+import { DuesBubble } from "@/components/chat/DuesBubble";
 import { Colors } from "@/constants/Colors";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useInstantDB } from "@/hooks/useInstantDB";
@@ -27,6 +28,7 @@ const colors = isDark ? Colors.dark : Colors.light;
     useGroup,
     useMessages,
     useMatches,
+    useDuesCycles,
     useProfile,
     useUserMembership,
     vote,
@@ -36,19 +38,25 @@ const colors = isDark ? Colors.dark : Colors.light;
     checkInToMatch,
     unCheckInFromMatch,
     closeMatch,
+    submitDuesPayment,
+    updateDuesMemberStatus,
+    closeDuesCycle,
   } = useInstantDB();
 
   const { data: groupData } = useGroup(groupId || "");
   const { data: messagesData } = useMessages(groupId || "", 1000);
   const { data: matchesData } = useMatches(groupId || "");
+  const { data: duesCyclesData } = useDuesCycles(groupId || "");
   const { data: profileData } = useProfile();
   const { data: membershipData } = useUserMembership(groupId || "");
 
   const [showActivePollsOnly, setShowActivePollsOnly] = useState(true);
   const [showActiveMatchesOnly, setShowActiveMatchesOnly] = useState(true);
+  const [showActiveDuesCyclesOnly, setShowActiveDuesCyclesOnly] = useState(true);
 
   const group = groupData?.groups?.[0];
   const matches = matchesData?.matches || [];
+  const duesCycles = duesCyclesData?.duesCycles || [];
   const currentProfile = profileData?.profiles?.[0];
   const userMembership = membershipData?.memberships?.[0];
 
@@ -90,6 +98,14 @@ const colors = isDark ? Colors.dark : Colors.light;
       return match.isActive && match.matchDate >= today.getTime();
     }
     return true; // Show all matches when toggle is off
+  });
+
+  // Filter dues cycles based on toggle state
+  const filteredDuesCycles = duesCycles.filter((duesCycle) => {
+    if (showActiveDuesCyclesOnly) {
+      return duesCycle.status === 'active' && duesCycle.deadline >= Date.now();
+    }
+    return true; // Show all dues cycles when toggle is off
   });
 
   // Create sections for FlatList
@@ -152,8 +168,36 @@ const colors = isDark ? Colors.dark : Colors.light;
       });
     }
 
+    // Dues cycles section
+    data.push({
+      type: 'section',
+      id: 'dues-cycles-header',
+      sectionType: 'dues-cycles',
+      title: showActiveDuesCyclesOnly ? t('chat.activeDuesCycles') : t('chat.allDuesCycles'),
+      count: filteredDuesCycles.length,
+      showActiveOnly: showActiveDuesCyclesOnly,
+      setShowActiveOnly: setShowActiveDuesCyclesOnly,
+    });
+
+    if (filteredDuesCycles.length > 0) {
+      filteredDuesCycles.forEach((duesCycle) => {
+        data.push({
+          type: 'dues-cycle',
+          id: duesCycle.id,
+          data: duesCycle,
+        });
+      });
+    } else {
+      data.push({
+        type: 'empty',
+        id: 'dues-cycles-empty',
+        sectionType: 'dues-cycles',
+        message: showActiveDuesCyclesOnly ? t('chat.noActiveDuesCycles') : t('chat.noDuesCycles'),
+      });
+    }
+
     return data;
-  }, [filteredPolls, filteredMatches, showActivePollsOnly, showActiveMatchesOnly, t]);
+  }, [filteredPolls, filteredMatches, filteredDuesCycles, showActivePollsOnly, showActiveMatchesOnly, showActiveDuesCyclesOnly, t]);
 
   useEffect(() => {
     navigation.setOptions({
@@ -176,7 +220,7 @@ const colors = isDark ? Colors.dark : Colors.light;
         return (
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionIcon}>
-              {item.sectionType === 'polls' ? '📊' : '⚽'}
+              {item.sectionType === 'polls' ? '📊' : item.sectionType === 'matches' ? '⚽' : '💰'}
             </Text>
             <View style={styles.titleWithBadge}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -265,6 +309,35 @@ const colors = isDark ? Colors.dark : Colors.light;
               showAuthor={!isOwnMatch}
               isCreator={isCreator}
               isGroupAdmin={isGroupAdmin}
+            />
+          </View>
+        );
+
+      case 'dues-cycle':
+        const duesCycle = item.data;
+        const isOwnDuesCycle = duesCycle.creator?.id === currentProfile?.id;
+
+        return (
+          <View style={styles.activityItem}>
+            <DuesBubble
+              duesCycle={{
+                id: duesCycle.id,
+                periodKey: duesCycle.periodKey,
+                amountPerMember: duesCycle.amountPerMember,
+                status: duesCycle.status,
+                deadline: duesCycle.deadline,
+                createdAt: duesCycle.createdAt,
+                duesMembers: duesCycle.duesMembers || [],
+              }}
+              currentUserId={currentProfile?.id || ''}
+              onSubmitPayment={handleSubmitDuesPayment}
+              onUpdateMemberStatus={handleUpdateDuesMemberStatus}
+              onCloseCycle={handleCloseDuesCycle}
+              isOwnMessage={isOwnDuesCycle}
+              isAdmin={userMembership?.role === "admin"}
+              author={duesCycle.creator}
+              createdAt={new Date(duesCycle.createdAt)}
+              showAuthor={!isOwnDuesCycle}
             />
           </View>
         );
@@ -375,6 +448,42 @@ const colors = isDark ? Colors.dark : Colors.light;
       await closeMatch(matchId);
     } catch (error) {
       console.error("Error closing match:", error);
+    }
+  };
+
+  const handleSubmitDuesPayment = async (cycleId: string, billImageUri?: string) => {
+    if (!currentProfile) return;
+
+    try {
+      await submitDuesPayment({
+        cycleId,
+        profileId: currentProfile.id,
+        billImageUri,
+      });
+    } catch (error) {
+      console.error("Error submitting dues payment:", error);
+    }
+  };
+
+  const handleUpdateDuesMemberStatus = async (cycleId: string, profileId: string, status: string) => {
+    if (!currentProfile) return;
+
+    try {
+      await updateDuesMemberStatus(cycleId, profileId, status);
+    } catch (error) {
+      console.error("Error updating dues member status:", error);
+      // Show user-friendly error message
+      console.error("Failed to update member status. This might be because the member entry doesn't exist yet.");
+    }
+  };
+
+  const handleCloseDuesCycle = async (cycleId: string) => {
+    if (!currentProfile) return;
+
+    try {
+      await closeDuesCycle(cycleId);
+    } catch (error) {
+      console.error("Error closing dues cycle:", error);
     }
   };
 
