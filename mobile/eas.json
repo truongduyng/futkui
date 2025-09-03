@@ -31,6 +31,9 @@
       },
       "ios": {
         "simulator": false
+      },
+      "env": {
+        "NODE_ENV": "production"
       }
     }
   },
