@@ -17,7 +17,10 @@
     "active": "Active",
     "all": "All",
     "ok": "OK",
-    "close": "Close"
+    "close": "Close",
+    "uploading": "Uploading...",
+    "permissionDenied": "Permission denied",
+    "uploadFailed": "Upload failed"
   },
   "auth": {
     "welcome": "Welcome to FutKui",
@@ -579,5 +582,17 @@
     "noBlockedUsers": "No Blocked Users",
     "noBlockedUsersDescription": "You haven't blocked anyone yet. You can block users to hide their messages from your view.",
     "blockedMessage": "Message from blocked user"
+  },
+  "expense": {
+    "addExpense": "Add Expense",
+    "amount": "Amount",
+    "enterAmount": "Enter amount",
+    "note": "Note",
+    "enterNote": "Enter note (optional)",
+    "billImage": "Bill Image",
+    "addBillImage": "Add Bill Image",
+    "createExpense": "Create Expense",
+    "invalidAmount": "Please enter a valid amount",
+    "createFailed": "Failed to create expense. Please try again."
   }
 }

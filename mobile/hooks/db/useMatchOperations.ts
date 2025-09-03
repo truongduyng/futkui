@@ -162,11 +162,43 @@ export function useMatchOperations() {
     [db]
   );
 
+  const addExpense = useCallback(
+    async (expenseData: {
+      matchId: string;
+      amount: number;
+      billImageUrl?: string;
+      note?: string;
+      creatorId: string;
+    }) => {
+      const ledgerEntryId = id();
+      const profileRefKey = `${expenseData.creatorId}_${expenseData.matchId}`;
+
+      const result = await db.transact([
+        db.tx.ledgerEntries[ledgerEntryId].update({
+          refId: expenseData.matchId,
+          amount: expenseData.amount,
+          type: 'match_expense',
+          billImageUrl: expenseData.billImageUrl,
+          note: expenseData.note,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          profileRefKey: profileRefKey,
+        }).link({
+          profile: expenseData.creatorId,
+        }),
+      ]);
+
+      return result;
+    },
+    [db]
+  );
+
   return {
     createMatch,
     rsvpToMatch,
     checkInToMatch,
     unCheckInFromMatch,
     closeMatch,
+    addExpense,
   };
 }

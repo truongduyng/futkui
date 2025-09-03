@@ -63,6 +63,7 @@ export default function ChatScreen() {
     checkInToMatch,
     unCheckInFromMatch,
     closeMatch,
+    addExpense,
     addReaction,
     leaveGroup,
     markMessagesAsRead,
@@ -228,6 +229,28 @@ export default function ChatScreen() {
       showError(t('common.error'), t('chat.deleteError'));
     }
   }, [deleteMessage, showSuccess, showError, t]);
+
+  // Expense handler
+  const handleAddExpense = useCallback(async (matchId: string, amount: number, billImageUrl?: string, note?: string) => {
+    if (!currentProfile?.id) {
+      showError(t('common.error'), t('hooks.sendMessage.waitProfile'));
+      return;
+    }
+
+    try {
+      await addExpense({
+        matchId,
+        amount,
+        billImageUrl,
+        note,
+        creatorId: currentProfile.id,
+      });
+      showSuccess(t('common.success'), t('expense.createExpense'));
+    } catch (error) {
+      console.error('Failed to add expense:', error);
+      showError(t('common.error'), t('expense.createFailed'));
+    }
+  }, [currentProfile?.id, addExpense, showSuccess, showError, t]);
 
   // Event handlers
   const {
@@ -412,6 +435,7 @@ export default function ChatScreen() {
     handleCheckIn,
     handleUnCheckIn,
     handleCloseMatch,
+    handleAddExpense,
     handleAddOptionToPoll,
     handleReportMessage,
     handleDeleteMessage,

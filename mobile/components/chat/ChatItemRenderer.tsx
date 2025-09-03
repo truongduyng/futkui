@@ -32,6 +32,7 @@ interface ChatItemRendererProps {
   handleCheckIn: (matchId: string) => void;
   handleUnCheckIn: (matchId: string) => void;
   handleCloseMatch: (matchId: string) => void;
+  handleAddExpense: (matchId: string, amount: number, billImageUrl?: string, note?: string) => void;
   handleReportMessage: (messageId: string, reason: string, description: string) => void;
   handleDeleteMessage: (messageId: string) => void;
   handleSubmitDuesPayment: (cycleId: string, billImageUri?: string) => Promise<void>;
@@ -54,6 +55,7 @@ export function useChatItemRenderer({
   handleCheckIn,
   handleUnCheckIn,
   handleCloseMatch,
+  handleAddExpense,
   handleReportMessage,
   handleDeleteMessage,
   handleSubmitDuesPayment,
@@ -137,6 +139,7 @@ const colors = isDark ? Colors.dark : Colors.light;
             onCheckIn={() => handleCheckIn(message.match.id)}
             onUnCheckIn={() => handleUnCheckIn(message.match.id)}
             onCloseMatch={() => handleCloseMatch(message.match.id)}
+            onAddExpense={(amount, billImageUrl, note) => handleAddExpense(message.match.id, amount, billImageUrl, note)}
             isOwnMessage={isOwnMessage}
             author={message.author}
             createdAt={new Date(message.createdAt)}
@@ -199,7 +202,7 @@ const colors = isDark ? Colors.dark : Colors.light;
         )}
       </>
     );
-  }, [currentProfile?.id, chatItems, shouldShowTimestamp, totalMembers, userMembership?.role, handleImagePress, handleReportMessage, handleDeleteMessage, colors.tabIconDefault, stableHandleVote, handleAddOptionToPoll, stableHandleClosePoll, handleRsvp, handleCheckIn, handleUnCheckIn, handleCloseMatch, stableHandleReaction, stableHandleAddReaction, handleSubmitDuesPayment, handleUpdateDuesMemberStatus, handleCloseDuesCycle]);
+  }, [currentProfile?.id, chatItems, shouldShowTimestamp, totalMembers, userMembership?.role, handleImagePress, handleReportMessage, handleDeleteMessage, colors.tabIconDefault, stableHandleVote, handleAddOptionToPoll, stableHandleClosePoll, handleRsvp, handleCheckIn, handleUnCheckIn, handleCloseMatch, handleAddExpense, stableHandleReaction, stableHandleAddReaction, handleSubmitDuesPayment, handleUpdateDuesMemberStatus, handleCloseDuesCycle]);
 
   const keyExtractor = useCallback((item: any) => item.id, []);
 

@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
   },
   duesTitle: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: "600",
     flex: 1,
     marginRight: 8,
   },

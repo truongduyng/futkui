@@ -17,7 +17,10 @@
     "active": "Hoạt động",
     "all": "Tất cả",
     "ok": "Đồng ý",
-    "close": "Đóng"
+    "close": "Đóng",
+    "uploading": "Đang tải lên...",
+    "permissionDenied": "Quyền bị từ chối",
+    "uploadFailed": "Tải lên thất bại"
   },
   "auth": {
     "welcome": "Chào mừng đến với FutKui",
@@ -571,5 +574,17 @@
     "noBlockedUsers": "Không có người dùng bị chặn",
     "noBlockedUsersDescription": "Bạn chưa chặn ai. Bạn có thể chặn người dùng để ẩn tin nhắn của họ khỏi chế độ xem của bạn.",
     "blockedMessage": "Tin nhắn từ người dùng bị chặn"
+  },
+  "expense": {
+    "addExpense": "Thêm Chi Phí",
+    "amount": "Số Tiền",
+    "enterAmount": "Nhập số tiền",
+    "note": "Ghi Chú",
+    "enterNote": "Nhập ghi chú (tùy chọn)",
+    "billImage": "Hình Hóa Đơn",
+    "addBillImage": "Thêm Hình Hóa Đơn",
+    "createExpense": "Tạo Chi Phí",
+    "invalidAmount": "Vui lòng nhập số tiền hợp lệ",
+    "createFailed": "Không thể tạo chi phí. Vui lòng thử lại."
   }
 }

@@ -108,6 +108,7 @@ export function useInstantDB() {
     checkInToMatch: matchOps.checkInToMatch,
     unCheckInFromMatch: matchOps.unCheckInFromMatch,
     closeMatch: matchOps.closeMatch,
+    addExpense: matchOps.addExpense,
 
     // Dues operations
     createDuesCycle: (duesData: {

@@ -5,6 +5,7 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AvatarStack } from './AvatarStack';
+import { ExpenseBottomSheet } from './ExpenseBottomSheet';
 
 interface RsvpData {
   id: string;
@@ -54,6 +55,7 @@ interface MatchCardProps {
   onCheckIn: () => void;
   onUnCheckIn: () => void;
   onCloseMatch?: () => void;
+  onAddExpense?: (amount: number, billImageUrl?: string, note?: string) => void;
   isOwnMessage: boolean;
   author?: {
     id: string;
@@ -74,6 +76,7 @@ export const MatchCard = React.memo(function MatchCard({
   onCheckIn,
   onUnCheckIn,
   onCloseMatch,
+  onAddExpense,
   isOwnMessage,
   author,
   createdAt,
@@ -83,7 +86,8 @@ export const MatchCard = React.memo(function MatchCard({
 }: MatchCardProps) {
   const { t } = useTranslation();
   const { isDark } = useTheme();
-const colors = isDark ? Colors.dark : Colors.light;
+  const colors = isDark ? Colors.dark : Colors.light;
+  const [showExpenseSheet, setShowExpenseSheet] = React.useState(false);
 
   const matchDateTime = new Date(match.matchDate);
   const isMatchToday = new Date().toDateString() === matchDateTime.toDateString();
@@ -92,6 +96,9 @@ const colors = isDark ? Colors.dark : Colors.light;
 
   // Show close button if user is creator or group admin, match is not closed, and match is not past
   const canCloseMatch = (isCreator || isGroupAdmin) && !isMatchClosed && !isMatchPast && onCloseMatch;
+
+  // Show expense button if user is creator or group admin and has expense callback
+  const canAddExpense = (isCreator || isGroupAdmin) && onAddExpense;
 
   // Checkin window: 15 minutes before match to 2 hours after match
   const now = Date.now();
@@ -162,6 +169,12 @@ const colors = isDark ? Colors.dark : Colors.light;
   const canCheckIn = isInCheckinWindow && match.isActive && !userCheckedIn && !isMatchClosed;
   const showCheckIn = isInCheckinWindow && match.isActive && !isMatchClosed;
 
+  const handleExpenseSubmit = async (amount: number, billImageUrl?: string, note?: string) => {
+    if (onAddExpense) {
+      await onAddExpense(amount, billImageUrl, note);
+    }
+  };
+
   return (
     <View
       style={[
@@ -202,22 +215,45 @@ const colors = isDark ? Colors.dark : Colors.light;
                 {t('chat.matchEvent')}
               </Text>
             </View>
-            {canCloseMatch && (
-              <TouchableOpacity
-                onPress={onCloseMatch}
-                style={[
-                  styles.closeButton,
-                  { backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }
-                ]}
-              >
-                <Text style={[
-                  styles.closeButtonText,
-                  { color: isOwnMessage ? 'white' : colors.text }
-                ]}>
-                  {t('chat.close')}
-                </Text>
-              </TouchableOpacity>
-            )}
+            <View style={styles.headerButtons}>
+              {canAddExpense && (
+                <TouchableOpacity
+                  onPress={() => setShowExpenseSheet(true)}
+                  style={[
+                    styles.actionButton,
+                    { backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }
+                  ]}
+                >
+                  <Ionicons
+                    name="receipt"
+                    size={14}
+                    color={isOwnMessage ? 'white' : colors.text}
+                  />
+                  <Text style={[
+                    styles.actionButtonText,
+                    { color: isOwnMessage ? 'white' : colors.text }
+                  ]}>
+                    {t('expense.addExpense')}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {canCloseMatch && (
+                <TouchableOpacity
+                  onPress={onCloseMatch}
+                  style={[
+                    styles.actionButton,
+                    { backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }
+                  ]}
+                >
+                  <Text style={[
+                    styles.actionButtonText,
+                    { color: isOwnMessage ? 'white' : colors.text }
+                  ]}>
+                    {t('chat.close')}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </View>
 
@@ -417,6 +453,13 @@ const colors = isDark ? Colors.dark : Colors.light;
           {formatTimeAgo(createdAt)}
         </Text>
       </View>
+
+      <ExpenseBottomSheet
+        isVisible={showExpenseSheet}
+        onClose={() => setShowExpenseSheet(false)}
+        onSubmit={handleExpenseSubmit}
+        matchId={match.id}
+      />
     </View>
   );
 });
@@ -424,7 +467,6 @@ const colors = isDark ? Colors.dark : Colors.light;
 const styles = StyleSheet.create({
   container: {
     marginVertical: 4,
-    maxWidth: "90%",
   },
   ownMessage: {
     alignSelf: "flex-end",
@@ -440,8 +482,9 @@ const styles = StyleSheet.create({
   matchCard: {
     borderRadius: 16,
     padding: 20,
-    minWidth: 300,
+    minWidth: 320,
     margin: 4,
+    width: "100%",
   },
   cardStyle: {
     shadowOffset: {
@@ -469,6 +512,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 8,
+    flexWrap: 'wrap',
   },
   titleContent: {
     flexDirection: 'row',
@@ -477,14 +521,30 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   gameTypeEmoji: {
-    fontSize: 20,
-    marginRight: 8,
+    fontSize: 16,
+    marginRight: 2,
   },
   matchTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
     lineHeight: 22,
     flex: 1,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 4,
+  },
+  actionButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   closeButton: {
     paddingHorizontal: 8,

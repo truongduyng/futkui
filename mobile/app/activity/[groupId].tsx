@@ -38,6 +38,7 @@ const colors = isDark ? Colors.dark : Colors.light;
     checkInToMatch,
     unCheckInFromMatch,
     closeMatch,
+    addExpense,
     submitDuesPayment,
     updateDuesMemberStatus,
     closeDuesCycle,
@@ -303,6 +304,7 @@ const colors = isDark ? Colors.dark : Colors.light;
               onCheckIn={() => handleCheckIn(match.id)}
               onUnCheckIn={() => handleUnCheckIn(match.id)}
               onCloseMatch={() => handleCloseMatch(match.id)}
+              onAddExpense={(amount, billImageUrl, note) => handleAddExpense(match.id, amount, billImageUrl, note)}
               isOwnMessage={isOwnMatch}
               author={match.creator}
               createdAt={new Date(match.createdAt)}
@@ -448,6 +450,23 @@ const colors = isDark ? Colors.dark : Colors.light;
       await closeMatch(matchId);
     } catch (error) {
       console.error("Error closing match:", error);
+    }
+  };
+
+  const handleAddExpense = async (matchId: string, amount: number, billImageUrl?: string, note?: string) => {
+    if (!currentProfile) return;
+
+    try {
+      await addExpense({
+        matchId,
+        amount,
+        billImageUrl,
+        note,
+        creatorId: currentProfile.id,
+      });
+      console.log("Expense added successfully");
+    } catch (error) {
+      console.error("Error adding expense:", error);
     }
   };
 
