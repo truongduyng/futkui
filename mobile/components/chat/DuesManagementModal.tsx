@@ -184,7 +184,7 @@ export function DuesManagementModal({
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
             <Text style={[styles.cancelText, { color: colors.text }]}>
-              {t("common.cancel")}
+              X
             </Text>
           </TouchableOpacity>
           <Text style={[styles.title, { color: colors.text }]}>

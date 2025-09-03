@@ -332,7 +332,7 @@ export const DuesBubble = React.memo(function DuesBubble({
 const styles = StyleSheet.create({
   container: {
     marginVertical: 4,
-    maxWidth: "90%",
+    maxWidth: "100%",
   },
   ownMessage: {
     alignSelf: "flex-end",
@@ -347,9 +347,9 @@ const styles = StyleSheet.create({
   },
   duesBubble: {
     borderRadius: 16,
-    padding: 20,
-    minWidth: 300,
-    margin: 4,
+    padding: 16,
+    width: "100%",
+    minWidth: 320,
   },
   cardStyle: {
     shadowOffset: {
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   progressSection: {
-    marginBottom: 16,
+    marginBottom: 6,
   },
   progressRow: {
     flexDirection: 'row',
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
   actionsSection: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 8,
+    marginTop: 12,
   },
   actionButton: {
     flex: 1,
