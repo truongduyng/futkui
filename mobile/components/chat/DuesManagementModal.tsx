@@ -2,7 +2,6 @@ import { Colors } from "@/constants/Colors";
 import { useTheme } from "@/contexts/ThemeContext";
 import React, { useState } from "react";
 import {
-  Alert,
   Modal,
   StyleSheet,
   Text,
@@ -10,8 +9,13 @@ import {
   View,
   ScrollView,
   ActivityIndicator,
+  Image,
+  Alert,
 } from "react-native";
 import { useTranslation } from "react-i18next";
+import Toast from "react-native-toast-message";
+import { ImageModal } from './ImageModal';
+import { CachedAvatar } from './CachedAvatar';
 
 interface DuesMember {
   id: string;
@@ -46,6 +50,8 @@ interface DuesManagementModalProps {
     profileId: string,
     status: string,
   ) => Promise<void>;
+  onCloseCycle?: (cycleId: string) => Promise<void>;
+  isAdmin: boolean;
 }
 
 export function DuesManagementModal({
@@ -53,12 +59,16 @@ export function DuesManagementModal({
   onClose,
   duesCycle,
   onUpdateMemberStatus,
+  onCloseCycle,
+  isAdmin,
 }: DuesManagementModalProps) {
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
   const [isUpdating, setIsUpdating] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -86,23 +96,70 @@ export function DuesManagementModal({
     }
   };
 
+  const handleViewBillingImage = (imageUrl: string) => {
+    setSelectedImageUrl(imageUrl);
+    setImageModalVisible(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setImageModalVisible(false);
+    setSelectedImageUrl(null);
+  };
+
   const handleStatusUpdate = async (member: DuesMember, newStatus: string) => {
     if (!onUpdateMemberStatus) return;
 
     setIsUpdating(true);
     try {
       await onUpdateMemberStatus(duesCycle.id, member.profile.id, newStatus);
-      Alert.alert(t("common.success"), t("chat.statusUpdated"));
+      Toast.show({
+        type: "success",
+        text1: t("common.success"),
+        text2: t("chat.statusUpdated"),
+      });
     } catch (error) {
       console.error("Failed to update member status:", error);
-      Alert.alert(t("common.error"), t("chat.failedToUpdateStatus"));
+      Toast.show({
+        type: "error",
+        text1: t("common.error"),
+        text2: t("chat.failedToUpdateStatus"),
+      });
     } finally {
       setIsUpdating(false);
     }
   };
 
+  const handleCloseCycle = () => {
+    if (onCloseCycle) {
+      Alert.alert(
+        t('chat.closeDuesCycle'),
+        t('chat.closeDuesCycleConfirm'),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('common.close'),
+            onPress: async () => {
+              try {
+                await onCloseCycle(duesCycle.id);
+                onClose(); // Close modal after successful cycle closure
+              } catch (error) {
+                console.error("Failed to close cycle:", error);
+                Toast.show({
+                  type: "error",
+                  text1: t("common.error"),
+                  text2: t("chat.failedToCloseCycle"),
+                });
+              }
+            }
+          },
+        ]
+      );
+    }
+  };
+
   // Calculate statistics
   const totalMembers = duesCycle.duesMembers.length;
+  const isActive = duesCycle.status === 'active' && duesCycle.deadline >= Date.now();
   const paidMembers = duesCycle.duesMembers.filter(
     (m) => m.status === "paid",
   ).length;
@@ -133,7 +190,15 @@ export function DuesManagementModal({
           <Text style={[styles.title, { color: colors.text }]}>
             {t("chat.manageDues")}
           </Text>
-          <View style={styles.headerSpacer} />
+          {isAdmin && isActive && onCloseCycle ? (
+            <TouchableOpacity onPress={handleCloseCycle} style={styles.closeButton}>
+              <Text style={styles.closeCycleText}>
+                {t('chat.closeCycle')}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.headerSpacer} />
+          )}
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -143,7 +208,6 @@ export function DuesManagementModal({
               styles.duesInfo,
               {
                 backgroundColor: isDark ? "#1C1C1E" : "#F8F8F8",
-                borderColor: colors.border || "rgba(0,0,0,0.1)",
               },
             ]}
           >
@@ -174,7 +238,6 @@ export function DuesManagementModal({
                     styles.memberItem,
                     {
                       backgroundColor: isDark ? "#2C2C2E" : "#F2F2F7",
-                      borderColor: getStatusColor(member.status),
                     },
                   ]}
                 >
@@ -186,10 +249,23 @@ export function DuesManagementModal({
                           { borderColor: getStatusColor(member.status) },
                         ]}
                       >
-                        <Text style={styles.avatarText}>
-                          {member.profile.handle?.charAt(0).toUpperCase() ||
-                            "?"}
-                        </Text>
+                        {member.profile.avatarUrl ? (
+                          <CachedAvatar
+                            uri={member.profile.avatarUrl}
+                            size={36}
+                            fallbackComponent={
+                              <Text style={styles.avatarText}>
+                                {member.profile.handle?.charAt(0).toUpperCase() ||
+                                  "?"}
+                              </Text>
+                            }
+                          />
+                        ) : (
+                          <Text style={styles.avatarText}>
+                            {member.profile.handle?.charAt(0).toUpperCase() ||
+                              "?"}
+                          </Text>
+                        )}
                       </View>
                       <View style={styles.memberDetails}>
                         <Text
@@ -242,6 +318,25 @@ export function DuesManagementModal({
                       )}
                     </View>
                   </View>
+
+                  {/* Billing Image */}
+                  {member.billImageUrl && (
+                    <View style={styles.billingImageContainer}>
+                      <Text style={[styles.billingImageLabel, { color: colors.text }]}>
+                        {t("chat.paymentProof")}:
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.billingImageWrapper}
+                        onPress={() => handleViewBillingImage(member.billImageUrl!)}
+                      >
+                        <Image
+                          source={{ uri: member.billImageUrl }}
+                          style={styles.billingImage}
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
               );
             })}
@@ -250,13 +345,16 @@ export function DuesManagementModal({
           {isUpdating && (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color={colors.tint} />
-              <Text style={[styles.loadingText, { color: colors.text }]}>
-                {t("common.updating")}...
-              </Text>
             </View>
           )}
         </ScrollView>
       </View>
+
+      <ImageModal
+        visible={imageModalVisible}
+        imageUrl={selectedImageUrl}
+        onClose={handleCloseImageModal}
+      />
     </Modal>
   );
 }
@@ -271,8 +369,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0, 0, 0, 0.1)",
   },
   cancelButton: {
     padding: 8,
@@ -287,16 +383,34 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 50,
   },
+  closeButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: '#EF4444',
+  },
+  closeCycleText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'white',
+  },
   content: {
     flex: 1,
     marginTop: 10,
     paddingHorizontal: 10,
   },
   duesInfo: {
-    borderWidth: 1,
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   duesTitle: {
     fontSize: 16,
@@ -320,10 +434,17 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   memberItem: {
-    borderWidth: 2,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   memberHeader: {
     flexDirection: "row",
@@ -340,11 +461,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    borderWidth: 2,
+    borderWidth: 1,
     backgroundColor: "rgba(0,0,0,0.1)",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
+    overflow: "hidden",
   },
   avatarText: {
     fontSize: 16,
@@ -386,5 +508,23 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
+  },
+  billingImageContainer: {
+    marginTop: 12,
+    paddingTop: 12,
+  },
+  billingImageLabel: {
+    fontSize: 12,
+    fontWeight: "500",
+    marginBottom: 8,
+  },
+  billingImageWrapper: {
+    alignSelf: "flex-start",
+    position: "relative",
+  },
+  billingImage: {
+    width: 120,
+    height: 80,
+    borderRadius: 8,
   },
 });

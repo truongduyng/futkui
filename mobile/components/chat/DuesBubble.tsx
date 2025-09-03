@@ -139,23 +139,9 @@ export const DuesBubble = React.memo(function DuesBubble({
     setShowManagementModal(true);
   };
 
-  const handleCloseCycle = () => {
-    if (onCloseCycle) {
-      Alert.alert(
-        t('chat.closeDuesCycle'),
-        t('chat.closeDuesCycleConfirm'),
-        [
-          { text: t('common.cancel'), style: 'cancel' },
-          { text: t('common.close'), onPress: () => onCloseCycle(duesCycle.id) },
-        ]
-      );
-    }
-  };
-
   const isOverdue = duesCycle.deadline < Date.now();
   const isExpired = duesCycle.deadline < Date.now();
   const isClosed = duesCycle.status === 'closed';
-  const isActive = !isClosed && !isExpired;
 
   return (
     <View
@@ -194,9 +180,9 @@ export const DuesBubble = React.memo(function DuesBubble({
             >
               💰 {duesCycle.periodKey}
             </Text>
-            {isAdmin && isActive && onCloseCycle && (
+            {isAdmin && (
               <TouchableOpacity
-                onPress={handleCloseCycle}
+                onPress={handleManagementPress}
                 style={[
                   styles.closeButton,
                   { backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }
@@ -206,7 +192,7 @@ export const DuesBubble = React.memo(function DuesBubble({
                   styles.closeButtonText,
                   { color: isOwnMessage ? 'white' : colors.text }
                 ]}>
-                  {t('chat.closeCycle')}
+                  {t('chat.manageDues')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -297,24 +283,6 @@ export const DuesBubble = React.memo(function DuesBubble({
               </Text>
             </TouchableOpacity>
           )}
-
-          {isAdmin && (
-            <TouchableOpacity
-              style={[
-                styles.actionButton,
-                styles.manageButton,
-                { backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }
-              ]}
-              onPress={handleManagementPress}
-            >
-              <Text style={[
-                styles.actionButtonText,
-                { color: isOwnMessage ? 'white' : colors.text }
-              ]}>
-                {t('chat.manageDues')}
-              </Text>
-            </TouchableOpacity>
-          )}
         </View>
 
         {/* Status indicator */}
@@ -353,6 +321,8 @@ export const DuesBubble = React.memo(function DuesBubble({
           onClose={() => setShowManagementModal(false)}
           duesCycle={duesCycle}
           onUpdateMemberStatus={onUpdateMemberStatus}
+          onCloseCycle={onCloseCycle}
+          isAdmin={isAdmin}
         />
       )}
     </View>
