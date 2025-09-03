@@ -1,4 +1,5 @@
-export { useInstantDB, instantClient } from './useInstantDB';
+export { instantClient } from './instantClient';
+export { useInstantDB } from './useInstantDB';
 export { useInstantQueries } from './useInstantQueries';
 export { useMessageOperations } from './useMessageOperations';
 export { useGroupOperations } from './useGroupOperations';

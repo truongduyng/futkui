@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { instantClient } from './useInstantDB';
+import { instantClient } from './instantClient';
 
 export function useInstantQueries() {
   const db = instantClient;

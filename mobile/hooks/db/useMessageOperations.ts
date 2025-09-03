@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { id } from '@instantdb/react-native';
-import { instantClient } from './useInstantDB';
+import { instantClient } from './instantClient';
 import { uploadToR2 } from '../../utils/r2Upload';
 import { sendGroupNotification, getMemberPushTokens } from '../../utils/notifications';
 

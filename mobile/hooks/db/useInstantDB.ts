@@ -1,5 +1,4 @@
-import { init } from '@instantdb/react-native';
-import schema from '../../instant.schema';
+import { instantClient } from './instantClient';
 import { useInstantQueries } from './useInstantQueries';
 import { useMessageOperations } from './useMessageOperations';
 import { useGroupOperations } from './useGroupOperations';
@@ -8,11 +7,6 @@ import { useMatchOperations } from './useMatchOperations';
 import { useDuesOperations } from './useDuesOperations';
 import { useUserOperations } from './useUserOperations';
 import { useBotOperations } from './useBotOperations';
-
-const instantClient = init({
-  appId: process.env.EXPO_PUBLIC_INSTANT_APP_ID || 'default-app-id',
-  schema,
-});
 
 export { instantClient };
 

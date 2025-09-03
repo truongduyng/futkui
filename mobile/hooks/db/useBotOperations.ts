@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { id } from '@instantdb/react-native';
-import { instantClient } from './useInstantDB';
+import { instantClient } from './instantClient';
 import { getTranslation } from '../../i18n';
 
 export function useBotOperations() {

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { id } from '@instantdb/react-native';
-import { instantClient } from './useInstantDB';
+import { instantClient } from './instantClient';
 
 export function useMatchOperations() {
   const db = instantClient;
