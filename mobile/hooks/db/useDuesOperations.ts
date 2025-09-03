@@ -229,6 +229,7 @@ export function useDuesOperations() {
               profileRefKey: profileRefKey,
             }).link({
               profile: profileId,
+              group: group.id,
             }),
             db.tx.groups[group.id].update({
               balance: newBalance,

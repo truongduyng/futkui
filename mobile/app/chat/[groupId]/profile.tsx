@@ -287,24 +287,22 @@ export default function GroupProfileScreen() {
           <Text style={[styles.memberCount, { color: colors.tabIconDefault }]}>
             {t('groupProfile.memberCount', { count: members.length })}
           </Text>
-          {group.balance !== undefined && group.balance !== null && (
-            <TouchableOpacity
-              style={[styles.balanceContainer, { backgroundColor: colors.card }]}
-              onPress={() => router.push(`/chat/${groupId}/finance`)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="wallet-outline" size={16} color={colors.tint} />
-              <Text style={[styles.balanceText, { color: colors.text }]}>
-                {new Intl.NumberFormat('vi-VN', { 
-                  style: 'currency', 
-                  currency: 'VND',
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0
-                }).format(group.balance)}
-              </Text>
-              <Ionicons name="chevron-forward" size={12} color={colors.tabIconDefault} style={styles.balanceChevron} />
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={[styles.balanceContainer, { backgroundColor: colors.card }]}
+            onPress={() => router.push(`/chat/${groupId}/finance`)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="wallet-outline" size={16} color={colors.tint} />
+            <Text style={[styles.balanceText, { color: colors.text }]}>
+              {new Intl.NumberFormat('vi-VN', { 
+                style: 'currency', 
+                currency: 'VND',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+              }).format(group.balance || 0)}
+            </Text>
+            <Ionicons name="chevron-forward" size={12} color={colors.tabIconDefault} style={styles.balanceChevron} />
+          </TouchableOpacity>
         </View>
 
         {/* Recent Activities Section */}

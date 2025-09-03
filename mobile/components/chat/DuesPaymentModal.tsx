@@ -108,7 +108,7 @@ export function DuesPaymentModal({
           {/* Bill Upload */}
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              {t('chat.paymentProof')} ({t('chat.optional')})
+              {t('chat.paymentProof')} ({t('common.optional')})
             </Text>
 
             {billImageUri ? (

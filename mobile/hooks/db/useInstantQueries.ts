@@ -221,16 +221,13 @@ export function useInstantQueries() {
     }
 
     return db.useQuery({
-      duesCycles: {
-        $: {
-          where: { "group.id": groupId },
-        },
-      },
       ledgerEntries: {
         $: {
+          where: { "group.id": groupId },
           order: { serverCreatedAt: 'desc' },
         },
         profile: {},
+        group: {},
       },
     });
   };

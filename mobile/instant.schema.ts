@@ -475,6 +475,18 @@ const _schema = i.schema({
         label: "ledgerEntries",
       },
     },
+    ledgerGroup: {
+      forward: {
+        on: "ledgerEntries",
+        has: "one",
+        label: "group",
+      },
+      reverse: {
+        on: "groups",
+        has: "many",
+        label: "ledgerEntries",
+      },
+    },
     duesMembersCycle: {
       forward: {
         on: "duesMembers",

@@ -371,10 +371,7 @@ export default function GroupFinanceScreen() {
         keyExtractor={(item) => item.id}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmptyComponent}
-        contentContainerStyle={[
-          styles.content,
-          sortedLedgerEntries.length === 0 && styles.emptyContainer
-        ]}
+        contentContainerStyle={styles.content}
         style={styles.flatList}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -395,10 +392,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
   },
   errorText: {
     fontSize: 16,

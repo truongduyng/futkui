@@ -203,6 +203,7 @@ export function useMatchOperations() {
           profileRefKey: profileRefKey,
         }).link({
           profile: expenseData.creatorId,
+          group: match.group.id,
         }),
         db.tx.groups[match.group.id].update({
           balance: newBalance,
