@@ -106,13 +106,13 @@ export const DuesBubble = React.memo(function DuesBubble({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'paid':
-        return '#4CAF50';
+        return '#22C55E';
       case 'pending':
-        return '#FF9800';
+        return '#F59E0B';
       case 'overdue':
-        return '#F44336';
+        return '#EF4444';
       default:
-        return colors.tabIconDefault;
+        return colors.accent;
     }
   };
 
@@ -213,7 +213,7 @@ export const DuesBubble = React.memo(function DuesBubble({
           <Text
             style={[
               styles.deadlineText,
-              { color: isOverdue ? '#F44336' : (isOwnMessage ? 'rgba(255,255,255,0.8)' : colors.tabIconDefault) }
+              { color: isOverdue ? '#EF4444' : (isOwnMessage ? 'rgba(255,255,255,0.8)' : colors.tabIconDefault) }
             ]}
           >
             {formatDeadline(duesCycle.deadline)}
