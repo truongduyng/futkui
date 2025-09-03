@@ -458,7 +458,7 @@ const colors = isDark ? Colors.dark : Colors.light;
     }
   };
 
-  const handleAddExpense = async (matchId: string, amount: number, billImageUrl?: string, note?: string) => {
+  const handleAddExpense = async (matchId: string, amount: number, billImageUrl?: string | null, note?: string) => {
     if (!currentProfile) return;
 
     try {
@@ -475,7 +475,7 @@ const colors = isDark ? Colors.dark : Colors.light;
     }
   };
 
-  const handleEditExpense = async (expenseId: string, amount: number, billImageUrl?: string, note?: string) => {
+  const handleEditExpense = async (expenseId: string, amount: number, billImageUrl?: string | null, note?: string) => {
     try {
       await editExpense({
         expenseId,

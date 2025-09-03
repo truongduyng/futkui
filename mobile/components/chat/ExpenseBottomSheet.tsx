@@ -33,7 +33,7 @@ interface ExpenseData {
 interface ExpenseBottomSheetProps {
   isVisible: boolean;
   onClose: () => void;
-  onSubmit: (amount: number, billImageUrl?: string, note?: string) => void;
+  onSubmit: (amount: number, billImageUrl?: string | null, note?: string) => void;
   matchId: string;
   existingExpense?: ExpenseData | null;
 }
@@ -83,7 +83,7 @@ export const ExpenseBottomSheet = React.memo(function ExpenseBottomSheet({
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
@@ -113,7 +113,7 @@ export const ExpenseBottomSheet = React.memo(function ExpenseBottomSheet({
 
     setIsSubmitting(true);
     try {
-      await onSubmit(amountValue, billImage || undefined, note.trim() || undefined);
+      await onSubmit(amountValue, billImage, note.trim() || undefined);
       handleClose();
     } catch (error) {
       console.error('Error creating expense:', error);
@@ -244,7 +244,7 @@ export const ExpenseBottomSheet = React.memo(function ExpenseBottomSheet({
             disabled={!amount || isSubmitting}
           >
             <Text style={styles.submitButtonText}>
-              {isSubmitting 
+              {isSubmitting
                 ? (existingExpense ? t('common.saving') : t('common.creating'))
                 : (existingExpense ? t('expense.updateExpense') : t('expense.createExpense'))
               }

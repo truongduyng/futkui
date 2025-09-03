@@ -166,7 +166,7 @@ export function useMatchOperations() {
     async (expenseData: {
       matchId: string;
       amount: number;
-      billImageUrl?: string;
+      billImageUrl?: string | null;
       note?: string;
       creatorId: string;
     }) => {
@@ -197,7 +197,7 @@ export function useMatchOperations() {
     async (expenseData: {
       expenseId: string;
       amount: number;
-      billImageUrl?: string;
+      billImageUrl?: string | null;
       note?: string;
     }) => {
       const result = await db.transact([

@@ -232,7 +232,7 @@ export default function ChatScreen() {
   }, [deleteMessage, showSuccess, showError, t]);
 
   // Expense handler
-  const handleAddExpense = useCallback(async (matchId: string, amount: number, billImageUrl?: string, note?: string) => {
+  const handleAddExpense = useCallback(async (matchId: string, amount: number, billImageUrl?: string | null, note?: string) => {
     if (!currentProfile?.id) {
       showError(t('common.error'), t('hooks.sendMessage.waitProfile'));
       return;
@@ -254,7 +254,7 @@ export default function ChatScreen() {
   }, [currentProfile?.id, addExpense, showSuccess, showError, t]);
 
   // Edit expense handler
-  const handleEditExpense = useCallback(async (expenseId: string, amount: number, billImageUrl?: string, note?: string) => {
+  const handleEditExpense = useCallback(async (expenseId: string, amount: number, billImageUrl?: string | null, note?: string) => {
     try {
       await editExpense({
         expenseId,

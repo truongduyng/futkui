@@ -70,8 +70,8 @@ interface MatchCardProps {
   onCheckIn: () => void;
   onUnCheckIn: () => void;
   onCloseMatch?: () => void;
-  onAddExpense?: (amount: number, billImageUrl?: string, note?: string) => void;
-  onEditExpense?: (expenseId: string, amount: number, billImageUrl?: string, note?: string) => void;
+  onAddExpense?: (amount: number, billImageUrl?: string | null, note?: string) => void;
+  onEditExpense?: (expenseId: string, amount: number, billImageUrl?: string | null, note?: string) => void;
   isOwnMessage: boolean;
   author?: {
     id: string;

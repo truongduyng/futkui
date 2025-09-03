@@ -33,8 +33,8 @@ interface ChatItemRendererProps {
   handleCheckIn: (matchId: string) => void;
   handleUnCheckIn: (matchId: string) => void;
   handleCloseMatch: (matchId: string) => void;
-  handleAddExpense: (matchId: string, amount: number, billImageUrl?: string, note?: string) => void;
-  handleEditExpense: (expenseId: string, amount: number, billImageUrl?: string, note?: string) => void;
+  handleAddExpense: (matchId: string, amount: number, billImageUrl?: string | null, note?: string) => void;
+  handleEditExpense: (expenseId: string, amount: number, billImageUrl?: string | null, note?: string) => void;
   handleReportMessage: (messageId: string, reason: string, description: string) => void;
   handleDeleteMessage: (messageId: string) => void;
   handleSubmitDuesPayment: (cycleId: string, billImageUri?: string) => Promise<void>;
