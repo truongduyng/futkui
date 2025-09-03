@@ -70,8 +70,8 @@ interface MatchCardProps {
   onCheckIn: () => void;
   onUnCheckIn: () => void;
   onCloseMatch?: () => void;
-  onAddExpense?: (amount: number, billImageUrl?: string | null, note?: string) => void;
-  onEditExpense?: (expenseId: string, amount: number, billImageUrl?: string | null, note?: string) => void;
+  onAddExpense?: (amount: number, billImageUrl?: string | null, note?: string) => Promise<void>;
+  onEditExpense?: (expenseId: string, amount: number, billImageUrl?: string | null, note?: string) => Promise<void>;
   isOwnMessage: boolean;
   author?: {
     id: string;
@@ -189,7 +189,7 @@ export const MatchCard = React.memo(function MatchCard({
   const canCheckIn = isInCheckinWindow && match.isActive && !userCheckedIn && !isMatchClosed;
   const showCheckIn = isInCheckinWindow && match.isActive && !isMatchClosed;
 
-  const handleExpenseSubmit = async (amount: number, billImageUrl?: string, note?: string) => {
+  const handleExpenseSubmit = async (amount: number, billImageUrl?: string | null, note?: string) => {
     if (editingExpense && onEditExpense) {
       await onEditExpense(editingExpense.id, amount, billImageUrl, note);
     } else if (onAddExpense) {

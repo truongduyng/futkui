@@ -33,7 +33,7 @@ interface ExpenseData {
 interface ExpenseBottomSheetProps {
   isVisible: boolean;
   onClose: () => void;
-  onSubmit: (amount: number, billImageUrl?: string | null, note?: string) => void;
+  onSubmit: (amount: number, billImageUrl?: string | null, note?: string) => Promise<void>;
   matchId: string;
   existingExpense?: ExpenseData | null;
 }
