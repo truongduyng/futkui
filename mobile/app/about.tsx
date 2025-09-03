@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-    marginBottom: -6,
+    marginBottom: 16,
   },
   appName: {
     fontSize: 28,
