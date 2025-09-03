@@ -198,18 +198,15 @@ export function ProfileSetup({
     setSelectedPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
-  const addSport = (sport: string) => {
+  const toggleSport = (sport: string) => {
     setSelectedSports(prev => {
       if (prev.includes(sport)) {
-        return prev; // Sport already exists
+        return prev.filter(s => s !== sport);
       }
       return [...prev, sport];
     });
   };
 
-  const removeSport = (sport: string) => {
-    setSelectedSports(prev => prev.filter(s => s !== sport));
-  };
 
 
 
@@ -595,59 +592,36 @@ export function ProfileSetup({
               {t("profile.sports")}
             </Text>
 
-            <View style={styles.addSportsContainer}>
-              <View style={styles.availableSportsContainer}>
-                {SPORTS_KEYS.map((sportKey) => (
-                  <TouchableOpacity
-                    key={sportKey}
+            <View style={styles.sportsContainer}>
+              {SPORTS_KEYS.map((sportKey) => (
+                <TouchableOpacity
+                  key={sportKey}
+                  style={[
+                    styles.sportButton,
+                    {
+                      borderColor: colors.icon,
+                      backgroundColor: isSportSelected(sportKey)
+                        ? colors.tint
+                        : colors.background,
+                    },
+                  ]}
+                  onPress={() => toggleSport(sportKey)}
+                >
+                  <Text
                     style={[
-                      styles.availableSportButton,
+                      styles.sportButtonText,
                       {
-                        borderColor: colors.icon,
-                        backgroundColor: isSportSelected(sportKey)
-                          ? colors.tint
-                          : colors.background,
+                        color: isSportSelected(sportKey)
+                          ? "white"
+                          : colors.text,
                       },
                     ]}
-                    onPress={() => isSportSelected(sportKey) ? removeSport(sportKey) : addSport(sportKey)}
-                    disabled={isSportSelected(sportKey)}
                   >
-                    <Text
-                      style={[
-                        styles.availableSportButtonText,
-                        {
-                          color: isSportSelected(sportKey)
-                            ? "white"
-                            : colors.text,
-                        },
-                      ]}
-                    >
-                      {t(`sports.${sportKey}`)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                    {t(`sports.${sportKey}`)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
-
-            {selectedSports.length > 0 && (
-              <View style={styles.selectedSportsContainer}>
-                <View style={styles.selectedSportsRow}>
-                  {selectedSports.map((sport) => (
-                    <View key={sport} style={[styles.selectedSportBadge, { borderColor: colors.border, backgroundColor: colors.card }]}>
-                      <Text style={[styles.selectedSportText, { color: colors.text }]}>
-                        {t(`sports.${sport.toLowerCase()}`)}
-                      </Text>
-                      <TouchableOpacity
-                        onPress={() => removeSport(sport)}
-                        style={[styles.removeSportButton, { backgroundColor: colors.accent }]}
-                      >
-                        <Text style={styles.removeSportText}>×</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -776,55 +750,28 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: 12,
   },
-  addSportsContainer: {
-    marginBottom: 16,
-  },
-  availableSportsContainer: {
+  sportsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
-  },
-  availableSportButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  availableSportButtonText: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  selectedSportsContainer: {
     marginBottom: 16,
   },
-  selectedSportsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  selectedSportBadge: {
+  sportButton: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    gap: 6,
+    gap: 4,
   },
-  selectedSportText: {
+  sportButtonText: {
     fontSize: 14,
     fontWeight: "500",
   },
-  removeSportButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  removeSportText: {
+  selectedIndicator: {
     color: "white",
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: "bold",
   },
   photosSection: {
