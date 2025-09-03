@@ -1,6 +1,5 @@
 import { Colors } from "@/constants/Colors";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useInstantDB } from "@/hooks/useInstantDB";
 import React, { useState } from "react";
 import {
   Alert,
@@ -10,16 +9,14 @@ import {
   TouchableOpacity,
   View,
   ScrollView,
-  Image,
-  TextInput,
   ActivityIndicator,
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import { Ionicons } from "@expo/vector-icons";
 
 interface DuesMember {
   id: string;
-  status: string;
+  status: string; // 'unpaid', 'pending', 'paid', 'overdue'
+  billImageUrl?: string;
   profile: {
     id: string;
     handle: string;
@@ -40,33 +37,11 @@ interface DuesCycleData {
   duesMembers: DuesMember[];
 }
 
-interface LedgerEntry {
-  id: string;
-  refId: string;
-  amount: number;
-  type: string;
-  status: string;
-  billImageUrl?: string;
-  adminNotes?: string;
-  confirmedAt?: number;
-  createdAt: number;
-  updatedAt: number;
-  profile: {
-    id: string;
-    handle: string;
-    displayName?: string;
-  };
-}
 
 interface DuesManagementModalProps {
   visible: boolean;
   onClose: () => void;
   duesCycle: DuesCycleData;
-  onConfirmPayment?: (
-    ledgerEntryId: string,
-    confirmed: boolean,
-    adminNotes?: string,
-  ) => Promise<void>;
   onUpdateMemberStatus?: (
     cycleId: string,
     profileId: string,
@@ -78,30 +53,13 @@ export function DuesManagementModal({
   visible,
   onClose,
   duesCycle,
-  onConfirmPayment,
   onUpdateMemberStatus,
 }: DuesManagementModalProps) {
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
-  const { useLedgerEntries } = useInstantDB();
 
-  const [adminNotes, setAdminNotes] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
-  const [expandedImage, setExpandedImage] = useState<string | null>(null);
-
-  // Get ledger entries for this dues cycle
-  const { data: ledgerData } = useLedgerEntries(duesCycle.id);
-  const ledgerEntries = (ledgerData?.ledgerEntries || []) as LedgerEntry[];
-
-  const formatTime = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -144,61 +102,13 @@ export function DuesManagementModal({
     }
   };
 
-  const handleConfirmPayment = async (
-    entry: LedgerEntry,
-    confirmed: boolean,
-  ) => {
-    if (!onConfirmPayment) return;
-
-    const notes = adminNotes.trim() || undefined;
-
-    Alert.alert(
-      confirmed ? t("chat.confirmPayment") : t("chat.rejectPayment"),
-      confirmed
-        ? t("chat.confirmPaymentMessage", { handle: entry.profile.handle })
-        : t("chat.rejectPaymentMessage", { handle: entry.profile.handle }),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: confirmed ? t("common.confirm") : t("common.reject"),
-          style: confirmed ? "default" : "destructive",
-          onPress: async () => {
-            setIsUpdating(true);
-            try {
-              await onConfirmPayment(entry.id, confirmed, notes);
-              setAdminNotes("");
-              Alert.alert(
-                t("common.success"),
-                confirmed
-                  ? t("chat.paymentConfirmed")
-                  : t("chat.paymentRejected"),
-              );
-            } catch (error) {
-              console.error("Failed to confirm payment:", error);
-              Alert.alert(t("common.error"), t("chat.failedToProcessPayment"));
-            } finally {
-              setIsUpdating(false);
-            }
-          },
-        },
-      ],
-    );
-  };
 
   // Calculate statistics
   const totalMembers = duesCycle.duesMembers.length;
-  const paidMembers = duesCycle.duesMembers.filter(
-    (m) => m.status === "paid",
-  ).length;
-  const pendingMembers = duesCycle.duesMembers.filter(
-    (m) => m.status === "pending",
-  ).length;
-  const unpaidMembers = duesCycle.duesMembers.filter(
-    (m) => m.status === "unpaid",
-  ).length;
-  const overdueMembers = duesCycle.duesMembers.filter(
-    (m) => m.status === "overdue",
-  ).length;
+  const paidMembers = duesCycle.duesMembers.filter(m => m.status === 'paid').length;
+  const pendingMembers = duesCycle.duesMembers.filter(m => m.status === 'pending').length;
+  const unpaidMembers = duesCycle.duesMembers.filter(m => m.status === 'unpaid').length;
+  const overdueMembers = duesCycle.duesMembers.filter(m => m.status === 'overdue').length;
 
   return (
     <Modal
@@ -256,10 +166,6 @@ export function DuesManagementModal({
               </Text>
 
               {duesCycle.duesMembers.map((member) => {
-                const memberLedgerEntries = ledgerEntries.filter(
-                  (entry) => entry.profile.id === member.profile.id,
-                );
-
                 return (
                   <View
                     key={member.id}
@@ -338,161 +244,6 @@ export function DuesManagementModal({
                         )}
                       </View>
                     </View>
-
-                    {/* Ledger Entries for this member */}
-                    {memberLedgerEntries.length > 0 && (
-                      <View style={styles.ledgerSection}>
-                        <Text
-                          style={[styles.ledgerTitle, { color: colors.text }]}
-                        >
-                          {t("chat.paymentHistory")}:
-                        </Text>
-
-                        {memberLedgerEntries.map((entry) => (
-                          <View
-                            key={entry.id}
-                            style={[
-                              styles.ledgerEntry,
-                              {
-                                backgroundColor: isDark ? "#1C1C1E" : "#FFFFFF",
-                                borderColor:
-                                  entry.status === "confirmed"
-                                    ? "#4CAF50"
-                                    : entry.status === "rejected"
-                                    ? "#F44336"
-                                    : "#FF9800",
-                              },
-                            ]}
-                          >
-                            <View style={styles.ledgerHeader}>
-                              <Text
-                                style={[
-                                  styles.ledgerAmount,
-                                  { color: colors.text },
-                                ]}
-                              >
-                                {entry.amount.toFixed(2)}
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.ledgerStatus,
-                                  {
-                                    color:
-                                      entry.status === "confirmed"
-                                        ? "#4CAF50"
-                                        : entry.status === "rejected"
-                                        ? "#F44336"
-                                        : "#FF9800",
-                                  },
-                                ]}
-                              >
-                                {entry.status.toUpperCase()}
-                              </Text>
-                            </View>
-
-                            <Text
-                              style={[
-                                styles.ledgerDate,
-                                { color: colors.tabIconDefault },
-                              ]}
-                            >
-                              {formatTime(entry.createdAt)}
-                            </Text>
-
-                            {entry.billImageUrl && (
-                              <TouchableOpacity
-                                style={styles.billImageContainer}
-                                onPress={() =>
-                                  setExpandedImage(entry.billImageUrl!)
-                                }
-                              >
-                                <Image
-                                  source={{ uri: entry.billImageUrl }}
-                                  style={styles.billThumbnail}
-                                  resizeMode="cover"
-                                />
-                                <Text
-                                  style={[
-                                    styles.viewImageText,
-                                    { color: colors.tint },
-                                  ]}
-                                >
-                                  {t("chat.viewReceipt")}
-                                </Text>
-                              </TouchableOpacity>
-                            )}
-
-                            {entry.adminNotes && (
-                              <Text
-                                style={[
-                                  styles.adminNotes,
-                                  { color: colors.tabIconDefault },
-                                ]}
-                              >
-                                {t("chat.adminNotes")}: {entry.adminNotes}
-                              </Text>
-                            )}
-
-                            {/* Pending actions */}
-                            {entry.status === "pending" && (
-                              <View style={styles.pendingActions}>
-                                <TextInput
-                                  style={[
-                                    styles.notesInput,
-                                    {
-                                      color: colors.text,
-                                      backgroundColor: isDark
-                                        ? "#3C3C3E"
-                                        : "#F8F8F8",
-                                      borderColor:
-                                        colors.border || "rgba(0,0,0,0.1)",
-                                    },
-                                  ]}
-                                  value={adminNotes}
-                                  onChangeText={setAdminNotes}
-                                  placeholder={t("chat.addAdminNotes")}
-                                  placeholderTextColor={colors.tabIconDefault}
-                                  multiline
-                                  numberOfLines={2}
-                                />
-
-                                <View style={styles.confirmActions}>
-                                  <TouchableOpacity
-                                    style={[
-                                      styles.confirmButton,
-                                      { backgroundColor: "#F44336" },
-                                    ]}
-                                    onPress={() =>
-                                      handleConfirmPayment(entry, false)
-                                    }
-                                    disabled={isUpdating}
-                                  >
-                                    <Text style={styles.confirmButtonText}>
-                                      {t("common.reject")}
-                                    </Text>
-                                  </TouchableOpacity>
-
-                                  <TouchableOpacity
-                                    style={[
-                                      styles.confirmButton,
-                                      { backgroundColor: "#4CAF50" },
-                                    ]}
-                                    onPress={() =>
-                                      handleConfirmPayment(entry, true)
-                                    }
-                                    disabled={isUpdating}
-                                  >
-                                    <Text style={styles.confirmButtonText}>
-                                      {t("common.confirm")}
-                                    </Text>
-                                  </TouchableOpacity>
-                                </View>
-                              </View>
-                            )}
-                          </View>
-                        ))}
-                      </View>
-                    )}
                   </View>
                 );
               })}
@@ -508,36 +259,6 @@ export function DuesManagementModal({
           )}
         </ScrollView>
       </View>
-
-      {/* Expanded Image Modal */}
-      {expandedImage && (
-        <Modal
-          visible={true}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setExpandedImage(null)}
-        >
-          <TouchableOpacity
-            style={styles.imageModalOverlay}
-            activeOpacity={1}
-            onPress={() => setExpandedImage(null)}
-          >
-            <View style={styles.imageModalContainer}>
-              <TouchableOpacity
-                style={styles.imageCloseButton}
-                onPress={() => setExpandedImage(null)}
-              >
-                <Ionicons name="close-circle" size={32} color="white" />
-              </TouchableOpacity>
-              <Image
-                source={{ uri: expandedImage }}
-                style={styles.expandedImage}
-                resizeMode="contain"
-              />
-            </View>
-          </TouchableOpacity>
-        </Modal>
-      )}
     </Modal>
   );
 }
@@ -657,87 +378,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "white",
   },
-  ledgerSection: {
-    borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.1)",
-    paddingTop: 12,
-    marginTop: 8,
-  },
-  ledgerTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  ledgerEntry: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-  },
-  ledgerHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  ledgerAmount: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  ledgerStatus: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  ledgerDate: {
-    fontSize: 11,
-    marginBottom: 8,
-  },
-  billImageContainer: {
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  billThumbnail: {
-    width: 100,
-    height: 80,
-    borderRadius: 8,
-    marginBottom: 4,
-  },
-  viewImageText: {
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  adminNotes: {
-    fontSize: 12,
-    fontStyle: "italic",
-    marginBottom: 8,
-  },
-  pendingActions: {
-    gap: 8,
-  },
-  notesInput: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 14,
-    minHeight: 60,
-    textAlignVertical: "top",
-  },
-  confirmActions: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  confirmButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  confirmButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "white",
-  },
   loadingContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -747,27 +387,5 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
-  },
-  imageModalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.9)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  imageModalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  imageCloseButton: {
-    position: "absolute",
-    top: 50,
-    right: 20,
-    zIndex: 1,
-  },
-  expandedImage: {
-    width: "100%",
-    height: "80%",
   },
 });

@@ -50,7 +50,6 @@ export default function ChatScreen() {
     useUserMembership,
     createDuesCycle,
     submitDuesPayment,
-    confirmPayment,
     updateDuesMemberStatus,
     closeDuesCycle,
     sendMessage,
@@ -311,33 +310,6 @@ export default function ChatScreen() {
     }
   }, [group, colors, navigation, router, groupId, t, handleShareGroup, isBotGroup]);
 
-  // Chat item rendering
-  const { renderChatItem, keyExtractor } = useChatItemRenderer({
-    chatItems: messages,
-    currentProfile,
-    group,
-    userMembership,
-    totalMembers: members.length,
-    stableHandleVote: (pollId, optionId, votes, allowMultiple) =>
-      handleVote(pollId, optionId, votes, allowMultiple),
-    stableHandleClosePoll: (pollId) => handleClosePoll(pollId),
-    stableHandleReaction: (messageId, emoji, reactions) =>
-      handleReactionPress(messageId, emoji, reactions),
-    stableHandleAddReaction: (messageId, emoji, reactions) =>
-      handleAddReaction(messageId, emoji, reactions),
-    handleImagePress,
-    handleRsvp,
-    handleCheckIn,
-    handleUnCheckIn,
-    handleCloseMatch,
-    handleAddOptionToPoll,
-    handleReportMessage,
-    handleDeleteMessage,
-    handleSubmitDuesPayment,
-    handleConfirmDuesPayment,
-    handleUpdateDuesMemberStatus,
-    handleCloseDuesCycle,
-  });
 
   // Reset limit when group changes
   useEffect(() => {
@@ -366,7 +338,7 @@ export default function ChatScreen() {
     deadline: number;
   }) => {
     if (!currentProfile || !groupId) return;
-    
+
     try {
       await createDuesCycle({
         ...duesData,
@@ -383,30 +355,20 @@ export default function ChatScreen() {
 
   const handleSubmitDuesPayment = useCallback(async (cycleId: string, billImageUri?: string) => {
     if (!currentProfile) return;
-    
+
     try {
       await submitDuesPayment({
         cycleId,
         profileId: currentProfile.id,
         billImageUri,
       });
-      
+
       showSuccess(t('chat.paymentSubmitted') || 'Payment submitted successfully');
     } catch (error) {
       console.error('Failed to submit payment:', error);
       showError(t('chat.failedToSubmitPayment') || 'Failed to submit payment');
     }
   }, [submitDuesPayment, currentProfile, showSuccess, showError, t]);
-
-  const handleConfirmDuesPayment = useCallback(async (ledgerEntryId: string, confirmed: boolean, adminNotes?: string) => {
-    try {
-      await confirmPayment(ledgerEntryId, confirmed, adminNotes);
-      showSuccess(confirmed ? t('chat.paymentConfirmed') : t('chat.paymentRejected'));
-    } catch (error) {
-      console.error('Failed to confirm payment:', error);
-      showError(t('chat.failedToProcessPayment') || 'Failed to process payment');
-    }
-  }, [confirmPayment, showSuccess, showError, t]);
 
   const handleUpdateDuesMemberStatus = useCallback(async (cycleId: string, profileId: string, status: string) => {
     try {
@@ -427,6 +389,33 @@ export default function ChatScreen() {
       showError('Failed to close dues cycle');
     }
   }, [closeDuesCycle, showSuccess, showError, t]);
+
+  // Chat item rendering
+  const { renderChatItem, keyExtractor } = useChatItemRenderer({
+    chatItems: messages,
+    currentProfile,
+    group,
+    userMembership,
+    totalMembers: members.length,
+    stableHandleVote: (pollId, optionId, votes, allowMultiple) =>
+      handleVote(pollId, optionId, votes, allowMultiple),
+    stableHandleClosePoll: (pollId) => handleClosePoll(pollId),
+    stableHandleReaction: (messageId, emoji, reactions) =>
+      handleReactionPress(messageId, emoji, reactions),
+    stableHandleAddReaction: (messageId, emoji, reactions) =>
+      handleAddReaction(messageId, emoji, reactions),
+    handleImagePress,
+    handleRsvp,
+    handleCheckIn,
+    handleUnCheckIn,
+    handleCloseMatch,
+    handleAddOptionToPoll,
+    handleReportMessage,
+    handleDeleteMessage,
+    handleSubmitDuesPayment,
+    handleUpdateDuesMemberStatus,
+    handleCloseDuesCycle,
+  });
 
   // Loading states
   if (!groupId) return <LoadingStates type="loading" />;

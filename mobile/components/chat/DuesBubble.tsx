@@ -33,8 +33,7 @@ interface DuesBubbleProps {
   duesCycle: DuesCycleData;
   currentUserId: string;
   onSubmitPayment: (cycleId: string, billImageUri?: string) => Promise<void>;
-  onConfirmPayment?: (ledgerEntryId: string, confirmed: boolean, adminNotes?: string) => Promise<void>;
-  onUpdateMemberStatus?: (cycleId: string, profileId: string, status: string) => Promise<void>;
+  onUpdateMemberStatus: (cycleId: string, profileId: string, status: string) => Promise<void>;
   onCloseCycle?: (cycleId: string) => Promise<void>;
   isOwnMessage: boolean;
   isAdmin: boolean;
@@ -51,7 +50,6 @@ export const DuesBubble = React.memo(function DuesBubble({
   duesCycle,
   currentUserId,
   onSubmitPayment,
-  onConfirmPayment,
   onUpdateMemberStatus,
   onCloseCycle,
   isOwnMessage,
@@ -69,17 +67,35 @@ export const DuesBubble = React.memo(function DuesBubble({
 
   // Calculate statistics
   const totalMembers = duesCycle.duesMembers.length;
-  const paidMembers = duesCycle.duesMembers.filter(m => m.status === 'paid').length;
-  const pendingMembers = duesCycle.duesMembers.filter(m => m.status === 'pending').length;
-  const unpaidMembers = duesCycle.duesMembers.filter(m => m.status === 'unpaid').length;
-  const overdueMembers = duesCycle.duesMembers.filter(m => m.status === 'overdue').length;
+  // Determine status based on ledger entries and bill images
+  const getMemberStatus = (member: any) => {
+    // Check if there's a ledger entry for this member (means paid)
+    const hasLedgerEntry = member.profile?.ledgerEntries?.some((entry: any) => 
+      entry.refId === duesCycle.id && entry.type === 'dues_payment'
+    );
+    
+    if (hasLedgerEntry) return 'paid';
+    if (member.billImageUrl) return 'pending'; // Has submitted payment proof
+    
+    // Check if overdue (past deadline)
+    const now = Date.now();
+    if (duesCycle.deadline && now > duesCycle.deadline) return 'overdue';
+    
+    return 'unpaid';
+  };
+
+  const memberStatuses = duesCycle.duesMembers.map(m => getMemberStatus(m));
+  const paidMembers = memberStatuses.filter(s => s === 'paid').length;
+  const pendingMembers = memberStatuses.filter(s => s === 'pending').length;
+  const unpaidMembers = memberStatuses.filter(s => s === 'unpaid').length;
+  const overdueMembers = memberStatuses.filter(s => s === 'overdue').length;
 
   const paymentProgress = totalMembers > 0 ? Math.round((paidMembers / totalMembers) * 100) : 0;
   const totalAmount = paidMembers * duesCycle.amountPerMember;
 
   // Find current user's payment status
   const currentUserMember = duesCycle.duesMembers.find(m => m.profile.id === currentUserId);
-  const currentUserStatus = currentUserMember?.status || 'unpaid';
+  const currentUserStatus = currentUserMember ? getMemberStatus(currentUserMember) : 'unpaid';
 
   const formatTime = (date: Date) => {
     return new Date(date).toLocaleTimeString([], {
@@ -90,14 +106,14 @@ export const DuesBubble = React.memo(function DuesBubble({
 
   const formatDeadline = (deadline: number) => {
     const isOverdue = deadline < Date.now();
-    
+
     if (isOverdue) {
       return t('chat.overdue');
     }
-    
+
     const timeDiff = deadline - Date.now();
     const daysDiff = Math.ceil(timeDiff / (24 * 60 * 60 * 1000));
-    
+
     if (daysDiff <= 0) {
       return t('chat.dueToday');
     } else if (daysDiff === 1) {
@@ -226,7 +242,7 @@ export const DuesBubble = React.memo(function DuesBubble({
               </TouchableOpacity>
             )}
           </View>
-          
+
           <Text
             style={[
               styles.amountText,
@@ -235,7 +251,7 @@ export const DuesBubble = React.memo(function DuesBubble({
           >
             {formatAmount(duesCycle.amountPerMember)} {t('chat.perMember')}
           </Text>
-          
+
           <Text
             style={[
               styles.deadlineText,
@@ -266,7 +282,7 @@ export const DuesBubble = React.memo(function DuesBubble({
               {formatAmount(totalAmount)}
             </Text>
           </View>
-          
+
           <View style={[
             styles.progressBar,
             { backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }
@@ -293,7 +309,7 @@ export const DuesBubble = React.memo(function DuesBubble({
           >
             {t('chat.memberStatus')}
           </Text>
-          
+
           {/* Status breakdown */}
           <View style={styles.statusBreakdown}>
             {paidMembers > 0 && (
@@ -307,7 +323,7 @@ export const DuesBubble = React.memo(function DuesBubble({
                 </Text>
               </View>
             )}
-            
+
             {pendingMembers > 0 && (
               <View style={styles.statusItem}>
                 <Text style={[styles.statusIcon, { color: '#FF9800' }]}>⏳</Text>
@@ -319,7 +335,7 @@ export const DuesBubble = React.memo(function DuesBubble({
                 </Text>
               </View>
             )}
-            
+
             {unpaidMembers > 0 && (
               <View style={styles.statusItem}>
                 <Text style={[styles.statusIcon, { color: colors.tabIconDefault }]}>○</Text>
@@ -331,7 +347,7 @@ export const DuesBubble = React.memo(function DuesBubble({
                 </Text>
               </View>
             )}
-            
+
             {overdueMembers > 0 && (
               <View style={styles.statusItem}>
                 <Text style={[styles.statusIcon, { color: '#F44336' }]}>⚠️</Text>
@@ -347,24 +363,27 @@ export const DuesBubble = React.memo(function DuesBubble({
 
           {/* Member avatars with status */}
           <View style={styles.memberAvatars}>
-            {duesCycle.duesMembers.map((member) => (
-              <View key={member.id} style={styles.memberAvatar}>
-                <View style={[
-                  styles.avatar,
-                  { borderColor: getStatusColor(member.status) }
-                ]}>
-                  <Text style={styles.avatarText}>
-                    {member.profile.handle?.charAt(0).toUpperCase() || '?'}
+            {duesCycle.duesMembers.map((member) => {
+              const memberStatus = getMemberStatus(member);
+              return (
+                <View key={member.id} style={styles.memberAvatar}>
+                  <View style={[
+                    styles.avatar,
+                    { borderColor: getStatusColor(memberStatus) }
+                  ]}>
+                    <Text style={styles.avatarText}>
+                      {member.profile.handle?.charAt(0).toUpperCase() || '?'}
+                    </Text>
+                  </View>
+                  <Text style={[
+                    styles.statusIndicator,
+                    { color: getStatusColor(memberStatus) }
+                  ]}>
+                    {getStatusIcon(memberStatus)}
                   </Text>
                 </View>
-                <Text style={[
-                  styles.statusIndicator,
-                  { color: getStatusColor(member.status) }
-                ]}>
-                  {getStatusIcon(member.status)}
-                </Text>
-              </View>
-            ))}
+              );
+            })}
           </View>
         </View>
 
@@ -381,7 +400,7 @@ export const DuesBubble = React.memo(function DuesBubble({
               disabled={currentUserStatus === 'paid'}
             >
               <Text style={styles.actionButtonText}>
-                {currentUserStatus === 'paid' 
+                {currentUserStatus === 'paid'
                   ? t('chat.paid')
                   : currentUserStatus === 'pending'
                   ? t('chat.pending')
@@ -445,7 +464,6 @@ export const DuesBubble = React.memo(function DuesBubble({
           visible={showManagementModal}
           onClose={() => setShowManagementModal(false)}
           duesCycle={duesCycle}
-          onConfirmPayment={onConfirmPayment}
           onUpdateMemberStatus={onUpdateMemberStatus}
         />
       )}

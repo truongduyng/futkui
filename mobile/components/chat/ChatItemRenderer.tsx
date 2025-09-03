@@ -32,11 +32,10 @@ interface ChatItemRendererProps {
   handleCheckIn: (matchId: string) => void;
   handleUnCheckIn: (matchId: string) => void;
   handleCloseMatch: (matchId: string) => void;
-  handleReportMessage?: (messageId: string, reason: string, description: string) => void;
-  handleDeleteMessage?: (messageId: string) => void;
-  handleSubmitDuesPayment?: (cycleId: string, billImageUri?: string) => Promise<void>;
-  handleConfirmDuesPayment?: (ledgerEntryId: string, confirmed: boolean, adminNotes?: string) => Promise<void>;
-  handleUpdateDuesMemberStatus?: (cycleId: string, profileId: string, status: string) => Promise<void>;
+  handleReportMessage: (messageId: string, reason: string, description: string) => void;
+  handleDeleteMessage: (messageId: string) => void;
+  handleSubmitDuesPayment: (cycleId: string, billImageUri?: string) => Promise<void>;
+  handleUpdateDuesMemberStatus: (cycleId: string, profileId: string, status: string) => Promise<void>;
   handleCloseDuesCycle?: (cycleId: string) => Promise<void>;
 }
 
@@ -58,7 +57,6 @@ export function useChatItemRenderer({
   handleReportMessage,
   handleDeleteMessage,
   handleSubmitDuesPayment,
-  handleConfirmDuesPayment,
   handleUpdateDuesMemberStatus,
   handleCloseDuesCycle,
 }: ChatItemRendererProps) {
@@ -158,8 +156,7 @@ const colors = isDark ? Colors.dark : Colors.light;
               duesMembers: message.duesCycle.duesMembers || [],
             }}
             currentUserId={currentProfile?.id || ''}
-            onSubmitPayment={handleSubmitDuesPayment || (async () => {})}
-            onConfirmPayment={handleConfirmDuesPayment}
+            onSubmitPayment={handleSubmitDuesPayment}
             onUpdateMemberStatus={handleUpdateDuesMemberStatus}
             onCloseCycle={handleCloseDuesCycle}
             isOwnMessage={isOwnMessage}
@@ -202,7 +199,7 @@ const colors = isDark ? Colors.dark : Colors.light;
         )}
       </>
     );
-  }, [currentProfile?.id, chatItems, shouldShowTimestamp, totalMembers, userMembership?.role, handleImagePress, handleReportMessage, handleDeleteMessage, colors.tabIconDefault, stableHandleVote, handleAddOptionToPoll, stableHandleClosePoll, handleRsvp, handleCheckIn, handleUnCheckIn, handleCloseMatch, stableHandleReaction, stableHandleAddReaction, handleSubmitDuesPayment, handleConfirmDuesPayment, handleUpdateDuesMemberStatus, handleCloseDuesCycle]);
+  }, [currentProfile?.id, chatItems, shouldShowTimestamp, totalMembers, userMembership?.role, handleImagePress, handleReportMessage, handleDeleteMessage, colors.tabIconDefault, stableHandleVote, handleAddOptionToPoll, stableHandleClosePoll, handleRsvp, handleCheckIn, handleUnCheckIn, handleCloseMatch, stableHandleReaction, stableHandleAddReaction, handleSubmitDuesPayment, handleUpdateDuesMemberStatus, handleCloseDuesCycle]);
 
   const keyExtractor = useCallback((item: any) => item.id, []);
 

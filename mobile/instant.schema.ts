@@ -111,15 +111,15 @@ const _schema = i.schema({
       refId: i.string(), // Reference to duesCycle ID
       amount: i.number(),
       type: i.string(), // 'dues_payment', 'dues_refund'
-      status: i.string(), // 'pending', 'confirmed', 'rejected'
       billImageUrl: i.string().optional(),
-      adminNotes: i.string().optional(),
-      confirmedAt: i.number().optional(),
+      note: i.string().optional(),
       createdAt: i.number(),
       updatedAt: i.number(),
+      profileRefKey: i.string().unique().indexed(), // 'profileId_refId' for uniqueness per profile and ref
     }),
     duesMembers: i.entity({
       status: i.string(), // 'unpaid', 'pending', 'paid', 'overdue'
+      billImageUrl: i.string().optional(),
       createdAt: i.number(),
       updatedAt: i.number(),
     }),

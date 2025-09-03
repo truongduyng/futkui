@@ -6,10 +6,8 @@ import {
   Modal,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
-  ScrollView,
   ActivityIndicator,
   Image,
   Platform,
@@ -21,7 +19,7 @@ import * as ImagePicker from 'expo-image-picker';
 interface DuesPaymentModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmitPayment: (billImageUri?: string) => Promise<void>;
+  onSubmitPayment: (billImageUri?: string) => void;
   requiredAmount: number;
   periodKey: string;
 }

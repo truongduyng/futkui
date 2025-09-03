@@ -121,7 +121,9 @@ export function useInstantDB() {
         },
         duesCycle: {
           duesMembers: {
-            profile: {},
+            profile: {
+              ledgerEntries: {},
+            },
           },
         },
         group: {},
@@ -1507,6 +1509,8 @@ export function useInstantDB() {
       profileId: string;
       billImageUri?: string;
     }) => {
+      console.log('submitDuesPayment called with:', paymentData);
+
       // First get the dues cycle to get the amount
       const duesCycleQuery = await db.queryOnce({
         duesCycles: {
@@ -1517,7 +1521,9 @@ export function useInstantDB() {
       });
 
       const duesCycle = duesCycleQuery.data?.duesCycles?.[0];
+      console.log('Found dues cycle:', duesCycle);
       if (!duesCycle) {
+        console.error('Dues cycle not found for ID:', paymentData.cycleId);
         throw new Error('Dues cycle not found');
       }
 
@@ -1548,50 +1554,41 @@ export function useInstantDB() {
 
       const existingDuesMember = duesMemberQuery.data.duesMembers?.[0];
 
-      // Create ledger entry
-      const ledgerEntryId = id();
-      const result = await db.transact([
-        db.tx.ledgerEntries[ledgerEntryId].update({
-          refId: paymentData.cycleId,
-          amount: duesCycle.amountPerMember,
-          type: 'dues_payment',
-          status: 'pending',
-          billImageUrl: billImageUrl,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        }).link({
-          profile: paymentData.profileId,
-        }),
-      ]);
-
-      // Update or create duesMembers entry
+      // Update or create duesMembers entry - mark as paid
+      let result;
       if (existingDuesMember) {
-        await db.transact([
+        console.log('Updating existing duesMembers entry:', existingDuesMember.id);
+        result = await db.transact([
           db.tx.duesMembers[existingDuesMember.id].update({
-            status: 'pending',
+            billImageUrl: billImageUrl,
             updatedAt: Date.now(),
+            status: 'pending', // Mark as pending admin approval
           })
         ]);
       } else {
+        console.log('Creating new duesMembers entry for cycle:', paymentData.cycleId, 'profile:', paymentData.profileId);
         const duesMemberId = id();
-        await db.transact([
+        result = await db.transact([
           db.tx.duesMembers[duesMemberId].update({
-            status: 'pending',
+            billImageUrl: billImageUrl,
             createdAt: Date.now(),
             updatedAt: Date.now(),
+            status: 'pending', // Mark as pending admin approval
           }).link({
             duesCycle: paymentData.cycleId,
             profile: paymentData.profileId,
           })
         ]);
+        console.log('Successfully created duesMembers entry:', duesMemberId);
       }
+
       return result;
     },
     [db]
   );
 
   const updateDuesMemberStatus = useCallback(
-    async (cycleId: string, profileId: string, status: string, adminNotes?: string) => {
+    async (cycleId: string, profileId: string, status: string) => {
       // Find the duesMembers entry
       const duesMemberQuery = await db.queryOnce({
         duesMembers: {
@@ -1609,9 +1606,57 @@ export function useInstantDB() {
         throw new Error('Dues member entry not found');
       }
 
+      // If marking as paid, create ledger entry
+      if (status === 'paid') {
+        // Get dues cycle info for amount
+        const duesCycleQuery = await db.queryOnce({
+          duesCycles: {
+            $: {
+              where: { id: cycleId },
+            },
+          },
+        });
+
+        const duesCycle = duesCycleQuery.data?.duesCycles?.[0];
+        if (!duesCycle) {
+          throw new Error('Dues cycle not found');
+        }
+
+        // Check if ledger entry already exists
+        const profileRefKey = `${profileId}_${cycleId}`;
+        const existingLedgerQuery = await db.queryOnce({
+          ledgerEntries: {
+            $: {
+              where: {
+                profileRefKey: profileRefKey,
+              },
+            },
+          },
+        });
+
+        const existingLedgerEntry = existingLedgerQuery.data.ledgerEntries?.[0];
+
+        if (!existingLedgerEntry) {
+          // Create ledger entry
+          const ledgerEntryId = id();
+          await db.transact([
+            db.tx.ledgerEntries[ledgerEntryId].update({
+              refId: cycleId,
+              amount: duesCycle.amountPerMember,
+              type: 'dues_payment',
+              note: 'Marked as paid by admin',
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+              profileRefKey: profileRefKey,
+            }).link({
+              profile: profileId,
+            }),
+          ]);
+        }
+      }
+
       const result = await db.transact([
         db.tx.duesMembers[duesMember.id].update({
-          status: status,
           updatedAt: Date.now(),
         }),
       ]);
@@ -1619,37 +1664,6 @@ export function useInstantDB() {
       return result;
     },
     [db]
-  );
-
-  const confirmPayment = useCallback(
-    async (ledgerEntryId: string, confirmed: boolean, adminNotes?: string) => {
-      const result = await db.transact([
-        db.tx.ledgerEntries[ledgerEntryId].update({
-          status: confirmed ? 'confirmed' : 'rejected',
-          confirmedAt: confirmed ? Date.now() : undefined,
-          adminNotes: adminNotes,
-          updatedAt: Date.now(),
-        }),
-      ]);
-
-      // If confirmed, update the member status to paid
-      if (confirmed) {
-        const ledgerQuery = await db.queryOnce({
-          ledgerEntries: {
-            $: { where: { id: ledgerEntryId } },
-            profile: {},
-          },
-        });
-
-        const entry = ledgerQuery.data.ledgerEntries?.[0];
-        if (entry && entry.profile) {
-          await updateDuesMemberStatus(entry.refId, entry.profile.id, 'paid');
-        }
-      }
-
-      return result;
-    },
-    [db, updateDuesMemberStatus]
   );
 
   const closeDuesCycle = useCallback(
@@ -1700,7 +1714,6 @@ export function useInstantDB() {
     createDuesCycle,
     submitDuesPayment,
     updateDuesMemberStatus,
-    confirmPayment,
     closeDuesCycle,
     addReaction: addOrUpdateReaction,
     removeReaction,
