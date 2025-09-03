@@ -2,7 +2,7 @@ import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AvatarStack } from './AvatarStack';
 import { ExpenseBottomSheet } from './ExpenseBottomSheet';
@@ -48,14 +48,30 @@ interface MatchData {
   };
 }
 
+interface ExpenseData {
+  id: string;
+  amount: number;
+  billImageUrl?: string;
+  note?: string;
+  createdAt: number;
+  updatedAt: number;
+  profile: {
+    id: string;
+    handle: string;
+    displayName?: string;
+  };
+}
+
 interface MatchCardProps {
   match: MatchData;
   currentUserId: string;
+  expenses?: ExpenseData[];
   onRsvp: (response: 'yes' | 'no' | 'maybe') => void;
   onCheckIn: () => void;
   onUnCheckIn: () => void;
   onCloseMatch?: () => void;
   onAddExpense?: (amount: number, billImageUrl?: string, note?: string) => void;
+  onEditExpense?: (expenseId: string, amount: number, billImageUrl?: string, note?: string) => void;
   isOwnMessage: boolean;
   author?: {
     id: string;
@@ -72,11 +88,13 @@ interface MatchCardProps {
 export const MatchCard = React.memo(function MatchCard({
   match,
   currentUserId,
+  expenses = [],
   onRsvp,
   onCheckIn,
   onUnCheckIn,
   onCloseMatch,
   onAddExpense,
+  onEditExpense,
   isOwnMessage,
   author,
   createdAt,
@@ -88,6 +106,7 @@ export const MatchCard = React.memo(function MatchCard({
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
   const [showExpenseSheet, setShowExpenseSheet] = React.useState(false);
+  const [editingExpense, setEditingExpense] = React.useState<ExpenseData | null>(null);
 
   const matchDateTime = new Date(match.matchDate);
   const isMatchToday = new Date().toDateString() === matchDateTime.toDateString();
@@ -97,8 +116,9 @@ export const MatchCard = React.memo(function MatchCard({
   // Show close button if user is creator or group admin, match is not closed, and match is not past
   const canCloseMatch = (isCreator || isGroupAdmin) && !isMatchClosed && !isMatchPast && onCloseMatch;
 
-  // Show expense button if user is creator or group admin and has expense callback
-  const canAddExpense = (isCreator || isGroupAdmin) && onAddExpense;
+  // Show expense button if user is creator or group admin and has expense callback, and no expense exists
+  const existingExpense = expenses[0]; // Only one expense per match
+  const canAddExpense = (isCreator || isGroupAdmin) && onAddExpense && !existingExpense;
 
   // Checkin window: 15 minutes before match to 2 hours after match
   const now = Date.now();
@@ -170,9 +190,17 @@ export const MatchCard = React.memo(function MatchCard({
   const showCheckIn = isInCheckinWindow && match.isActive && !isMatchClosed;
 
   const handleExpenseSubmit = async (amount: number, billImageUrl?: string, note?: string) => {
-    if (onAddExpense) {
+    if (editingExpense && onEditExpense) {
+      await onEditExpense(editingExpense.id, amount, billImageUrl, note);
+    } else if (onAddExpense) {
       await onAddExpense(amount, billImageUrl, note);
     }
+    setEditingExpense(null);
+  };
+
+  const handleEditExpense = (expense: ExpenseData) => {
+    setEditingExpense(expense);
+    setShowExpenseSheet(true);
   };
 
   return (
@@ -357,6 +385,59 @@ export const MatchCard = React.memo(function MatchCard({
           </View>
         )}
 
+        {/* Expense Section */}
+        {existingExpense && (
+          <View style={styles.expensesSection}>
+            <Text style={[
+              styles.sectionTitle,
+              isOwnMessage ? styles.ownText : { color: colors.text }
+            ]}>
+              {t('expense.expense')}
+            </Text>
+            <View style={styles.expenseItem}>
+              <View style={styles.expenseHeader}>
+                <View style={styles.expenseInfo}>
+                  <Text style={[
+                    styles.expenseAmount,
+                    isOwnMessage ? styles.ownText : { color: colors.text }
+                  ]}>
+                    {existingExpense.amount}
+                  </Text>
+                </View>
+                {(isCreator || isGroupAdmin) && onEditExpense && (
+                  <TouchableOpacity
+                    onPress={() => handleEditExpense(existingExpense)}
+                    style={[styles.editExpenseButton, { backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }]}
+                  >
+                    <Ionicons
+                      name="pencil"
+                      size={13}
+                      color={isOwnMessage ? 'rgba(255,255,255,0.8)' : colors.tabIconDefault}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+              {existingExpense.note && (
+                <Text style={[
+                  styles.expenseNote,
+                  isOwnMessage ? styles.ownText : { color: colors.tabIconDefault }
+                ]}>
+                  {existingExpense.note}
+                </Text>
+              )}
+              {existingExpense.billImageUrl && (
+                <View style={styles.billImageContainer}>
+                  <Image
+                    source={{ uri: existingExpense.billImageUrl }}
+                    style={styles.billImagePreview}
+                    resizeMode="cover"
+                  />
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
         {/* RSVP Summary */}
         <View style={styles.rsvpSummary}>
           <View style={styles.summaryHeader}>
@@ -456,9 +537,13 @@ export const MatchCard = React.memo(function MatchCard({
 
       <ExpenseBottomSheet
         isVisible={showExpenseSheet}
-        onClose={() => setShowExpenseSheet(false)}
+        onClose={() => {
+          setShowExpenseSheet(false);
+          setEditingExpense(null);
+        }}
         onSubmit={handleExpenseSubmit}
         matchId={match.id}
+        existingExpense={editingExpense}
       />
     </View>
   );
@@ -582,6 +667,62 @@ const styles = StyleSheet.create({
   },
   checkInSection: {
     marginBottom: 16,
+  },
+  expensesSection: {
+    marginBottom: 16,
+  },
+  expenseItem: {
+    marginBottom: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  expenseHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  expenseInfo: {
+    flex: 1,
+  },
+  expenseAmount: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  expenseAuthor: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  expenseNote: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginTop: 4,
+  },
+  expenseBill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    gap: 4,
+  },
+  expenseBillText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  editExpenseButton: {
+    padding: 6,
+    borderRadius: 12,
+  },
+  billImageContainer: {
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  billImagePreview: {
+    width: 200,
+    height: 120,
+    borderRadius: 8,
   },
   sectionTitle: {
     fontSize: 14,

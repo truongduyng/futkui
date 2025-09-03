@@ -9,6 +9,7 @@ import { DuesBubble } from "./DuesBubble";
 
 interface ChatItemRendererProps {
   chatItems: any[];
+  expenses: any[];
   currentProfile?: {
     id: string;
     handle: string;
@@ -33,6 +34,7 @@ interface ChatItemRendererProps {
   handleUnCheckIn: (matchId: string) => void;
   handleCloseMatch: (matchId: string) => void;
   handleAddExpense: (matchId: string, amount: number, billImageUrl?: string, note?: string) => void;
+  handleEditExpense: (expenseId: string, amount: number, billImageUrl?: string, note?: string) => void;
   handleReportMessage: (messageId: string, reason: string, description: string) => void;
   handleDeleteMessage: (messageId: string) => void;
   handleSubmitDuesPayment: (cycleId: string, billImageUri?: string) => Promise<void>;
@@ -42,6 +44,7 @@ interface ChatItemRendererProps {
 
 export function useChatItemRenderer({
   chatItems,
+  expenses,
   currentProfile,
   userMembership,
   totalMembers,
@@ -56,6 +59,7 @@ export function useChatItemRenderer({
   handleUnCheckIn,
   handleCloseMatch,
   handleAddExpense,
+  handleEditExpense,
   handleReportMessage,
   handleDeleteMessage,
   handleSubmitDuesPayment,
@@ -132,21 +136,30 @@ const colors = isDark ? Colors.dark : Colors.light;
             totalMembers={totalMembers}
           />
         ) : message.type === 'match' && message.match ? (
-          <MatchCard
-            match={message.match}
-            currentUserId={currentProfile?.id || ''}
-            onRsvp={(response) => handleRsvp(message.match.id, response)}
-            onCheckIn={() => handleCheckIn(message.match.id)}
-            onUnCheckIn={() => handleUnCheckIn(message.match.id)}
-            onCloseMatch={() => handleCloseMatch(message.match.id)}
-            onAddExpense={(amount, billImageUrl, note) => handleAddExpense(message.match.id, amount, billImageUrl, note)}
-            isOwnMessage={isOwnMessage}
-            author={message.author}
-            createdAt={new Date(message.createdAt)}
-            showAuthor={showAuthor}
-            isCreator={message.match?.creator?.id === currentProfile?.id}
-            isGroupAdmin={userMembership?.role === "admin"}
-          />
+          (() => {
+            // Filter expenses for this specific match
+            const matchExpenses = expenses.filter(expense => expense.refId === message.match.id);
+            
+            return (
+              <MatchCard
+                match={message.match}
+                expenses={matchExpenses}
+                currentUserId={currentProfile?.id || ''}
+                onRsvp={(response) => handleRsvp(message.match.id, response)}
+                onCheckIn={() => handleCheckIn(message.match.id)}
+                onUnCheckIn={() => handleUnCheckIn(message.match.id)}
+                onCloseMatch={() => handleCloseMatch(message.match.id)}
+                onAddExpense={(amount, billImageUrl, note) => handleAddExpense(message.match.id, amount, billImageUrl, note)}
+                onEditExpense={(expenseId, amount, billImageUrl, note) => handleEditExpense(expenseId, amount, billImageUrl, note)}
+                isOwnMessage={isOwnMessage}
+                author={message.author}
+                createdAt={new Date(message.createdAt)}
+                showAuthor={showAuthor}
+                isCreator={message.match?.creator?.id === currentProfile?.id}
+                isGroupAdmin={userMembership?.role === "admin"}
+              />
+            );
+          })()
         ) : message.type === 'dues' && message.duesCycle ? (
           <DuesBubble
             duesCycle={{
@@ -202,7 +215,7 @@ const colors = isDark ? Colors.dark : Colors.light;
         )}
       </>
     );
-  }, [currentProfile?.id, chatItems, shouldShowTimestamp, totalMembers, userMembership?.role, handleImagePress, handleReportMessage, handleDeleteMessage, colors.tabIconDefault, stableHandleVote, handleAddOptionToPoll, stableHandleClosePoll, handleRsvp, handleCheckIn, handleUnCheckIn, handleCloseMatch, handleAddExpense, stableHandleReaction, stableHandleAddReaction, handleSubmitDuesPayment, handleUpdateDuesMemberStatus, handleCloseDuesCycle]);
+  }, [currentProfile?.id, chatItems, expenses, shouldShowTimestamp, totalMembers, userMembership?.role, handleImagePress, handleReportMessage, handleDeleteMessage, colors.tabIconDefault, stableHandleVote, handleAddOptionToPoll, stableHandleClosePoll, handleRsvp, handleCheckIn, handleUnCheckIn, handleCloseMatch, handleAddExpense, handleEditExpense, stableHandleReaction, stableHandleAddReaction, handleSubmitDuesPayment, handleUpdateDuesMemberStatus, handleCloseDuesCycle]);
 
   const keyExtractor = useCallback((item: any) => item.id, []);
 

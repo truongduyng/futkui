@@ -577,6 +577,10 @@
   },
   "expense": {
     "addExpense": "Thêm Chi Phí",
+    "editExpense": "Sửa Chi Phí",
+    "expense": "Chi Phí",
+    "expenses": "Chi Phí",
+    "viewBill": "Xem Hóa Đơn",
     "amount": "Số Tiền",
     "enterAmount": "Nhập số tiền",
     "note": "Ghi Chú",
@@ -584,7 +588,9 @@
     "billImage": "Hình Hóa Đơn",
     "addBillImage": "Thêm Hình Hóa Đơn",
     "createExpense": "Tạo Chi Phí",
+    "updateExpense": "Cập Nhật Chi Phí",
     "invalidAmount": "Vui lòng nhập số tiền hợp lệ",
-    "createFailed": "Không thể tạo chi phí. Vui lòng thử lại."
+    "createFailed": "Không thể tạo chi phí. Vui lòng thử lại.",
+    "updateFailed": "Không thể cập nhật chi phí. Vui lòng thử lại."
   }
 }

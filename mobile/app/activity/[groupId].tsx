@@ -39,6 +39,7 @@ const colors = isDark ? Colors.dark : Colors.light;
     unCheckInFromMatch,
     closeMatch,
     addExpense,
+    editExpense,
     submitDuesPayment,
     updateDuesMemberStatus,
     closeDuesCycle,
@@ -50,6 +51,8 @@ const colors = isDark ? Colors.dark : Colors.light;
   const { data: duesCyclesData } = useDuesCycles(groupId || "");
   const { data: profileData } = useProfile();
   const { data: membershipData } = useUserMembership(groupId || "");
+
+  const expenses = matchesData?.ledgerEntries || [];
 
   const [showActivePollsOnly, setShowActivePollsOnly] = useState(true);
   const [showActiveMatchesOnly, setShowActiveMatchesOnly] = useState(true);
@@ -299,12 +302,14 @@ const colors = isDark ? Colors.dark : Colors.light;
                 checkIns: (match.checkIns || []).filter((checkIn: { user: null; }): checkIn is any => checkIn.user != null),
                 creator: match.creator || { id: '', handle: 'Unknown', displayName: 'Unknown' },
               }}
+              expenses={expenses.filter(expense => expense.refId === match.id)}
               currentUserId={currentProfile?.id || ''}
               onRsvp={(response) => handleRsvp(match.id, response)}
               onCheckIn={() => handleCheckIn(match.id)}
               onUnCheckIn={() => handleUnCheckIn(match.id)}
               onCloseMatch={() => handleCloseMatch(match.id)}
               onAddExpense={(amount, billImageUrl, note) => handleAddExpense(match.id, amount, billImageUrl, note)}
+              onEditExpense={(expenseId, amount, billImageUrl, note) => handleEditExpense(expenseId, amount, billImageUrl, note)}
               isOwnMessage={isOwnMatch}
               author={match.creator}
               createdAt={new Date(match.createdAt)}
@@ -467,6 +472,20 @@ const colors = isDark ? Colors.dark : Colors.light;
       console.log("Expense added successfully");
     } catch (error) {
       console.error("Error adding expense:", error);
+    }
+  };
+
+  const handleEditExpense = async (expenseId: string, amount: number, billImageUrl?: string, note?: string) => {
+    try {
+      await editExpense({
+        expenseId,
+        amount,
+        billImageUrl,
+        note,
+      });
+      console.log("Expense updated successfully");
+    } catch (error) {
+      console.error("Error updating expense:", error);
     }
   };
 

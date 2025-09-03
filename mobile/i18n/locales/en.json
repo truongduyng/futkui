@@ -585,6 +585,10 @@
   },
   "expense": {
     "addExpense": "Add Expense",
+    "editExpense": "Edit Expense",
+    "expense": "Expense",
+    "expenses": "Expenses",
+    "viewBill": "View Bill",
     "amount": "Amount",
     "enterAmount": "Enter amount",
     "note": "Note",
@@ -592,7 +596,9 @@
     "billImage": "Bill Image",
     "addBillImage": "Add Bill Image",
     "createExpense": "Create Expense",
+    "updateExpense": "Update Expense",
     "invalidAmount": "Please enter a valid amount",
-    "createFailed": "Failed to create expense. Please try again."
+    "createFailed": "Failed to create expense. Please try again.",
+    "updateFailed": "Failed to update expense. Please try again."
   }
 }

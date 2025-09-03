@@ -193,6 +193,27 @@ export function useMatchOperations() {
     [db]
   );
 
+  const editExpense = useCallback(
+    async (expenseData: {
+      expenseId: string;
+      amount: number;
+      billImageUrl?: string;
+      note?: string;
+    }) => {
+      const result = await db.transact([
+        db.tx.ledgerEntries[expenseData.expenseId].update({
+          amount: expenseData.amount,
+          billImageUrl: expenseData.billImageUrl,
+          note: expenseData.note,
+          updatedAt: Date.now(),
+        }),
+      ]);
+
+      return result;
+    },
+    [db]
+  );
+
   return {
     createMatch,
     rsvpToMatch,
@@ -200,5 +221,6 @@ export function useMatchOperations() {
     unCheckInFromMatch,
     closeMatch,
     addExpense,
+    editExpense,
   };
 }

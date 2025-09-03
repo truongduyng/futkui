@@ -16,11 +16,26 @@ import { Colors } from '@/constants/Colors';
 import * as ImagePicker from 'expo-image-picker';
 import { uploadToR2 } from '@/utils/r2Upload';
 
+interface ExpenseData {
+  id: string;
+  amount: number;
+  billImageUrl?: string;
+  note?: string;
+  createdAt: number;
+  updatedAt: number;
+  profile: {
+    id: string;
+    handle: string;
+    displayName?: string;
+  };
+}
+
 interface ExpenseBottomSheetProps {
   isVisible: boolean;
   onClose: () => void;
   onSubmit: (amount: number, billImageUrl?: string, note?: string) => void;
   matchId: string;
+  existingExpense?: ExpenseData | null;
 }
 
 export const ExpenseBottomSheet = React.memo(function ExpenseBottomSheet({
@@ -28,6 +43,7 @@ export const ExpenseBottomSheet = React.memo(function ExpenseBottomSheet({
   onClose,
   onSubmit,
   matchId,
+  existingExpense,
 }: ExpenseBottomSheetProps) {
   const { t } = useTranslation();
   const { isDark } = useTheme();
@@ -38,6 +54,19 @@ export const ExpenseBottomSheet = React.memo(function ExpenseBottomSheet({
   const [billImage, setBillImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Initialize form with existing expense data when editing
+  React.useEffect(() => {
+    if (existingExpense) {
+      setAmount(existingExpense.amount.toString());
+      setNote(existingExpense.note || '');
+      setBillImage(existingExpense.billImageUrl || null);
+    } else {
+      setAmount('');
+      setNote('');
+      setBillImage(null);
+    }
+  }, [existingExpense]);
 
   const handleClose = () => {
     setAmount('');
@@ -109,7 +138,7 @@ export const ExpenseBottomSheet = React.memo(function ExpenseBottomSheet({
           {/* Header */}
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.text }]}>
-              {t('expense.addExpense')}
+              {existingExpense ? t('expense.editExpense') : t('expense.addExpense')}
             </Text>
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color={colors.text} />
@@ -215,7 +244,10 @@ export const ExpenseBottomSheet = React.memo(function ExpenseBottomSheet({
             disabled={!amount || isSubmitting}
           >
             <Text style={styles.submitButtonText}>
-              {isSubmitting ? t('common.creating') : t('expense.createExpense')}
+              {isSubmitting 
+                ? (existingExpense ? t('common.saving') : t('common.creating'))
+                : (existingExpense ? t('expense.updateExpense') : t('expense.createExpense'))
+              }
             </Text>
           </TouchableOpacity>
         </View>

@@ -64,6 +64,7 @@ export default function ChatScreen() {
     unCheckInFromMatch,
     closeMatch,
     addExpense,
+    editExpense,
     addReaction,
     leaveGroup,
     markMessagesAsRead,
@@ -252,6 +253,22 @@ export default function ChatScreen() {
     }
   }, [currentProfile?.id, addExpense, showSuccess, showError, t]);
 
+  // Edit expense handler
+  const handleEditExpense = useCallback(async (expenseId: string, amount: number, billImageUrl?: string, note?: string) => {
+    try {
+      await editExpense({
+        expenseId,
+        amount,
+        billImageUrl,
+        note,
+      });
+      showSuccess(t('common.success'), t('expense.updateExpense'));
+    } catch (error) {
+      console.error('Failed to edit expense:', error);
+      showError(t('common.error'), t('expense.updateFailed'));
+    }
+  }, [editExpense, showSuccess, showError, t]);
+
   // Event handlers
   const {
     handleSendMessage,
@@ -419,6 +436,7 @@ export default function ChatScreen() {
   // Chat item rendering
   const { renderChatItem, keyExtractor } = useChatItemRenderer({
     chatItems: messages,
+    expenses: messagesData?.ledgerEntries || [],
     currentProfile,
     group,
     userMembership,
@@ -436,6 +454,7 @@ export default function ChatScreen() {
     handleUnCheckIn,
     handleCloseMatch,
     handleAddExpense,
+    handleEditExpense,
     handleAddOptionToPoll,
     handleReportMessage,
     handleDeleteMessage,

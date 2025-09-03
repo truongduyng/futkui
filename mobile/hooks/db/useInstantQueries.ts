@@ -114,6 +114,12 @@ export function useInstantQueries() {
         },
         group: {},
       },
+      ledgerEntries: {
+        $: {
+          where: { type: "match_expense" },
+        },
+        profile: {},
+      },
     });
   };
 
@@ -162,6 +168,12 @@ export function useInstantQueries() {
         checkIns: {
           user: {},
         },
+      },
+      ledgerEntries: {
+        $: {
+          where: { type: "match_expense" },
+        },
+        profile: {},
       },
     });
   };
