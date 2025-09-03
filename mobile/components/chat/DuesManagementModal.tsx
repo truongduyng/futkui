@@ -37,7 +37,6 @@ interface DuesCycleData {
   duesMembers: DuesMember[];
 }
 
-
 interface DuesManagementModalProps {
   visible: boolean;
   onClose: () => void;
@@ -102,13 +101,20 @@ export function DuesManagementModal({
     }
   };
 
-
   // Calculate statistics
   const totalMembers = duesCycle.duesMembers.length;
-  const paidMembers = duesCycle.duesMembers.filter(m => m.status === 'paid').length;
-  const pendingMembers = duesCycle.duesMembers.filter(m => m.status === 'pending').length;
-  const unpaidMembers = duesCycle.duesMembers.filter(m => m.status === 'unpaid').length;
-  const overdueMembers = duesCycle.duesMembers.filter(m => m.status === 'overdue').length;
+  const paidMembers = duesCycle.duesMembers.filter(
+    (m) => m.status === "paid",
+  ).length;
+  const pendingMembers = duesCycle.duesMembers.filter(
+    (m) => m.status === "pending",
+  ).length;
+  const unpaidMembers = duesCycle.duesMembers.filter(
+    (m) => m.status === "unpaid",
+  ).length;
+  const overdueMembers = duesCycle.duesMembers.filter(
+    (m) => m.status === "overdue",
+  ).length;
 
   return (
     <Modal
@@ -121,7 +127,7 @@ export function DuesManagementModal({
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
             <Text style={[styles.cancelText, { color: colors.text }]}>
-              {t('common.cancel')}
+              {t("common.cancel")}
             </Text>
           </TouchableOpacity>
           <Text style={[styles.title, { color: colors.text }]}>
@@ -130,132 +136,124 @@ export function DuesManagementModal({
           <View style={styles.headerSpacer} />
         </View>
 
-        <ScrollView
-          style={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
-            {/* Dues Info */}
-            <View
-              style={[
-                styles.duesInfo,
-                {
-                  backgroundColor: isDark ? "#1C1C1E" : "#F8F8F8",
-                  borderColor: colors.border || "rgba(0,0,0,0.1)",
-                },
-              ]}
-            >
-              <Text style={[styles.duesTitle, { color: colors.text }]}>
-                💰 {duesCycle.periodKey}
-              </Text>
-              <Text style={[styles.amountText, { color: colors.text }]}>
-                {duesCycle.amountPerMember} {t("chat.perMember")}
-              </Text>
-              <Text
-                style={[styles.statsText, { color: colors.tabIconDefault }]}
-              >
-                {paidMembers}/{totalMembers} {t("chat.paid")} •{pendingMembers}{" "}
-                {t("chat.pending")} •{unpaidMembers} {t("chat.unpaid")} •
-                {overdueMembers} {t("chat.overdue")}
-              </Text>
-            </View>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Dues Info */}
+          <View
+            style={[
+              styles.duesInfo,
+              {
+                backgroundColor: isDark ? "#1C1C1E" : "#F8F8F8",
+                borderColor: colors.border || "rgba(0,0,0,0.1)",
+              },
+            ]}
+          >
+            <Text style={[styles.duesTitle, { color: colors.text }]}>
+              💰 {duesCycle.periodKey}
+            </Text>
+            <Text style={[styles.amountText, { color: colors.text }]}>
+              {duesCycle.amountPerMember} {t("chat.perMember")}
+            </Text>
+            <Text style={[styles.statsText, { color: colors.tabIconDefault }]}>
+              {paidMembers}/{totalMembers} {t("chat.paid")} •{pendingMembers}{" "}
+              {t("chat.pending")} •{unpaidMembers} {t("chat.unpaid")} •
+              {overdueMembers} {t("chat.overdue")}
+            </Text>
+          </View>
 
-            {/* Member List */}
-            <View style={styles.membersSection}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                {t("chat.memberStatus")} ({totalMembers})
-              </Text>
+          {/* Member List */}
+          <View style={styles.membersSection}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {t("chat.memberStatus")} ({totalMembers})
+            </Text>
 
-              {duesCycle.duesMembers.map((member) => {
-                return (
-                  <View
-                    key={member.id}
-                    style={[
-                      styles.memberItem,
-                      {
-                        backgroundColor: isDark ? "#2C2C2E" : "#F2F2F7",
-                        borderColor: getStatusColor(member.status),
-                      },
-                    ]}
-                  >
-                    <View style={styles.memberHeader}>
-                      <View style={styles.memberInfo}>
-                        <View
+            {duesCycle.duesMembers.map((member) => {
+              return (
+                <View
+                  key={member.id}
+                  style={[
+                    styles.memberItem,
+                    {
+                      backgroundColor: isDark ? "#2C2C2E" : "#F2F2F7",
+                      borderColor: getStatusColor(member.status),
+                    },
+                  ]}
+                >
+                  <View style={styles.memberHeader}>
+                    <View style={styles.memberInfo}>
+                      <View
+                        style={[
+                          styles.memberAvatar,
+                          { borderColor: getStatusColor(member.status) },
+                        ]}
+                      >
+                        <Text style={styles.avatarText}>
+                          {member.profile.handle?.charAt(0).toUpperCase() ||
+                            "?"}
+                        </Text>
+                      </View>
+                      <View style={styles.memberDetails}>
+                        <Text
+                          style={[styles.memberHandle, { color: colors.text }]}
+                        >
+                          @{member.profile.handle}
+                        </Text>
+                        <Text
                           style={[
-                            styles.memberAvatar,
-                            { borderColor: getStatusColor(member.status) },
+                            styles.memberStatus,
+                            { color: getStatusColor(member.status) },
                           ]}
                         >
-                          <Text style={styles.avatarText}>
-                            {member.profile.handle?.charAt(0).toUpperCase() ||
-                              "?"}
-                          </Text>
-                        </View>
-                        <View style={styles.memberDetails}>
-                          <Text
-                            style={[
-                              styles.memberHandle,
-                              { color: colors.text },
-                            ]}
-                          >
-                            @{member.profile.handle}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.memberStatus,
-                              { color: getStatusColor(member.status) },
-                            ]}
-                          >
-                            {getStatusIcon(member.status)}{" "}
-                            {member.status.toUpperCase()}
-                          </Text>
-                        </View>
-                      </View>
-
-                      {/* Quick Actions */}
-                      <View style={styles.memberActions}>
-                        {member.status !== "paid" && (
-                          <TouchableOpacity
-                            style={[
-                              styles.actionButton,
-                              { backgroundColor: "#4CAF50" },
-                            ]}
-                            onPress={() => handleStatusUpdate(member, "paid")}
-                            disabled={isUpdating}
-                          >
-                            <Text style={styles.actionButtonText}>
-                              {t("chat.markPaid")}
-                            </Text>
-                          </TouchableOpacity>
-                        )}
-
-                        {member.status !== "unpaid" && (
-                          <TouchableOpacity
-                            style={[
-                              styles.actionButton,
-                              { backgroundColor: colors.tabIconDefault },
-                            ]}
-                            onPress={() => handleStatusUpdate(member, "unpaid")}
-                            disabled={isUpdating}
-                          >
-                            <Text style={styles.actionButtonText}>
-                              {t("chat.markUnpaid")}
-                            </Text>
-                          </TouchableOpacity>
-                        )}
+                          {getStatusIcon(member.status)}{" "}
+                          {member.status.toUpperCase()}
+                        </Text>
                       </View>
                     </View>
-                  </View>
-                );
-              })}
-            </View>
 
-            {isUpdating && (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color={colors.tint} />
-                <Text style={[styles.loadingText, { color: colors.text }]}>
-                  {t("common.updating")}...
-                </Text>
-              </View>
+                    {/* Quick Actions */}
+                    <View style={styles.memberActions}>
+                      {member.status !== "paid" && (
+                        <TouchableOpacity
+                          style={[
+                            styles.actionButton,
+                            { backgroundColor: "#4CAF50" },
+                          ]}
+                          onPress={() => handleStatusUpdate(member, "paid")}
+                          disabled={isUpdating}
+                        >
+                          <Text style={styles.actionButtonText}>
+                            {t("chat.markPaid")}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+
+                      {member.status !== "unpaid" && (
+                        <TouchableOpacity
+                          style={[
+                            styles.actionButton,
+                            { backgroundColor: colors.tabIconDefault },
+                          ]}
+                          onPress={() => handleStatusUpdate(member, "unpaid")}
+                          disabled={isUpdating}
+                        >
+                          <Text style={styles.actionButtonText}>
+                            {t("chat.markUnpaid")}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+
+          {isUpdating && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={colors.tint} />
+              <Text style={[styles.loadingText, { color: colors.text }]}>
+                {t("common.updating")}...
+              </Text>
+            </View>
           )}
         </ScrollView>
       </View>
@@ -291,7 +289,8 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    marginTop: 10,
+    paddingHorizontal: 10,
   },
   duesInfo: {
     borderWidth: 1,

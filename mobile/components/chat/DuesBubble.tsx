@@ -5,6 +5,7 @@ import { StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { DuesPaymentModal } from './DuesPaymentModal';
 import { DuesManagementModal } from './DuesManagementModal';
+import { AvatarStack } from './AvatarStack';
 
 interface DuesMember {
   id: string;
@@ -71,6 +72,16 @@ export const DuesBubble = React.memo(function DuesBubble({
   const paidMembers = memberStatuses.filter(s => s === 'paid').length;
 
   const paymentProgress = totalMembers > 0 ? Math.round((paidMembers / totalMembers) * 100) : 0;
+
+  // Get paid members for avatar display
+  const paidMembersList = duesCycle.duesMembers
+    .filter(m => m.status === 'paid')
+    .map(m => ({
+      id: m.profile.id,
+      handle: m.profile.handle,
+      displayName: m.profile.displayName,
+      avatarUrl: m.profile.avatarUrl || `https://ui-avatars.com/api/?name=${m.profile.handle}&background=random&size=32`,
+    }));
 
   // Find current user's payment status
   const currentUserMember = duesCycle.duesMembers.find(m => m.profile.id === currentUserId);
@@ -247,6 +258,21 @@ export const DuesBubble = React.memo(function DuesBubble({
               ]}
             />
           </View>
+
+          {/* Paid Members Avatars */}
+          {paidMembersList.length > 0 && (
+            <View style={styles.paidMembersSection}>
+              <View style={styles.paidMembersRow}>
+                <AvatarStack
+                  users={paidMembersList}
+                  maxVisible={6}
+                  avatarSize={24}
+                  overlap={8}
+                  showCount={true}
+                />
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Actions */}
@@ -432,6 +458,18 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 2,
   },
+  paidMembersSection: {
+    paddingTop: 8,
+  },
+  paidMembersRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  paidMembersLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
   membersSection: {
     marginBottom: 16,
   },
@@ -471,7 +509,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.1)',
     borderWidth: 2,
     justifyContent: 'center',
     alignItems: 'center',
@@ -479,7 +516,6 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#666',
   },
   statusIndicator: {
     fontSize: 10,
