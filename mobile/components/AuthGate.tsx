@@ -229,7 +229,6 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
         return;
       }
 
-
       // Use correct client name for Android
       const androidClientName = __DEV__ ? 'google-android-dev' : 'google-android';
       const clientName = Platform.OS === 'android' ? androidClientName : 'google-ios';
