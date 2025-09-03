@@ -148,7 +148,7 @@ export function DuesManagementModal({
                 💰 {duesCycle.periodKey}
               </Text>
               <Text style={[styles.amountText, { color: colors.text }]}>
-                {duesCycle.amountPerMember.toFixed(2)} {t("chat.perMember")}
+                {duesCycle.amountPerMember} {t("chat.perMember")}
               </Text>
               <Text
                 style={[styles.statsText, { color: colors.tabIconDefault }]}

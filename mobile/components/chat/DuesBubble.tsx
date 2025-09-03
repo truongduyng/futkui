@@ -67,35 +67,14 @@ export const DuesBubble = React.memo(function DuesBubble({
 
   // Calculate statistics
   const totalMembers = duesCycle.duesMembers.length;
-  // Determine status based on ledger entries and bill images
-  const getMemberStatus = (member: any) => {
-    // Check if there's a ledger entry for this member (means paid)
-    const hasLedgerEntry = member.profile?.ledgerEntries?.some((entry: any) => 
-      entry.refId === duesCycle.id && entry.type === 'dues_payment'
-    );
-    
-    if (hasLedgerEntry) return 'paid';
-    if (member.billImageUrl) return 'pending'; // Has submitted payment proof
-    
-    // Check if overdue (past deadline)
-    const now = Date.now();
-    if (duesCycle.deadline && now > duesCycle.deadline) return 'overdue';
-    
-    return 'unpaid';
-  };
-
-  const memberStatuses = duesCycle.duesMembers.map(m => getMemberStatus(m));
+  const memberStatuses = duesCycle.duesMembers.map(m => m.status || 'unpaid');
   const paidMembers = memberStatuses.filter(s => s === 'paid').length;
-  const pendingMembers = memberStatuses.filter(s => s === 'pending').length;
-  const unpaidMembers = memberStatuses.filter(s => s === 'unpaid').length;
-  const overdueMembers = memberStatuses.filter(s => s === 'overdue').length;
 
   const paymentProgress = totalMembers > 0 ? Math.round((paidMembers / totalMembers) * 100) : 0;
-  const totalAmount = paidMembers * duesCycle.amountPerMember;
 
   // Find current user's payment status
   const currentUserMember = duesCycle.duesMembers.find(m => m.profile.id === currentUserId);
-  const currentUserStatus = currentUserMember ? getMemberStatus(currentUserMember) : 'unpaid';
+  const currentUserStatus = currentUserMember ? (currentUserMember.status || 'unpaid') : 'unpaid';
 
   const formatTime = (date: Date) => {
     return new Date(date).toLocaleTimeString([], {
@@ -123,14 +102,6 @@ export const DuesBubble = React.memo(function DuesBubble({
     }
   };
 
-  const formatAmount = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -142,19 +113,6 @@ export const DuesBubble = React.memo(function DuesBubble({
         return '#F44336';
       default:
         return colors.tabIconDefault;
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return '✓';
-      case 'pending':
-        return '⏳';
-      case 'overdue':
-        return '⚠️';
-      default:
-        return '○';
     }
   };
 
@@ -249,7 +207,7 @@ export const DuesBubble = React.memo(function DuesBubble({
               isOwnMessage ? styles.ownText : { color: colors.text },
             ]}
           >
-            {formatAmount(duesCycle.amountPerMember)} {t('chat.perMember')}
+            {duesCycle.amountPerMember} {t('chat.perMember')}
           </Text>
 
           <Text
@@ -273,14 +231,6 @@ export const DuesBubble = React.memo(function DuesBubble({
             >
               {paidMembers}/{totalMembers} {t('chat.paid')} ({paymentProgress}%)
             </Text>
-            <Text
-              style={[
-                styles.totalAmountText,
-                isOwnMessage ? styles.ownText : { color: colors.text },
-              ]}
-            >
-              {formatAmount(totalAmount)}
-            </Text>
           </View>
 
           <View style={[
@@ -296,94 +246,6 @@ export const DuesBubble = React.memo(function DuesBubble({
                 },
               ]}
             />
-          </View>
-        </View>
-
-        {/* Member Status */}
-        <View style={styles.membersSection}>
-          <Text
-            style={[
-              styles.sectionTitle,
-              isOwnMessage ? styles.ownText : { color: colors.text },
-            ]}
-          >
-            {t('chat.memberStatus')}
-          </Text>
-
-          {/* Status breakdown */}
-          <View style={styles.statusBreakdown}>
-            {paidMembers > 0 && (
-              <View style={styles.statusItem}>
-                <Text style={[styles.statusIcon, { color: '#4CAF50' }]}>✓</Text>
-                <Text style={[
-                  styles.statusCount,
-                  isOwnMessage ? styles.ownText : { color: colors.text }
-                ]}>
-                  {paidMembers} {t('chat.paid')}
-                </Text>
-              </View>
-            )}
-
-            {pendingMembers > 0 && (
-              <View style={styles.statusItem}>
-                <Text style={[styles.statusIcon, { color: '#FF9800' }]}>⏳</Text>
-                <Text style={[
-                  styles.statusCount,
-                  isOwnMessage ? styles.ownText : { color: colors.text }
-                ]}>
-                  {pendingMembers} {t('chat.pending')}
-                </Text>
-              </View>
-            )}
-
-            {unpaidMembers > 0 && (
-              <View style={styles.statusItem}>
-                <Text style={[styles.statusIcon, { color: colors.tabIconDefault }]}>○</Text>
-                <Text style={[
-                  styles.statusCount,
-                  isOwnMessage ? styles.ownText : { color: colors.text }
-                ]}>
-                  {unpaidMembers} {t('chat.unpaid')}
-                </Text>
-              </View>
-            )}
-
-            {overdueMembers > 0 && (
-              <View style={styles.statusItem}>
-                <Text style={[styles.statusIcon, { color: '#F44336' }]}>⚠️</Text>
-                <Text style={[
-                  styles.statusCount,
-                  isOwnMessage ? styles.ownText : { color: colors.text }
-                ]}>
-                  {overdueMembers} {t('chat.overdue')}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {/* Member avatars with status */}
-          <View style={styles.memberAvatars}>
-            {duesCycle.duesMembers.map((member) => {
-              const memberStatus = getMemberStatus(member);
-              return (
-                <View key={member.id} style={styles.memberAvatar}>
-                  <View style={[
-                    styles.avatar,
-                    { borderColor: getStatusColor(memberStatus) }
-                  ]}>
-                    <Text style={styles.avatarText}>
-                      {member.profile.handle?.charAt(0).toUpperCase() || '?'}
-                    </Text>
-                  </View>
-                  <Text style={[
-                    styles.statusIndicator,
-                    { color: getStatusColor(memberStatus) }
-                  ]}>
-                    {getStatusIcon(memberStatus)}
-                  </Text>
-                </View>
-              );
-            })}
           </View>
         </View>
 

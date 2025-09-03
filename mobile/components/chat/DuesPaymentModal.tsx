@@ -46,12 +46,6 @@ export function DuesPaymentModal({
       // Reset form
       setBillImageUri(null);
       onClose();
-
-      Alert.alert(
-        t('chat.paymentSubmitted'),
-        t('chat.paymentSubmittedMessage'),
-        [{ text: t('common.ok') }]
-      );
     } catch (error) {
       console.error('Failed to submit payment:', error);
       Alert.alert(t('common.error'), t('chat.failedToSubmitPayment'));

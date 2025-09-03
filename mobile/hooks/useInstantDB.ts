@@ -1658,6 +1658,7 @@ export function useInstantDB() {
       const result = await db.transact([
         db.tx.duesMembers[duesMember.id].update({
           updatedAt: Date.now(),
+          status: status,
         }),
       ]);
 

@@ -96,16 +96,6 @@ export function CreateDuesCycleModal({
     }
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-
   return (
     <Modal
       visible={visible}
