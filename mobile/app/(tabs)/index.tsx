@@ -4,7 +4,7 @@ import { Colors } from '@/constants/Colors';
 import { GroupRefreshProvider } from '@/contexts/GroupRefreshContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUnreadCount } from '@/contexts/UnreadCountContext';
-import { useInstantDB } from '@/hooks/useInstantDB';
+import { useInstantDB } from '@/hooks/db/useInstantDB';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Animated, SafeAreaView, StyleSheet, Text, View, Platform, StatusBar as RNStatusBar } from 'react-native';

@@ -11,7 +11,7 @@ import {
 import { useThemeColor } from '../hooks/useThemeColor';
 import { getTranslation } from '../i18n';
 import { useToast } from '../hooks/useToast';
-import { useInstantDB } from '../hooks/useInstantDB';
+import { useInstantDB } from '../hooks/db/useInstantDB';
 
 interface FeedbackModalProps {
   isVisible: boolean;

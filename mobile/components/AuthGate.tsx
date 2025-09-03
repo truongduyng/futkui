@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useInstantDB } from '@/hooks/useInstantDB';
+import { useInstantDB } from '@/hooks/db/useInstantDB';
 import AntDesign from '@expo/vector-icons/AntDesign';
 // Conditional import for Google Sign-In to avoid module errors in Expo Go
 import * as AppleAuthentication from 'expo-apple-authentication';

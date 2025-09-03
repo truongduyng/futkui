@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useChatData } from "@/hooks/useChatData";
 import { useChatHandlers } from "@/hooks/useChatHandlers";
 import { useChatScroll } from "@/hooks/useChatScroll";
-import { useInstantDB } from "@/hooks/useInstantDB";
+import { useInstantDB } from "@/hooks/db/useInstantDB";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useState, useCallback, useMemo } from "react";

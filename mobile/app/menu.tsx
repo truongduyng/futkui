@@ -3,7 +3,7 @@ import { ProfileEditModal } from "@/components/ProfileEditModal";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { Colors } from "@/constants/Colors";
 import { useTheme } from '@/contexts/ThemeContext';
-import { useInstantDB } from "@/hooks/useInstantDB";
+import { useInstantDB } from "@/hooks/db/useInstantDB";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";

@@ -2,7 +2,7 @@ import { CachedAvatar } from "@/components/chat/CachedAvatar";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
 import { Colors } from "@/constants/Colors";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useInstantDB } from "@/hooks/useInstantDB";
+import { useInstantDB } from "@/hooks/db/useInstantDB";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";

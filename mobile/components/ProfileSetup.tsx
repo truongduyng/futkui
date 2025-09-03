@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useInstantDB } from "@/hooks/useInstantDB";
+import { useInstantDB } from "@/hooks/db/useInstantDB";
 import { registerForPushNotificationsAsync } from "@/utils/notifications";
 import { uploadToR2 } from "@/utils/r2Upload";
 import { id } from "@instantdb/react-native";
@@ -308,7 +308,7 @@ export function ProfileSetup({
         } catch (error) {
           console.error("Error uploading avatar:", error);
           showError(
-            t("common.error"), 
+            t("common.error"),
             t("profile.failedUploadPhoto") + " Your selected image is still available - please try again."
           );
           setIsSubmitting(false);
@@ -339,7 +339,7 @@ export function ProfileSetup({
         } catch (error) {
           console.error("Error uploading photos:", error);
           showError(
-            t("common.error"), 
+            t("common.error"),
             t("profile.failedUploadPhoto") + " Your selected image is still available - please try again."
           );
           setIsSubmitting(false);

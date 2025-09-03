@@ -3,7 +3,7 @@ import { PollBubble } from "@/components/chat/PollBubble";
 import { DuesBubble } from "@/components/chat/DuesBubble";
 import { Colors } from "@/constants/Colors";
 import { useTheme } from '@/contexts/ThemeContext';
-import { useInstantDB } from "@/hooks/useInstantDB";
+import { useInstantDB } from "@/hooks/db/useInstantDB";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {

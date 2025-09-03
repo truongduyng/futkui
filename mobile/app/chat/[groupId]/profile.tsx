@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import { useTheme } from "@/contexts/ThemeContext";
-import { instantClient, useInstantDB } from "@/hooks/useInstantDB";
+import { instantClient, useInstantDB } from "@/hooks/db/useInstantDB";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
