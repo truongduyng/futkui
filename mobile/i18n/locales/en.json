@@ -89,6 +89,20 @@
     "running": "Running",
     "cycling": "Cycling"
   },
+  "finance": {
+    "title": "Finance",
+    "currentBalance": "Current Balance",
+    "groupFunds": "Group Funds",
+    "totalIn": "Total In",
+    "totalOut": "Total Out",
+    "recentTransactions": "Recent Transactions",
+    "noTransactions": "No Transactions",
+    "noTransactionsMessage": "No financial transactions have been recorded for this group yet.",
+    "duesPayment": "Dues Payment",
+    "duesRefund": "Dues Refund",
+    "expense": "Expense",
+    "transaction": "Transaction"
+  },
   "profile": {
     "createProfile": "Create Profile",
     "editProfile": "Edit Profile",

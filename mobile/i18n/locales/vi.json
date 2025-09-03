@@ -89,6 +89,20 @@
     "running": "Chạy bộ",
     "cycling": "Đạp xe"
   },
+  "finance": {
+    "title": "Tài chính",
+    "currentBalance": "Số dư hiện tại",
+    "groupFunds": "Quỹ nhóm",
+    "totalIn": "Tổng thu",
+    "totalOut": "Tổng chi",
+    "recentTransactions": "Giao dịch gần đây",
+    "noTransactions": "Không có giao dịch",
+    "noTransactionsMessage": "Chưa có giao dịch tài chính nào được ghi nhận cho nhóm này.",
+    "duesPayment": "Đóng phí",
+    "duesRefund": "Hoàn phí",
+    "expense": "Chi phí",
+    "transaction": "Giao dịch"
+  },
   "profile": {
     "createProfile": "Tạo hồ sơ",
     "editProfile": "Chỉnh sửa hồ sơ",

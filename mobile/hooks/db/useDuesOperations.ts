@@ -199,7 +199,7 @@ export function useDuesOperations() {
         if (!existingLedgerEntry) {
           // Create ledger entry and update group balance
           const ledgerEntryId = id();
-          
+
           // Get group ID and current balance from the dues cycle
           const groupQuery = await db.queryOnce({
             groups: {
@@ -224,7 +224,6 @@ export function useDuesOperations() {
               refId: cycleId,
               amount: duesCycle.amountPerMember,
               type: 'dues_payment',
-              note: 'Marked as paid by admin',
               createdAt: Date.now(),
               updatedAt: Date.now(),
               profileRefKey: profileRefKey,

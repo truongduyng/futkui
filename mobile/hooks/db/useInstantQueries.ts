@@ -215,15 +215,19 @@ export function useInstantQueries() {
     });
   };
 
-  const useLedgerEntries = (refId: string) => {
-    if (!refId) {
+  const useLedgerEntries = (groupId: string) => {
+    if (!groupId) {
       return { data: null, isLoading: false, error: null };
     }
 
     return db.useQuery({
+      duesCycles: {
+        $: {
+          where: { "group.id": groupId },
+        },
+      },
       ledgerEntries: {
         $: {
-          where: { refId: refId },
           order: { serverCreatedAt: 'desc' },
         },
         profile: {},

@@ -288,7 +288,11 @@ export default function GroupProfileScreen() {
             {t('groupProfile.memberCount', { count: members.length })}
           </Text>
           {group.balance !== undefined && group.balance !== null && (
-            <View style={[styles.balanceContainer, { backgroundColor: colors.card }]}>
+            <TouchableOpacity
+              style={[styles.balanceContainer, { backgroundColor: colors.card }]}
+              onPress={() => router.push(`/chat/${groupId}/finance`)}
+              activeOpacity={0.7}
+            >
               <Ionicons name="wallet-outline" size={16} color={colors.tint} />
               <Text style={[styles.balanceText, { color: colors.text }]}>
                 {new Intl.NumberFormat('vi-VN', { 
@@ -298,7 +302,8 @@ export default function GroupProfileScreen() {
                   maximumFractionDigits: 0
                 }).format(group.balance)}
               </Text>
-            </View>
+              <Ionicons name="chevron-forward" size={12} color={colors.tabIconDefault} style={styles.balanceChevron} />
+            </TouchableOpacity>
           )}
         </View>
 
@@ -730,6 +735,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     marginLeft: 6,
+  },
+  balanceChevron: {
+    marginLeft: 4,
   },
   section: {
     marginBottom: 32,
