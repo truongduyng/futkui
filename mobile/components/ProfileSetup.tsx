@@ -179,13 +179,13 @@ export function ProfileSetup({
       mediaTypes: ["images"],
       allowsEditing: false,
       allowsMultipleSelection: true,
-      selectionLimit: 5,
+      selectionLimit: 9,
       quality: 0.5,
     });
 
     if (!result.canceled && result.assets) {
       const newPhotos = result.assets.map(asset => asset.uri);
-      setSelectedPhotos(prev => [...prev, ...newPhotos].slice(0, 5));
+      setSelectedPhotos(prev => [...prev, ...newPhotos].slice(0, 9));
     }
   };
 
@@ -547,7 +547,7 @@ export function ProfileSetup({
                   { borderColor: colors.icon },
                 ]}
                 onPress={pickMultiplePhotos}
-                disabled={selectedPhotos.length >= 5}
+                disabled={selectedPhotos.length >= 9}
               >
                 <Text
                   style={[
@@ -555,16 +555,12 @@ export function ProfileSetup({
                     { color: colors.tabIconDefault },
                   ]}
                 >
-                  {selectedPhotos.length >= 5 ? t("profile.maxPhotos") : t("profile.addPhotos")}
+                  {selectedPhotos.length >= 9 ? t("profile.maxPhotos") : t("profile.addPhotos")}
                 </Text>
               </TouchableOpacity>
 
               {selectedPhotos.length > 0 && (
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.photosScroll}
-                >
+                <View style={styles.photosGrid}>
                   {selectedPhotos.map((photo, index) => (
                     <View key={index} style={styles.photoContainer}>
                       <Image
@@ -579,7 +575,7 @@ export function ProfileSetup({
                       </TouchableOpacity>
                     </View>
                   ))}
-                </ScrollView>
+                </View>
               )}
             </View>
 
@@ -784,14 +780,13 @@ const styles = StyleSheet.create({
   addPhotoText: {
     fontSize: 14,
   },
-  photosScroll: {
-    maxHeight: 100,
+  photosGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   photoContainer: {
     position: "relative",
-    marginRight: 8,
-    marginTop: 8,
-    marginBottom: 8,
   },
   additionalPhoto: {
     width: 80,
