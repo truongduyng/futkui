@@ -294,7 +294,7 @@
     "groupActivities": "Group Activities",
     "noActiveActivities": "No Active Activities",
     "createActivityPrompt": "Create a poll or match in the chat to see them here",
-    "welcomeMessage": "👋 Welcome to FutKui!\n\nI'm your personal assistant here to help you with:\n• 📅 Match notifications and reminders\n• ⚽ Team updates and announcements\n• 🔔 Important app notifications\n• 💬 Quick support when you need it\n\nFeel free to message me anytime if you have questions or need help with the app!",
+    "welcomeMessage": "👋 Welcome to FutKui!\n\nI'm your personal assistant here to help you with:\n• 📅 Match notifications and reminders\n• ⚽ Team updates and announcements\n• 🔔 Important app notifications\n• 💬 Quick support when you need it\n\n🏆 **Ready to join a group?**\nTo join an existing group, you'll need an invite link from a current member. Ask your friends for their group's invite link and paste it in the main chat screen!\n\nOr create your own group by tapping the \"+\" button on the main screen.\n\nFeel free to message me anytime if you have questions or need help with the app!",
     "groupWelcomeMessage": "🎉 Welcome to your new group!\n\nAs the admin, here are some things you can do:\n• 📤 Share the invite link to add more members\n• ⚽ Create matches and polls in the chat\n• ⚙️ Manage group settings from the profile page\n• 🔗 Find the invite link in the group profile\n\nStart chatting and invite your friends to join the fun!",
     "language": "Language",
     "selectLanguage": "Select Language",
