@@ -7,31 +7,69 @@ import { useImageSaver } from '@/hooks/useImageSaver';
 interface ImageModalProps {
   visible: boolean;
   imageUrl: string | null;
+  imageUrls?: string[];
+  initialIndex?: number;
   onClose: () => void;
 }
 
-export function ImageModal({ visible, imageUrl, onClose }: ImageModalProps) {
+export function ImageModal({ visible, imageUrl, imageUrls, initialIndex = 0, onClose }: ImageModalProps) {
   const { t } = useTranslation();
   const [imageLoading, setImageLoading] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const { saveImageToGallery, isSaving } = useImageSaver(false);
+
+  const images = imageUrls || (imageUrl ? [imageUrl] : []);
+  const currentImageUrl = images[currentIndex] || imageUrl;
 
   // Reset loading state when imageUrl changes
   useEffect(() => {
-    if (imageUrl) {
+    if (currentImageUrl) {
       setImageLoading(true);
     }
-  }, [imageUrl]);
+  }, [currentImageUrl]);
+
+  // Reset currentIndex when modal opens or initialIndex changes
+  useEffect(() => {
+    if (visible) {
+      setCurrentIndex(initialIndex);
+    }
+  }, [visible, initialIndex]);
 
   const handleSaveImage = async () => {
-    if (imageUrl) {
-      const success = await saveImageToGallery(imageUrl);
+    if (currentImageUrl) {
+      const success = await saveImageToGallery(currentImageUrl);
       if (success) {
         setShowSuccess(true);
         setTimeout(() => {
           setShowSuccess(false);
         }, 2000);
       }
+    }
+  };
+
+  const handleNextImage = () => {
+    if (images.length > 1) {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (images.length > 1) {
+      setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+    }
+  };
+
+  const handleImagePress = (event: any) => {
+    if (images.length <= 1) return;
+    
+    const { locationX } = event.nativeEvent;
+    const screenWidth = Dimensions.get('window').width;
+    
+    if (locationX > screenWidth / 2) {
+      handleNextImage();
+    } else {
+      handlePrevImage();
     }
   };
 
@@ -42,7 +80,7 @@ export function ImageModal({ visible, imageUrl, onClose }: ImageModalProps) {
     }
   }, [visible]);
 
-  if (!imageUrl) return null;
+  if (!currentImageUrl) return null;
 
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -58,9 +96,13 @@ export function ImageModal({ visible, imageUrl, onClose }: ImageModalProps) {
         activeOpacity={1}
         onPress={onClose}
       >
-        <View style={styles.imageContainer}>
+        <TouchableOpacity 
+          style={styles.imageContainer}
+          activeOpacity={1}
+          onPress={handleImagePress}
+        >
           <Image
-            source={{ uri: imageUrl }}
+            source={{ uri: currentImageUrl }}
             style={[styles.fullScreenImage, { width: screenWidth * 0.9, height: screenHeight * 0.8 }]}
             resizeMode="contain"
             onLoad={() => setImageLoading(false)}
@@ -71,7 +113,16 @@ export function ImageModal({ visible, imageUrl, onClose }: ImageModalProps) {
               <ActivityIndicator size="large" color="white" />
             </View>
           )}
-        </View>
+        </TouchableOpacity>
+        {/* Image counter */}
+        {images.length > 1 && (
+          <View style={styles.imageCounter}>
+            <Text style={styles.imageCounterText}>
+              {currentIndex + 1} / {images.length}
+            </Text>
+          </View>
+        )}
+        
         {/* Success message */}
         {showSuccess && (
           <View style={styles.successMessage}>
@@ -181,6 +232,21 @@ const styles = StyleSheet.create({
   successText: {
     color: 'white',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  imageCounter: {
+    position: 'absolute',
+    bottom: 50,
+    left: '50%',
+    transform: [{ translateX: -30 }],
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+  },
+  imageCounterText: {
+    color: 'white',
+    fontSize: 14,
     fontWeight: '600',
   },
 });

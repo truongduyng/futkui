@@ -1,4 +1,5 @@
 import { CachedAvatar } from "@/components/chat/CachedAvatar";
+import { ImageModal } from "@/components/chat/ImageModal";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
 import { Colors } from "@/constants/Colors";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -57,11 +58,18 @@ export default function ProfileScreen() {
   const { user } = instantClient.useAuth();
 
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
+  const [isImageModalVisible, setIsImageModalVisible] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const currentProfile = profileData?.profiles?.[0];
 
   const handleEditProfile = () => {
     setIsProfileModalVisible(true);
+  };
+
+  const handleImagePress = (index: number) => {
+    setSelectedImageIndex(index);
+    setIsImageModalVisible(true);
   };
 
   if (!currentProfile) {
@@ -203,13 +211,18 @@ export default function ProfileScreen() {
         {currentProfile.photos && currentProfile.photos.length > 0 && (
           <View style={styles.photosGrid}>
             {currentProfile.photos.map((photo: string, index: number) => (
-              <View key={index} style={styles.photoContainer}>
+              <TouchableOpacity 
+                key={index} 
+                style={styles.photoContainer}
+                onPress={() => handleImagePress(index)}
+                activeOpacity={0.8}
+              >
                 <Image
                   source={{ uri: photo }}
                   style={styles.gridPhoto}
                   resizeMode="cover"
                 />
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}
@@ -226,6 +239,16 @@ export default function ProfileScreen() {
           onProfileUpdated={() => {
             setIsProfileModalVisible(false);
           }}
+        />
+      )}
+      
+      {currentProfile?.photos && (
+        <ImageModal
+          visible={isImageModalVisible}
+          imageUrl={null}
+          imageUrls={currentProfile.photos}
+          initialIndex={selectedImageIndex}
+          onClose={() => setIsImageModalVisible(false)}
         />
       )}
     </SafeAreaView>
