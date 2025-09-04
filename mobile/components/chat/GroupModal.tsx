@@ -119,7 +119,7 @@ export function GroupModal({ mode, visible, onClose, onSubmit, initialData }: Gr
 
       // For create mode, always upload. For edit mode, only upload if it's a new local image
       const shouldUpload = !isEditMode || selectedImage.startsWith('file://');
-      
+
       if (shouldUpload) {
         const fileName = `group-avatar-${id()}-${Date.now()}.jpg`;
         avatarUrl = await uploadToR2(selectedImage, fileName);
@@ -141,7 +141,7 @@ export function GroupModal({ mode, visible, onClose, onSubmit, initialData }: Gr
         setSelectedImage(null);
         setSelectedSports([]);
       }
-      
+
       onClose();
     } catch (error) {
       console.error(`Error ${isEditMode ? 'updating' : 'creating'} group:`, error);
@@ -179,7 +179,7 @@ export function GroupModal({ mode, visible, onClose, onSubmit, initialData }: Gr
   };
 
   const title = isEditMode ? t('groupProfile.editGroup') : t('createGroup.title');
-  const submitButtonText = isSubmitting 
+  const submitButtonText = isSubmitting
     ? (isEditMode ? t('common.saving') : t('common.creating'))
     : (isEditMode ? t('common.save') : t('common.create'));
 
@@ -202,7 +202,15 @@ export function GroupModal({ mode, visible, onClose, onSubmit, initialData }: Gr
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.content}>
+        <ScrollView
+          style={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          contentInsetAdjustmentBehavior="automatic"
+          automaticallyAdjustKeyboardInsets={true}
+          automaticallyAdjustContentInsets={true}
+        >
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('createGroup.clubImage')}</Text>
             <View style={styles.imagePickerSection}>
