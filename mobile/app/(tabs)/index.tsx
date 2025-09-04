@@ -24,12 +24,13 @@ export default function ChatScreen() {
   const { useGroups, useLastMessages, useProfile, createGroup, queryGroupByShareLink, joinGroup } = useInstantDB();
   const { setTotalUnreadCount } = useUnreadCount();
 
-  // Use real-time hooks
-  const { data: groupsData, isLoading: groupsLoading, error: groupsError } = useGroups();
+  // Use real-time hooks with better coordination
   const { data: profileData, isLoading: profileLoading, error: profileError } = useProfile();
-
   const currentProfile = profileData?.profiles?.[0];
 
+  // Only fetch groups after we have profile data
+  const { data: groupsData, isLoading: groupsLoading, error: groupsError } = useGroups();
+  
   // Extract groups first to get group IDs
   const profile = groupsData?.profiles?.[0];
   const baseGroups = useMemo(() =>
@@ -39,11 +40,13 @@ export default function ChatScreen() {
     [profile?.memberships]
   );
 
-  // Get group IDs for useLastMessages
+  // Get group IDs for useLastMessages - only when we have groups
   const groupIds = useMemo(() => baseGroups.map((group: any) => group.id), [baseGroups]);
 
-  // Use real-time last messages
-  const { data: lastMessagesData, isLoading: lastMessagesLoading, error: lastMessagesError } = useLastMessages(groupIds);
+  // Use real-time last messages - only fetch when we have group IDs
+  const { data: lastMessagesData, isLoading: lastMessagesLoading, error: lastMessagesError } = useLastMessages(
+    groupIds.length > 0 ? groupIds : []
+  );
 
   // Calculate combined loading state and error state
   const isLoading = groupsLoading || profileLoading || lastMessagesLoading;

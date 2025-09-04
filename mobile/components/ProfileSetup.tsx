@@ -354,10 +354,14 @@ export function ProfileSetup({
         await instantClient.transact([profileTransaction]);
         onProfileUpdated?.();
       } else {
-        // Get push notification token for new profiles
+        // Coordinate profile creation operations sequentially
+        console.log('Creating new profile for user:', userId);
+        
+        // 1. Get push notification token first (this is quick and doesn't depend on other operations)
         const pushToken = await registerForPushNotificationsAsync();
+        console.log('Push token obtained:', pushToken ? 'success' : 'failed');
 
-        // Create new profile
+        // 2. Create the profile transaction
         const profileTransaction = instantClient.tx.profiles[profileId]
           .update({
             handle: handle.toLowerCase(),
@@ -371,7 +375,11 @@ export function ProfileSetup({
           })
           .link({ user: userId! });
 
+        // 3. Execute the profile creation transaction
         await instantClient.transact([profileTransaction]);
+        console.log('Profile created successfully:', profileId);
+
+        // 4. Notify completion (this will trigger AuthGate to initialize bot group and other operations)
         onProfileCreated?.();
       }
     } catch (error) {

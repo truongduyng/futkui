@@ -6,7 +6,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ProfileSetup } from './ProfileSetup';
 import { WebViewModal } from './WebViewModal';
@@ -22,49 +22,84 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const { instantClient, useProfile, ensureUserHasBotGroup } = useInstantDB();
   const { user } = instantClient.useAuth();
-  const botGroupInitiatedRef = useRef(new Set<string>());
+  const initializationRef = useRef<{
+    isInitializing: boolean;
+    profileId: string | null;
+  }>({ isInitializing: false, profileId: null });
   const [showProfileSetup, setShowProfileSetup] = useState(false);
+  const [initializationState, setInitializationState] = useState<'idle' | 'initializing' | 'complete' | 'error'>('idle');
 
   const { data: profileData, isLoading: profileLoading } = useProfile();
   const profile = profileData?.profiles?.[0];
 
   // Check if user needs to set up profile
   useEffect(() => {
-    if (user && !profileLoading && !profile) {
+    if (user && !profileLoading && !profile && initializationState === 'idle') {
       setShowProfileSetup(true);
     }
-  }, [user, profileLoading, profile]);
+  }, [user, profileLoading, profile, initializationState]);
 
-  // Ensure bot group is created for the user after profile is created
+  // Coordinated initialization after profile is available
   useEffect(() => {
-    if (profile?.id && !botGroupInitiatedRef.current.has(profile.id)) {
-      botGroupInitiatedRef.current.add(profile.id);
-      
-      const ensureBotGroup = async () => {
-        try {
-          await ensureUserHasBotGroup(profile.id);
-        } catch (error) {
-          console.error('Error ensuring bot group in AuthenticatedContent:', error);
-          botGroupInitiatedRef.current.delete(profile.id); // Reset on error to allow retry
-          
-          // Don't throw the error to prevent app crashes
-          // The bot group creation will be retried next time the effect runs
-        }
-      };
-      
-      ensureBotGroup();
+    const initializeUserData = async (profileId: string) => {
+      if (initializationRef.current.isInitializing ||
+          initializationRef.current.profileId === profileId) {
+        return; // Already initializing or initialized for this profile
+      }
+
+      initializationRef.current.isInitializing = true;
+      initializationRef.current.profileId = profileId;
+      setInitializationState('initializing');
+
+      try {
+        // Coordinate all async operations sequentially to avoid race conditions
+        console.log('Starting user initialization for profile:', profileId);
+
+        // 1. Ensure bot group is created first (this might affect other operations)
+        await ensureUserHasBotGroup(profileId);
+        console.log('Bot group ensured for profile:', profileId);
+
+        // 2. If there are other initialization tasks, add them here in order
+        // e.g., await updatePushToken(), await syncUserPreferences(), etc.
+
+        setInitializationState('complete');
+        console.log('User initialization complete for profile:', profileId);
+      } catch (error) {
+        console.error('Error during user initialization:', error);
+        setInitializationState('error');
+
+        // Reset initialization state to allow retry
+        initializationRef.current.isInitializing = false;
+        initializationRef.current.profileId = null;
+
+        // Retry after a short delay
+        setTimeout(() => {
+          if (profile?.id === profileId) {
+            setInitializationState('idle');
+          }
+        }, 3000);
+      } finally {
+        initializationRef.current.isInitializing = false;
+      }
+    };
+
+    if (profile?.id && initializationState === 'idle') {
+      initializeUserData(profile.id);
     }
-  }, [profile?.id, ensureUserHasBotGroup]);
+  }, [profile?.id, ensureUserHasBotGroup, initializationState]);
 
   const handleProfileCreated = () => {
     setShowProfileSetup(false);
-    // The profile query will automatically refetch and show the main content
+    // Reset initialization state so the new profile gets properly initialized
+    setInitializationState('idle');
+    initializationRef.current = { isInitializing: false, profileId: null };
   };
 
   if (profileLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.text, { color: colors.text }]}>{t('common.loading')}</Text>
+        <ActivityIndicator size="large" color={colors.tint} />
+        <Text style={[styles.text, { color: colors.text, marginTop: 16 }]}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -81,11 +116,33 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
   if (!profile) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.text, { color: colors.text }]}>{t('auth.settingUpProfile')}</Text>
+        <ActivityIndicator size="large" color={colors.tint} />
       </View>
     );
   }
 
+  // Show loading state during initialization
+  if (initializationState === 'initializing') {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.tint} />
+      </View>
+    );
+  }
+
+  // Show error state with retry option
+  if (initializationState === 'error') {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={[styles.text, { color: colors.text }]}>{t('common.error')}</Text>
+        <Text style={[styles.text, { color: colors.tabIconDefault, fontSize: 14, marginTop: 8 }]}>
+          {t('auth.retryingIn3Seconds')}
+        </Text>
+      </View>
+    );
+  }
+
+  // Only render children when initialization is complete
   return <>{children}</>;
 }
 
@@ -108,7 +165,8 @@ export function AuthGate({ children }: AuthGateProps) {
   if (authLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.text, { color: colors.text }]}>{t('common.loading')}</Text>
+        <ActivityIndicator size="large" color={colors.tint} />
+        <Text style={[styles.text, { color: colors.text, marginTop: 16 }]}>{t('common.loading')}</Text>
       </View>
     );
   }
