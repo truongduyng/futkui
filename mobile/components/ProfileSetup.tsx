@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/Colors";
+import { SPORTS_KEYS } from "@/constants/Sports";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useInstantDB } from "@/hooks/db/useInstantDB";
 import { registerForPushNotificationsAsync } from "@/utils/notifications";
@@ -45,12 +46,6 @@ interface ProfileSetupProps {
   showHeader?: boolean;
   onSubmitPress?: (submitFn: () => void) => void;
 }
-
-const SPORTS_KEYS = [
-  'football', 'basketball', 'tennis', 'pickleball', 'volleyball',
-  'badminton', 'table_tennis', 'swimming', 'running', 'cycling',
-];
-
 
 
 export function ProfileSetup({

@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/Colors';
+import SPORTS_OPTIONS from '@/constants/Sports';
 import { useTheme } from '@/contexts/ThemeContext';
 import { uploadToR2 } from '@/utils/r2Upload';
 import { id } from '@instantdb/react-native';
@@ -33,11 +34,6 @@ interface GroupModalProps {
   initialData?: Partial<GroupData>;
 }
 
-const SPORTS_OPTIONS = [
-  { emoji: '⚽', nameKey: 'sports.football' },
-  { emoji: '🏓', nameKey: 'sports.pickleball' },
-  { emoji: '🏸', nameKey: 'sports.badminton' },
-];
 
 export function GroupModal({ mode, visible, onClose, onSubmit, initialData }: GroupModalProps) {
   const { t } = useTranslation();
@@ -187,7 +183,7 @@ export function GroupModal({ mode, visible, onClose, onSubmit, initialData }: Gr
     <Modal
       visible={visible}
       animationType="slide"
-      presentationStyle="pageSheet"
+      presentationStyle="formSheet"
     >
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
@@ -210,6 +206,7 @@ export function GroupModal({ mode, visible, onClose, onSubmit, initialData }: Gr
           contentInsetAdjustmentBehavior="automatic"
           automaticallyAdjustKeyboardInsets={true}
           automaticallyAdjustContentInsets={true}
+          contentContainerStyle={{ paddingBottom: 16 }}
         >
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('createGroup.clubImage')}</Text>
