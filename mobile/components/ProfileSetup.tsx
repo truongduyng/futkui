@@ -379,7 +379,7 @@ export function ProfileSetup({
         await instantClient.transact([profileTransaction]);
         console.log('Profile created successfully:', profileId);
 
-        // 4. Notify completion (this will trigger AuthGate to initialize bot group and other operations)
+        // 4. Notify completion (this will trigger AuthGate to initialize bot group in background)
         onProfileCreated?.();
       }
     } catch (error) {

@@ -39,60 +39,52 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
     }
   }, [user, profileLoading, profile, initializationState]);
 
-  // Coordinated initialization after profile is available
+  // Non-blocking background initialization after profile is available
   useEffect(() => {
-    const initializeUserData = async (profileId: string) => {
-      if (initializationRef.current.isInitializing ||
-          initializationRef.current.profileId === profileId) {
-        return; // Already initializing or initialized for this profile
+    const initializeUserDataInBackground = async (profileId: string) => {
+      if (initializationRef.current.profileId === profileId) {
+        return; // Already initialized for this profile
       }
 
-      initializationRef.current.isInitializing = true;
       initializationRef.current.profileId = profileId;
-      setInitializationState('initializing');
 
       try {
-        // Coordinate all async operations sequentially to avoid race conditions
-        console.log('Starting user initialization for profile:', profileId);
-
-        // 1. Ensure bot group is created first (this might affect other operations)
+        // Run bot group creation in background - don't block app access
+        console.log('Starting background initialization for profile:', profileId);
+        
+        // Bot group creation happens in background, user can access app immediately
         await ensureUserHasBotGroup(profileId);
-        console.log('Bot group ensured for profile:', profileId);
+        console.log('Background bot group creation completed for profile:', profileId);
 
-        // 2. If there are other initialization tasks, add them here in order
-        // e.g., await updatePushToken(), await syncUserPreferences(), etc.
+        // Add other non-critical initialization tasks here
+        // e.g., await syncUserPreferences(), await updateAnalytics(), etc.
 
-        setInitializationState('complete');
-        console.log('User initialization complete for profile:', profileId);
       } catch (error) {
-        console.error('Error during user initialization:', error);
-        setInitializationState('error');
-
-        // Reset initialization state to allow retry
-        initializationRef.current.isInitializing = false;
+        console.error('Background initialization error (non-blocking):', error);
+        // Don't prevent app access on background task failures
+        // Reset to allow retry on next app launch
         initializationRef.current.profileId = null;
-
-        // Retry after a short delay
-        setTimeout(() => {
-          if (profile?.id === profileId) {
-            setInitializationState('idle');
-          }
-        }, 3000);
-      } finally {
-        initializationRef.current.isInitializing = false;
       }
     };
 
-    if (profile?.id && initializationState === 'idle') {
-      initializeUserData(profile.id);
+    // Start background initialization but don't block app access
+    if (profile?.id) {
+      // Set complete immediately so user can access app
+      setInitializationState('complete');
+      
+      // Run background tasks without blocking
+      initializeUserDataInBackground(profile.id);
     }
-  }, [profile?.id, ensureUserHasBotGroup, initializationState]);
+  }, [profile?.id, ensureUserHasBotGroup]);
 
   const handleProfileCreated = () => {
     setShowProfileSetup(false);
     // Reset initialization state so the new profile gets properly initialized
     setInitializationState('idle');
     initializationRef.current = { isInitializing: false, profileId: null };
+    
+    // Profile creation complete - the useEffect will trigger background bot group creation
+    // for the newly created profile automatically
   };
 
   if (profileLoading) {
@@ -121,28 +113,7 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Show loading state during initialization
-  if (initializationState === 'initializing') {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.tint} />
-      </View>
-    );
-  }
-
-  // Show error state with retry option
-  if (initializationState === 'error') {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.text, { color: colors.text }]}>{t('common.error')}</Text>
-        <Text style={[styles.text, { color: colors.tabIconDefault, fontSize: 14, marginTop: 8 }]}>
-          {t('auth.retryingIn3Seconds')}
-        </Text>
-      </View>
-    );
-  }
-
-  // Only render children when initialization is complete
+  // Since initialization is non-blocking, always render children when profile exists
   return <>{children}</>;
 }
 
