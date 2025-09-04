@@ -13,7 +13,7 @@ export function useGroupOperations() {
       sports: string[];
       creatorId: string;
       rule?: string;
-    }, ensureBotProfile: () => Promise<string>) => {
+    }, ensureBotProfile: () => Promise<string>, sendGroupWelcomeMessage: (groupId: string, botProfileId: string) => Promise<void>) => {
       const shareLink = `futkui-chat://group/${Math.random().toString(36).substring(2, 15)}`;
       const groupId = id();
       const membershipId = id();
@@ -53,6 +53,14 @@ export function useGroupOperations() {
           profile: botProfileId
         }),
       ]);
+
+      // Send welcome message from bot after group creation
+      try {
+        await sendGroupWelcomeMessage(groupId, botProfileId);
+      } catch (error) {
+        console.error('Error sending group welcome message:', error);
+        // Don't throw to prevent breaking group creation
+      }
 
       return result;
     },

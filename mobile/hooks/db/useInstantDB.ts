@@ -70,7 +70,7 @@ export function useInstantDB() {
       sports: string[];
       creatorId: string;
       rule?: string;
-    }) => groupOps.createGroup(groupData, botOps.ensureBotProfile),
+    }) => groupOps.createGroup(groupData, botOps.ensureBotProfile, botOps.sendGroupWelcomeMessage),
     joinGroup: groupOps.joinGroup,
     leaveGroup: groupOps.leaveGroup,
     removeMember: groupOps.removeMember,

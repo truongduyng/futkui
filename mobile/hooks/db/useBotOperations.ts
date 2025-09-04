@@ -67,6 +67,23 @@ export function useBotOperations() {
     ]);
   }, [db]);
 
+  const sendGroupWelcomeMessage = useCallback(async (groupId: string, botProfileId: string) => {
+    const groupWelcomeMessage = getTranslation('chat.groupWelcomeMessage');
+
+    await db.transact([
+      db.tx.messages[id()].update({
+        content: groupWelcomeMessage,
+        authorName: 'FutKui Bot',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        type: 'text',
+      }).link({
+        group: groupId,
+        author: botProfileId
+      }),
+    ]);
+  }, [db]);
+
   const createBotGroup = useCallback(async (userProfileId: string) => {
     try {
       // Ensure bot profile exists first and get its ID
@@ -193,6 +210,7 @@ export function useBotOperations() {
     ensureBotProfile,
     getBotProfile,
     sendWelcomeMessage,
+    sendGroupWelcomeMessage,
     createBotGroup,
     ensureUserHasBotGroup,
     ensureBotInGroup,
