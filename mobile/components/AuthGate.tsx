@@ -39,10 +39,20 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (profile?.id && !botGroupInitiatedRef.current.has(profile.id)) {
       botGroupInitiatedRef.current.add(profile.id);
-      ensureUserHasBotGroup(profile.id).catch(error => {
-        console.error('Error ensuring bot group in AuthenticatedContent:', error);
-        botGroupInitiatedRef.current.delete(profile.id); // Reset on error to allow retry
-      });
+      
+      const ensureBotGroup = async () => {
+        try {
+          await ensureUserHasBotGroup(profile.id);
+        } catch (error) {
+          console.error('Error ensuring bot group in AuthenticatedContent:', error);
+          botGroupInitiatedRef.current.delete(profile.id); // Reset on error to allow retry
+          
+          // Don't throw the error to prevent app crashes
+          // The bot group creation will be retried next time the effect runs
+        }
+      };
+      
+      ensureBotGroup();
     }
   }, [profile?.id, ensureUserHasBotGroup]);
 
