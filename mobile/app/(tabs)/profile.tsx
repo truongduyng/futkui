@@ -47,6 +47,14 @@ const getSportEmoji = (sport: string) => {
   }
 };
 
+const maskEmail = (email: string) => {
+  const [localPart, domain] = email.split('@');
+  const maskedLocal = localPart.length > 2 
+    ? `${localPart.charAt(0)}***${localPart.charAt(localPart.length - 1)}`
+    : `${localPart.charAt(0)}***`;
+  return `${maskedLocal}@${domain}`;
+};
+
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const { isDark } = useTheme();
@@ -165,13 +173,27 @@ export default function ProfileScreen() {
             @{currentProfile.handle}
           </Text>
 
-          {/* Location */}
-          {currentProfile.location && (
+          {/* Email and Location */}
+          {(currentProfile.location || user?.email) && (
             <View style={styles.locationContainer}>
-              <Ionicons name="location-outline" size={16} color={colors.tabIconDefault} />
-              <Text style={[styles.locationText, { color: colors.tabIconDefault }]}>
-                {currentProfile.location}
-              </Text>
+              {user?.email && (
+                <Text style={[styles.locationText, { color: colors.tabIconDefault }]}>
+                  {maskEmail(user.email)}
+                </Text>
+              )}
+              {user?.email && currentProfile.location && (
+                <Text style={[styles.locationText, { color: colors.tabIconDefault }]}>
+                  {' • '}
+                </Text>
+              )}
+              {currentProfile.location && (
+                <>
+                  <Ionicons name="location-outline" size={16} color={colors.tabIconDefault} />
+                  <Text style={[styles.locationText, { color: colors.tabIconDefault }]}>
+                    {currentProfile.location}
+                  </Text>
+                </>
+              )}
             </View>
           )}
 
