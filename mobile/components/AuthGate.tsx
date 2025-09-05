@@ -10,6 +10,7 @@ import { Alert, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInp
 import { useTranslation } from 'react-i18next';
 import { ProfileSetup } from './ProfileSetup';
 import { WebViewModal } from './WebViewModal';
+import { registerForPushNotificationsAsync } from '@/utils/notifications';
 
 
 interface AuthGateProps {
@@ -56,6 +57,9 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
         await ensureUserHasBotGroup(profileId);
         console.log('Background bot group creation completed for profile:', profileId);
 
+        // Update push token for existing users (non-blocking)
+        await updatePushTokenIfNeeded(profileId);
+
         // Add other non-critical initialization tasks here
         // e.g., await syncUserPreferences(), await updateAnalytics(), etc.
 
@@ -67,6 +71,35 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
       }
     };
 
+    const updatePushTokenIfNeeded = async (profileId: string) => {
+      try {
+        console.log('Checking push token for existing user:', profileId);
+        
+        // Get current push token
+        const currentToken = await registerForPushNotificationsAsync();
+        
+        if (currentToken && profile) {
+          // Only update if token is different from stored one
+          if (!profile.pushToken || profile.pushToken !== currentToken) {
+            console.log('Updating push token for existing user');
+            
+            await instantClient.transact([
+              instantClient.tx.profiles[profileId].update({
+                pushToken: currentToken
+              })
+            ]);
+            
+            console.log('Push token updated successfully for existing user');
+          } else {
+            console.log('Push token is up to date');
+          }
+        }
+      } catch (error) {
+        console.error('Error updating push token for existing user (non-blocking):', error);
+        // Non-blocking - don't prevent app access
+      }
+    };
+
     // Start background initialization but don't block app access
     if (profile?.id) {
       // Set complete immediately so user can access app
@@ -75,7 +108,7 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
       // Run background tasks without blocking
       initializeUserDataInBackground(profile.id);
     }
-  }, [profile?.id, ensureUserHasBotGroup]);
+  }, [profile?.id, ensureUserHasBotGroup, instantClient, profile]);
 
   const handleProfileCreated = () => {
     setShowProfileSetup(false);
