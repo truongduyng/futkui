@@ -14,7 +14,7 @@ export function useDuesOperations() {
       deadline: number;
       creatorId: string;
       authorName: string;
-    }, triggerGroupNotifications: (data: any) => Promise<void>) => {
+    }) => {
       const cycleId = id();
       const messageId = id();
 
@@ -42,21 +42,6 @@ export function useDuesOperations() {
           author: duesData.creatorId,
         }),
       ]);
-
-      // Trigger notifications
-      try {
-        await triggerGroupNotifications({
-          groupId: duesData.groupId,
-          messageContent: '',
-          authorName: duesData.authorName,
-          authorId: duesData.creatorId,
-          mentions: [],
-          messageId: messageId,
-          messageType: 'text',
-        });
-      } catch (error) {
-        console.error('Failed to send dues notifications:', error);
-      }
 
       return result;
     },

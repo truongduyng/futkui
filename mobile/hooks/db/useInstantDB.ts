@@ -16,10 +16,10 @@ export function useInstantDB() {
   const botOps = useBotOperations();
   const messageOps = useMessageOperations();
   const userOps = useUserOperations();
-  
+
   // Group operations need bot operations
   const groupOps = useGroupOperations();
-  
+
   // Poll, Match, and Dues operations need message notifications
   const pollOps = usePollOperations();
   const matchOps = useMatchOperations();
@@ -27,7 +27,7 @@ export function useInstantDB() {
 
   return {
     instantClient,
-    
+
     // Query hooks from useInstantQueries
     useGroups: queries.useGroups,
     useLastMessages: queries.useLastMessages,
@@ -43,7 +43,7 @@ export function useInstantDB() {
     useUnreadCount: queries.useUnreadCount,
     useBlockedUsers: queries.useBlockedUsers,
     useIsBlocked: queries.useIsBlocked,
-    
+
     // Query once functions
     queryAllGroupsOnce: queries.queryAllGroupsOnce,
     queryGroupByShareLink: queries.queryGroupByShareLink,
@@ -60,7 +60,6 @@ export function useInstantDB() {
     reportMessage: messageOps.reportMessage,
     filterBlockedMessages: messageOps.filterBlockedMessages,
     getBlockedUserIds: messageOps.getBlockedUserIds,
-    triggerGroupNotifications: messageOps.triggerGroupNotifications,
 
     // Group operations
     createGroup: (groupData: {
@@ -88,7 +87,7 @@ export function useInstantDB() {
       allowMultiple: boolean;
       allowMembersToAddOptions: boolean;
       expiresAt?: number;
-    }) => pollOps.sendPoll(pollData, messageOps.triggerGroupNotifications),
+    }) => pollOps.sendPoll(pollData),
     vote: pollOps.vote,
     closePoll: pollOps.closePoll,
     addOptionToPoll: pollOps.addOptionToPoll,
@@ -103,7 +102,7 @@ export function useInstantDB() {
       matchDate: number;
       creatorId: string;
       authorName: string;
-    }) => matchOps.createMatch(matchData, messageOps.triggerGroupNotifications),
+    }) => matchOps.createMatch(matchData),
     rsvpToMatch: matchOps.rsvpToMatch,
     checkInToMatch: matchOps.checkInToMatch,
     unCheckInFromMatch: matchOps.unCheckInFromMatch,
@@ -119,7 +118,7 @@ export function useInstantDB() {
       deadline: number;
       creatorId: string;
       authorName: string;
-    }) => duesOps.createDuesCycle(duesData, messageOps.triggerGroupNotifications),
+    }) => duesOps.createDuesCycle(duesData),
     submitDuesPayment: duesOps.submitDuesPayment,
     updateDuesMemberStatus: duesOps.updateDuesMemberStatus,
     closeDuesCycle: duesOps.closeDuesCycle,

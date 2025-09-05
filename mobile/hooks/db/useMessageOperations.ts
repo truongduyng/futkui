@@ -2,67 +2,10 @@ import { useCallback } from 'react';
 import { id } from '@instantdb/react-native';
 import { instantClient } from './instantClient';
 import { uploadToR2 } from '../../utils/r2Upload';
-import { sendGroupNotification, getMemberPushTokens } from '../../utils/notifications';
 
 export function useMessageOperations() {
   const db = instantClient;
 
-  const triggerGroupNotifications = useCallback(async (data: {
-    groupId: string;
-    messageContent: string;
-    authorName: string;
-    authorId: string;
-    mentions?: string[];
-    messageId: string;
-    messageType?: 'text' | 'poll' | 'match';
-    pollData?: {
-      question: string;
-      options: any[];
-    };
-    matchData?: {
-      description: string;
-    };
-  }) => {
-    try {
-      const groupQuery = await db.queryOnce({
-        groups: {
-          $: { where: { id: data.groupId } },
-          memberships: {
-            profile: {
-              user: {},
-            },
-          },
-        },
-      });
-
-      const group = groupQuery.data.groups?.[0];
-      if (!group) return;
-
-      const memberTokens = await getMemberPushTokens(
-        group.memberships || [],
-        data.authorId
-      );
-
-      if (memberTokens.length === 0) return;
-
-      await sendGroupNotification({
-        groupId: data.groupId,
-        groupName: group.name || 'Group Chat',
-        messageContent: data.messageContent,
-        authorName: data.authorName,
-        authorId: data.authorId,
-        mentions: data.mentions,
-        messageId: data.messageId,
-        messageType: data.messageType || 'text',
-        pollData: data.pollData,
-        matchData: data.matchData,
-      }, memberTokens);
-
-    } catch (error) {
-      console.error('Error triggering group notifications:', error);
-      throw error;
-    }
-  }, [db]);
 
   const sendMessage = useCallback(
     async (messageData: {
@@ -101,24 +44,9 @@ export function useMessageOperations() {
         }),
       ]);
 
-      try {
-        const messageType = imageUrl ? 'text' : 'text';
-        await triggerGroupNotifications({
-          groupId: messageData.groupId,
-          messageContent: messageData.content || '[Image]',
-          authorName: messageData.authorName,
-          authorId: messageData.authorId,
-          mentions: messageData.mentions,
-          messageId: messageId,
-          messageType,
-        });
-      } catch (error) {
-        console.error('Failed to send notifications:', error);
-      }
-
       return result;
     },
-    [db, triggerGroupNotifications]
+    [db]
   );
 
   const addOrUpdateReaction = useCallback(
@@ -241,6 +169,5 @@ export function useMessageOperations() {
     reportMessage,
     filterBlockedMessages,
     getBlockedUserIds,
-    triggerGroupNotifications,
   };
 }
