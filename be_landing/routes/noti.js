@@ -211,49 +211,68 @@ async function addToGlobalBatch(message, group, memberTokens) {
 
 async function handleNewMessage(message) {
   try {
-    console.log('🔍 Processing new message:', {
-      messageId: message.id,
-      groupId: message.group?.id,
-      authorName: message.authorName,
-      type: message.type,
-      content: message.content?.substring(0, 50) + '...',
-      hasMentions: !!(message.mentions && message.mentions.length > 0)
-    });
+    console.log('🔍 Processing new message ID:', message.id);
 
-    // Skip if message doesn't have required fields
-    if (!message.group?.id || !message.authorName || !message.author?.id) {
-      console.log('⚠️ Skipping message - missing required fields');
+    // Skip if no message ID
+    if (!message.id) {
+      console.log('⚠️ Skipping message - no ID');
       return;
     }
 
-    // Get group with memberships
-    const groupQuery = await db.queryOnce({
-      groups: {
-        $: { where: { id: message.group.id } },
-        memberships: {
-          profile: {
-            user: {},
+    // Query the full message data with all relationships
+    const messageQuery = await db.queryOnce({
+      messages: {
+        $: { where: { id: message.id } },
+        author: {
+          user: {}
+        },
+        group: {
+          memberships: {
+            profile: {
+              user: {},
+            },
           },
         },
       },
     });
 
-    const group = groupQuery.data.groups?.[0];
-    if (!group) {
-      console.log('⚠️ Group not found:', message.group.id);
+    const fullMessage = messageQuery.data.messages?.[0];
+    if (!fullMessage) {
+      console.log('⚠️ Message not found:', message.id);
       return;
     }
 
+    console.log('🔍 Full message data:', {
+      messageId: fullMessage.id,
+      groupId: fullMessage.group?.id,
+      groupName: fullMessage.group?.name,
+      authorName: fullMessage.authorName,
+      authorId: fullMessage.author?.id || fullMessage.author?.user?.id,
+      type: fullMessage.type,
+      content: fullMessage.content?.substring(0, 50) + '...',
+      hasMentions: !!(fullMessage.mentions && fullMessage.mentions.length > 0),
+      memberCount: fullMessage.group?.memberships?.length || 0
+    });
+
+    // Skip if message doesn't have required fields
+    if (!fullMessage.group?.id || !fullMessage.authorName) {
+      console.log('⚠️ Skipping message - missing required fields');
+      return;
+    }
+
+    const group = fullMessage.group;
+    const authorId = fullMessage.author?.id || fullMessage.author?.user?.id;
+
     const memberTokens = await getMemberPushTokens(
       group.memberships || [],
-      message.author.id,
+      authorId,
     );
 
     console.log('📱 Found push tokens:', {
       groupName: group.name,
       totalMembers: group.memberships?.length || 0,
       tokensFound: memberTokens.length,
-      excludeUserId: message.author.id
+      excludeUserId: authorId
     });
 
     if (memberTokens.length === 0) {
@@ -261,26 +280,26 @@ async function handleNewMessage(message) {
       return;
     }
 
-    const hasMentions = message.mentions && message.mentions.length > 0;
+    const hasMentions = fullMessage.mentions && fullMessage.mentions.length > 0;
     const isImmediate =
       hasMentions ||
-      message.type === "poll" ||
-      message.type === "match" ||
-      message.type === "dues";
+      fullMessage.type === "poll" ||
+      fullMessage.type === "match" ||
+      fullMessage.type === "dues";
 
     console.log('🚀 Notification routing:', {
       isImmediate,
       hasMentions,
-      messageType: message.type,
+      messageType: fullMessage.type,
       route: isImmediate ? 'immediate' : 'batch'
     });
 
     if (isImmediate) {
       console.log('⚡ Sending immediate notification');
-      await sendImmediateNotification(message, group, memberTokens);
+      await sendImmediateNotification(fullMessage, group, memberTokens);
     } else {
       console.log('📦 Adding to global batch');
-      await addToGlobalBatch(message, group, memberTokens);
+      await addToGlobalBatch(fullMessage, group, memberTokens);
     }
   } catch (error) {
     console.error("Error handling new message:", error);
@@ -290,13 +309,11 @@ async function handleNewMessage(message) {
 // Flag to skip first subscription trigger on startup
 let isFirstTrigger = true;
 
-// Subscribe to new messages
+// Subscribe to new messages - only need ID since we fetch full data with queryOnce
 const sub = db.subscribeQuery(
   {
     messages: {
       $: { limit: 1, order: { serverCreatedAt: "desc" } },
-      author: {},
-      group: {},
     },
   },
   (payload) => {
