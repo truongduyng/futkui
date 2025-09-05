@@ -2,6 +2,7 @@
   "common": {
     "loading": "Loading...",
     "error": "Error",
+    "errorGeneric": "Something went wrong",
     "cancel": "Cancel",
     "create": "Create",
     "creating": "Creating...",
@@ -18,6 +19,7 @@
     "all": "All",
     "ok": "OK",
     "close": "Close",
+    "tryAgain": "Try again",
     "uploading": "Uploading...",
     "permissionDenied": "Permission denied",
     "uploadFailed": "Upload failed"

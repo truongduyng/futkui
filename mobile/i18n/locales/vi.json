@@ -2,6 +2,7 @@
   "common": {
     "loading": "Đang tải...",
     "error": "Lỗi",
+    "errorGeneric": "Đã xảy ra lỗi",
     "cancel": "Hủy",
     "create": "Tạo",
     "creating": "Đang tạo...",
@@ -18,6 +19,7 @@
     "all": "Tất cả",
     "ok": "Đồng ý",
     "close": "Đóng",
+    "tryAgain": "Thử lại",
     "uploading": "Đang tải lên...",
     "permissionDenied": "Quyền bị từ chối",
     "uploadFailed": "Tải lên thất bại"
