@@ -402,7 +402,7 @@
     "shareLinkCopied": "Share Link Copied",
     "shareLinkCopiedMessage": "The group invite link has been copied to your clipboard!",
     "joinGroupMessage": "Join me in {{groupName}} on FutKui!\n\nStep 1: Download the app:",
-    "downloadAppMessage": "Step 2: Open the app and enter this group code:\n{{groupCode}}\n\n(Copy and paste the code into the app - don't click the link!)",
+    "downloadAppMessage": "Step 2: Open the app and enter this group code:\n\n{{groupCode}}",
     "failedToCopyLink": "Failed to copy share link",
     "memberCount": "{{count}} member",
     "memberCount_other": "{{count}} members",
