@@ -92,15 +92,11 @@ async function sendImmediateNotification(message, group, memberTokens) {
 
 async function sendGlobalBatchNotifications() {
   if (!globalBatch.messages.length) {
-    console.log('📦 No messages in global batch to send');
     return;
   }
 
   const messageCount = globalBatch.messages.length;
-  console.log('📤 Sending global batch notification:', {
-    messageCount,
-    batchAge: globalBatch.firstMessageTime ? Date.now() - globalBatch.firstMessageTime : 0
-  });
+  console.log('📤 Sending batch notification for', messageCount, 'messages');
   const authors = [...new Set(globalBatch.messages.map((m) => m.authorName))];
   const groups = [...new Set(globalBatch.messages.map((m) => m.groupName))];
 
@@ -157,9 +153,8 @@ async function sendGlobalBatchNotifications() {
   );
 
   try {
-    console.log('📱 Sending batch to', notifications.length, 'recipients');
     await sendPushNotification(notifications);
-    console.log('✅ Global batch notifications sent successfully');
+    console.log('✅ Batch notifications sent to', notifications.length, 'recipients');
   } catch (error) {
     console.error("Failed to send global batch notifications:", error);
   } finally {
@@ -186,41 +181,32 @@ async function addToGlobalBatch(message, group, memberTokens) {
     memberTokens,
   });
 
-  console.log('📦 Added to batch:', {
-    batchSize: globalBatch.messages.length,
-    messageId: message.id,
-    groupName: group.name
-  });
+  console.log('📦 Added to batch (', globalBatch.messages.length, '/', 100, ')');
 
   // If this is the first message, start the 60s timer
   if (globalBatch.messages.length === 1) {
     globalBatch.firstMessageTime = Date.now();
     globalBatch.timeoutId = setTimeout(() => {
-      console.log('⏰ 60s timer expired, sending batch');
       sendGlobalBatchNotifications();
     }, 60000);
-    console.log('⏱️ Started 60s batch timer');
   }
 
   // If we hit 100 messages, trigger immediately
   if (globalBatch.messages.length >= 100) {
-    console.log('🚀 Batch size limit reached (100), sending immediately');
+    console.log('🚀 Batch limit reached, sending immediately');
     await sendGlobalBatchNotifications();
   }
 }
 
 async function handleNewMessage(message) {
   try {
-    console.log('🔍 Processing new message ID:', message.id);
-
     // Skip if no message ID
     if (!message.id) {
-      console.log('⚠️ Skipping message - no ID');
       return;
     }
 
     // Query the full message data with all relationships
-    const messageQuery = await db.queryOnce({
+    const messageQuery = await db.query({
       messages: {
         $: { where: { id: message.id } },
         author: {
@@ -238,27 +224,15 @@ async function handleNewMessage(message) {
 
     const fullMessage = messageQuery.data.messages?.[0];
     if (!fullMessage) {
-      console.log('⚠️ Message not found:', message.id);
       return;
     }
-
-    console.log('🔍 Full message data:', {
-      messageId: fullMessage.id,
-      groupId: fullMessage.group?.id,
-      groupName: fullMessage.group?.name,
-      authorName: fullMessage.authorName,
-      authorId: fullMessage.author?.id || fullMessage.author?.user?.id,
-      type: fullMessage.type,
-      content: fullMessage.content?.substring(0, 50) + '...',
-      hasMentions: !!(fullMessage.mentions && fullMessage.mentions.length > 0),
-      memberCount: fullMessage.group?.memberships?.length || 0
-    });
 
     // Skip if message doesn't have required fields
     if (!fullMessage.group?.id || !fullMessage.authorName) {
-      console.log('⚠️ Skipping message - missing required fields');
       return;
     }
+
+    console.log('🔍 Processing:', fullMessage.type || 'text', 'message in', fullMessage.group?.name);
 
     const group = fullMessage.group;
     const authorId = fullMessage.author?.id || fullMessage.author?.user?.id;
@@ -268,15 +242,7 @@ async function handleNewMessage(message) {
       authorId,
     );
 
-    console.log('📱 Found push tokens:', {
-      groupName: group.name,
-      totalMembers: group.memberships?.length || 0,
-      tokensFound: memberTokens.length,
-      excludeUserId: authorId
-    });
-
     if (memberTokens.length === 0) {
-      console.log('⚠️ No push tokens found for group members');
       return;
     }
 
@@ -287,18 +253,10 @@ async function handleNewMessage(message) {
       fullMessage.type === "match" ||
       fullMessage.type === "dues";
 
-    console.log('🚀 Notification routing:', {
-      isImmediate,
-      hasMentions,
-      messageType: fullMessage.type,
-      route: isImmediate ? 'immediate' : 'batch'
-    });
-
     if (isImmediate) {
-      console.log('⚡ Sending immediate notification');
+      console.log('⚡ Immediate notification:', fullMessage.type || 'mention');
       await sendImmediateNotification(fullMessage, group, memberTokens);
     } else {
-      console.log('📦 Adding to global batch');
       await addToGlobalBatch(fullMessage, group, memberTokens);
     }
   } catch (error) {
@@ -321,24 +279,16 @@ const sub = db.subscribeQuery(
       console.log("InstantDB subscription error:", payload);
       // Don't close subscription on error, try to reconnect
     } else if (payload.type === "ok") {
-      console.log('📨 Subscription payload received:', {
-        messageCount: payload.data.messages?.length || 0,
-        isFirstTrigger
-      });
-
       // Skip first trigger on startup to avoid processing old messages
       if (isFirstTrigger) {
         isFirstTrigger = false;
-        console.log("Skipping first subscription trigger on startup");
+        console.log("Notification service ready");
         return;
       }
 
       const message = payload.data.messages[0];
       if (message) {
-        console.log('🎯 New message detected, processing...');
         handleNewMessage(message);
-      } else {
-        console.log('⚠️ No message in payload data');
       }
     }
   },
