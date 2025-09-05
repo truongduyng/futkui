@@ -48,11 +48,19 @@ async function sendPushNotification(messages) {
 
 async function getMemberPushTokens(groupMembers, excludeUserId) {
   const tokens = groupMembers
-    .filter(
-      (member) =>
-        member.profile?.pushToken && member.profile.user?.id !== excludeUserId,
-    )
-    .map((member) => member.profile.pushToken);
+    .filter((member) => {
+      // Admin SDK returns profile as array
+      const profile = Array.isArray(member.profile) ? member.profile[0] : member.profile;
+      if (!profile?.pushToken) return false;
+
+      // Check user ID - could be in profile.user array or direct
+      const userId = Array.isArray(profile.user) ? profile.user[0]?.id : profile.user?.id;
+      return userId !== excludeUserId;
+    })
+    .map((member) => {
+      const profile = Array.isArray(member.profile) ? member.profile[0] : member.profile;
+      return profile.pushToken;
+    });
 
   return tokens;
 }
@@ -205,37 +213,70 @@ async function handleNewMessage(message) {
       return;
     }
 
-    // Query the full message data with all relationships
-    const messageQuery = await db.query({
-      messages: {
-        $: { where: { id: message.id } },
-        author: {
-          user: {}
-        },
-        group: {
-          memberships: {
-            profile: {
-              user: {},
+    // Query only the fields we need
+    let messageQuery;
+    try {
+      messageQuery = await db.query({
+        messages: {
+          $: {
+            where: { id: message.id },
+            fields: ['id', 'authorName', 'content', 'type', 'mentions', 'createdAt']
+          },
+          author: {
+            $: {
+              fields: ['id']
+            },
+            user: {
+              $: {
+                fields: ['id']
+              }
+            }
+          },
+          group: {
+            $: {
+              fields: ['id', 'name']
+            },
+            memberships: {
+              $: {
+                fields: ['id']
+              },
+              profile: {
+                $: {
+                  fields: ['pushToken']
+                },
+                user: {
+                  $: {
+                    fields: ['id']
+                  }
+                },
+              },
             },
           },
         },
-      },
-    });
-
-    const fullMessage = messageQuery.data.messages?.[0];
-    if (!fullMessage) {
+      });
+    } catch (queryError) {
+      console.error('Query error:', queryError);
       return;
     }
+
+    const fullMessage = messageQuery?.messages?.[0];
+    if (!fullMessage) {
+      console.log('⚠️ Message not found in query result:', message.id);
+      return;
+    }
+
+    // Admin SDK returns arrays for relationships
+    const group = fullMessage.group?.[0];
+    const author = fullMessage.author?.[0];
 
     // Skip if message doesn't have required fields
-    if (!fullMessage.group?.id || !fullMessage.authorName) {
+    if (!group?.id || !fullMessage.authorName) {
       return;
     }
 
-    console.log('🔍 Processing:', fullMessage.type || 'text', 'message in', fullMessage.group?.name);
+    console.log('🔍 Processing:', fullMessage.type || 'text', 'message in', group.name);
 
-    const group = fullMessage.group;
-    const authorId = fullMessage.author?.id || fullMessage.author?.user?.id;
+    const authorId = author?.id || author?.user?.[0]?.id;
 
     const memberTokens = await getMemberPushTokens(
       group.memberships || [],
