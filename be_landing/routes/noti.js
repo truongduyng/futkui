@@ -92,10 +92,15 @@ async function sendImmediateNotification(message, group, memberTokens) {
 
 async function sendGlobalBatchNotifications() {
   if (!globalBatch.messages.length) {
+    console.log('📦 No messages in global batch to send');
     return;
   }
 
   const messageCount = globalBatch.messages.length;
+  console.log('📤 Sending global batch notification:', {
+    messageCount,
+    batchAge: globalBatch.firstMessageTime ? Date.now() - globalBatch.firstMessageTime : 0
+  });
   const authors = [...new Set(globalBatch.messages.map((m) => m.authorName))];
   const groups = [...new Set(globalBatch.messages.map((m) => m.groupName))];
 
@@ -152,7 +157,9 @@ async function sendGlobalBatchNotifications() {
   );
 
   try {
+    console.log('📱 Sending batch to', notifications.length, 'recipients');
     await sendPushNotification(notifications);
+    console.log('✅ Global batch notifications sent successfully');
   } catch (error) {
     console.error("Failed to send global batch notifications:", error);
   } finally {
@@ -179,24 +186,43 @@ async function addToGlobalBatch(message, group, memberTokens) {
     memberTokens,
   });
 
+  console.log('📦 Added to batch:', {
+    batchSize: globalBatch.messages.length,
+    messageId: message.id,
+    groupName: group.name
+  });
+
   // If this is the first message, start the 60s timer
   if (globalBatch.messages.length === 1) {
     globalBatch.firstMessageTime = Date.now();
     globalBatch.timeoutId = setTimeout(() => {
+      console.log('⏰ 60s timer expired, sending batch');
       sendGlobalBatchNotifications();
     }, 60000);
+    console.log('⏱️ Started 60s batch timer');
   }
 
   // If we hit 100 messages, trigger immediately
   if (globalBatch.messages.length >= 100) {
+    console.log('🚀 Batch size limit reached (100), sending immediately');
     await sendGlobalBatchNotifications();
   }
 }
 
 async function handleNewMessage(message) {
   try {
+    console.log('🔍 Processing new message:', {
+      messageId: message.id,
+      groupId: message.group?.id,
+      authorName: message.authorName,
+      type: message.type,
+      content: message.content?.substring(0, 50) + '...',
+      hasMentions: !!(message.mentions && message.mentions.length > 0)
+    });
+
     // Skip if message doesn't have required fields
     if (!message.group?.id || !message.authorName || !message.author?.id) {
+      console.log('⚠️ Skipping message - missing required fields');
       return;
     }
 
@@ -213,14 +239,27 @@ async function handleNewMessage(message) {
     });
 
     const group = groupQuery.data.groups?.[0];
-    if (!group) return;
+    if (!group) {
+      console.log('⚠️ Group not found:', message.group.id);
+      return;
+    }
 
     const memberTokens = await getMemberPushTokens(
       group.memberships || [],
       message.author.id,
     );
 
-    if (memberTokens.length === 0) return;
+    console.log('📱 Found push tokens:', {
+      groupName: group.name,
+      totalMembers: group.memberships?.length || 0,
+      tokensFound: memberTokens.length,
+      excludeUserId: message.author.id
+    });
+
+    if (memberTokens.length === 0) {
+      console.log('⚠️ No push tokens found for group members');
+      return;
+    }
 
     const hasMentions = message.mentions && message.mentions.length > 0;
     const isImmediate =
@@ -229,9 +268,18 @@ async function handleNewMessage(message) {
       message.type === "match" ||
       message.type === "dues";
 
+    console.log('🚀 Notification routing:', {
+      isImmediate,
+      hasMentions,
+      messageType: message.type,
+      route: isImmediate ? 'immediate' : 'batch'
+    });
+
     if (isImmediate) {
+      console.log('⚡ Sending immediate notification');
       await sendImmediateNotification(message, group, memberTokens);
     } else {
+      console.log('📦 Adding to global batch');
       await addToGlobalBatch(message, group, memberTokens);
     }
   } catch (error) {
@@ -256,6 +304,11 @@ const sub = db.subscribeQuery(
       console.log("InstantDB subscription error:", payload);
       // Don't close subscription on error, try to reconnect
     } else if (payload.type === "ok") {
+      console.log('📨 Subscription payload received:', {
+        messageCount: payload.data.messages?.length || 0,
+        isFirstTrigger
+      });
+
       // Skip first trigger on startup to avoid processing old messages
       if (isFirstTrigger) {
         isFirstTrigger = false;
@@ -265,7 +318,10 @@ const sub = db.subscribeQuery(
 
       const message = payload.data.messages[0];
       if (message) {
+        console.log('🎯 New message detected, processing...');
         handleNewMessage(message);
+      } else {
+        console.log('⚠️ No message in payload data');
       }
     }
   },
