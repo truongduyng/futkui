@@ -30,7 +30,7 @@ export default function ChatScreen() {
 
   // Only fetch groups after we have profile data
   const { data: groupsData, isLoading: groupsLoading, error: groupsError } = useGroups();
-  
+
   // Extract groups first to get group IDs
   const profile = groupsData?.profiles?.[0];
   const baseGroups = useMemo(() =>

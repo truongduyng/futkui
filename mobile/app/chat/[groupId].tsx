@@ -103,7 +103,7 @@ export default function ChatScreen() {
 
     if (group?.shareLink) {
       try {
-        const shareMessage = `${t('groupProfile.joinGroupMessage', { groupName: group.name })}\n\n${group.shareLink}\n\n${t('groupProfile.downloadAppMessage')}\nhttps://futkui.com/download`;
+        const shareMessage = `${t('groupProfile.joinGroupMessage', { groupName: group.name })}\nhttps://futkui.com/download\n\n${t('groupProfile.downloadAppMessage', { groupCode: group.shareLink })}`;
         await Clipboard.setStringAsync(shareMessage);
         showSuccess(
           t('groupProfile.shareLinkCopied'),
