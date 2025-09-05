@@ -14,7 +14,7 @@ export function useGroupOperations() {
       creatorId: string;
       rule?: string;
     }, ensureBotProfile: () => Promise<string>, sendGroupWelcomeMessage: (groupId: string, botProfileId: string) => Promise<void>) => {
-      const shareLink = `futkui-chat://group/${Math.random().toString(36).substring(2, 15)}`;
+      const shareLink = Math.random().toString(36).substring(2, 8).toUpperCase();
       const groupId = id();
       const membershipId = id();
       const botMembershipId = id();

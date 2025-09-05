@@ -112,7 +112,7 @@ export function useBotOperations() {
       const groupId = id();
       const membershipId = id();
       const botMembershipId = id();
-      const shareLink = `futkui-chat://group/${Math.random().toString(36).substring(2, 15)}`;
+      const shareLink = Math.random().toString(36).substring(2, 8).toUpperCase();
 
       // Create group with bot as admin and add user as member
       await db.transact([
