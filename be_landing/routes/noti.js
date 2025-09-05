@@ -276,11 +276,12 @@ async function handleNewMessage(message) {
 
     console.log('🔍 Processing:', fullMessage.type || 'text', 'message in', group.name);
 
-    const authorId = author?.id || author?.user?.[0]?.id;
+    // Get author's user ID for excluding from notifications
+    const authorUserId = Array.isArray(author?.user) ? author.user[0]?.id : author?.user?.id;
 
     const memberTokens = await getMemberPushTokens(
       group.memberships || [],
-      authorId,
+      authorUserId,
     );
 
     if (memberTokens.length === 0) {
