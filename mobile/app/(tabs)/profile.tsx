@@ -49,7 +49,7 @@ const getSportEmoji = (sport: string) => {
 
 const maskEmail = (email: string) => {
   const [localPart, domain] = email.split('@');
-  const maskedLocal = localPart.length > 2 
+  const maskedLocal = localPart.length > 2
     ? `${localPart.charAt(0)}***${localPart.charAt(localPart.length - 1)}`
     : `${localPart.charAt(0)}***`;
   return `${maskedLocal}@${domain}`;
@@ -233,8 +233,8 @@ export default function ProfileScreen() {
         {currentProfile.photos && currentProfile.photos.length > 0 && (
           <View style={styles.photosGrid}>
             {currentProfile.photos.map((photo: string, index: number) => (
-              <TouchableOpacity 
-                key={index} 
+              <TouchableOpacity
+                key={index}
                 style={styles.photoContainer}
                 onPress={() => handleImagePress(index)}
                 activeOpacity={0.8}
@@ -263,7 +263,7 @@ export default function ProfileScreen() {
           }}
         />
       )}
-      
+
       {currentProfile?.photos && (
         <ImageModal
           visible={isImageModalVisible}
