@@ -4,7 +4,7 @@ import db from "../libs/admin_db.js";
 let globalBatch = {
   messages: [],
   firstMessageTime: null,
-  timeoutId: null
+  timeoutId: null,
 };
 
 // Helper function to generate notification content based on message type
@@ -65,7 +65,9 @@ async function sendImmediateNotification(message, group, memberTokens) {
   const notificationType = hasMentions ? "mention" : message.type || "message";
   const channelId = hasMentions
     ? "mentions"
-    : message.type === "poll" || message.type === "match" || message.type === "dues"
+    : message.type === "poll" ||
+      message.type === "match" ||
+      message.type === "dues"
     ? "mentions"
     : "messages";
 
@@ -109,39 +111,45 @@ async function sendGlobalBatchNotifications() {
     });
   });
 
-  const notifications = Array.from(tokenNotifications.entries()).map(([token, msgs]) => {
-    let title = "FutKui";
-    let body = "";
+  const notifications = Array.from(tokenNotifications.entries()).map(
+    ([token, msgs]) => {
+      let title = "FutKui";
+      let body = "";
 
-    if (messageCount === 1) {
-      const msg = msgs[0];
-      title = msg.groupName;
-      body = `${msg.authorName}: ${msg.content}`;
-    } else if (groups.length === 1) {
-      title = groups[0];
-      if (authors.length === 1) {
-        body = `${authors[0]} sent ${messageCount} messages`;
+      if (messageCount === 1) {
+        const msg = msgs[0];
+        title = msg.groupName;
+        body = `${msg.authorName}: ${msg.content}`;
+      } else if (groups.length === 1) {
+        title = groups[0];
+        if (authors.length === 1) {
+          body = `${authors[0]} sent ${messageCount} messages`;
+        } else {
+          body = `${messageCount} new messages from ${authors
+            .slice(0, 2)
+            .join(", ")}${
+            authors.length > 2 ? ` and ${authors.length - 2} others` : ""
+          }`;
+        }
       } else {
-        body = `${messageCount} new messages from ${authors.slice(0, 2).join(", ")}${authors.length > 2 ? ` and ${authors.length - 2} others` : ""}`;
+        body = `${messageCount} new messages in ${groups.length} groups`;
       }
-    } else {
-      body = `${messageCount} new messages in ${groups.length} groups`;
-    }
 
-    return {
-      to: token,
-      sound: "default",
-      title,
-      body,
-      data: {
-        messageIds: msgs.map((m) => m.messageId),
-        type: "batch",
-        messageCount: msgs.length,
-      },
-      priority: "normal",
-      channelId: "messages",
-    };
-  });
+      return {
+        to: token,
+        sound: "default",
+        title,
+        body,
+        data: {
+          messageIds: msgs.map((m) => m.messageId),
+          type: "batch",
+          messageCount: msgs.length,
+        },
+        priority: "normal",
+        channelId: "messages",
+      };
+    },
+  );
 
   try {
     await sendPushNotification(notifications);
@@ -155,7 +163,7 @@ async function sendGlobalBatchNotifications() {
     globalBatch = {
       messages: [],
       firstMessageTime: null,
-      timeoutId: null
+      timeoutId: null,
     };
   }
 }
@@ -216,7 +224,10 @@ async function handleNewMessage(message) {
 
     const hasMentions = message.mentions && message.mentions.length > 0;
     const isImmediate =
-      hasMentions || message.type === "poll" || message.type === "match" || message.type === "dues";
+      hasMentions ||
+      message.type === "poll" ||
+      message.type === "match" ||
+      message.type === "dues";
 
     if (isImmediate) {
       await sendImmediateNotification(message, group, memberTokens);
@@ -227,6 +238,9 @@ async function handleNewMessage(message) {
     console.error("Error handling new message:", error);
   }
 }
+
+// Flag to skip first subscription trigger on startup
+let isFirstTrigger = true;
 
 // Subscribe to new messages
 const sub = db.subscribeQuery(
@@ -241,8 +255,18 @@ const sub = db.subscribeQuery(
     if (payload.type === "error") {
       console.log("InstantDB subscription error:", payload);
       // Don't close subscription on error, try to reconnect
-    } else if (payload.type === "result") {
-       handleNewMessage(payload.data.messages[0]);
+    } else if (payload.type === "ok") {
+      // Skip first trigger on startup to avoid processing old messages
+      if (isFirstTrigger) {
+        isFirstTrigger = false;
+        console.log("Skipping first subscription trigger on startup");
+        return;
+      }
+
+      const message = payload.data.messages[0];
+      if (message) {
+        handleNewMessage(message);
+      }
     }
   },
 );
