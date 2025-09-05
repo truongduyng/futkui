@@ -1,164 +1,187 @@
 import db from "../libs/admin_db.js";
 
-// Store for batched notifications (60s grouping)
-const notificationBatches = new Map();
+// Global batch for regular messages (100 messages or 60s, whichever comes first)
+let globalBatch = {
+  messages: [],
+  firstMessageTime: null,
+  timeoutId: null
+};
 
 // Helper function to generate notification content based on message type
 function generateNotificationContent(message) {
   switch (message.type) {
-    case 'poll':
+    case "poll":
       return `📊 ${message.content}`;
-    case 'match':
+    case "match":
       return `⚽ ${message.content}`;
-    case 'text':
-    case 'image':
+    case "dues":
+      return `💰 ${message.content}`;
+    case "text":
+    case "image":
     default:
-      return message.content || '[Image]';
+      return message.content || "[Image]";
   }
 }
 
 async function sendPushNotification(messages) {
   try {
-    const response = await fetch('https://exp.host/--/api/v2/push/send', {
-      method: 'POST',
+    const response = await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
       headers: {
-        Accept: 'application/json',
-        'Accept-encoding': 'gzip, deflate',
-        'Content-Type': 'application/json',
+        Accept: "application/json",
+        "Accept-encoding": "gzip, deflate",
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(messages),
     });
 
     if (!response.ok) {
-      console.error('Failed to send push notification:', response.status);
+      console.error("Failed to send push notification:", response.status);
     }
 
     return await response.json();
   } catch (error) {
-    console.error('Error sending push notification:', error);
+    console.error("Error sending push notification:", error);
     throw error;
   }
 }
 
 async function getMemberPushTokens(groupMembers, excludeUserId) {
   const tokens = groupMembers
-    .filter(member =>
-      member.profile?.pushToken &&
-      member.profile.user?.id !== excludeUserId
+    .filter(
+      (member) =>
+        member.profile?.pushToken && member.profile.user?.id !== excludeUserId,
     )
-    .map(member => member.profile.pushToken);
+    .map((member) => member.profile.pushToken);
 
   return tokens;
 }
 
 async function sendImmediateNotification(message, group, memberTokens) {
-  const mentionText = message.mentions?.map(m => `@${m}`).join(' ') || '';
+  const mentionText = message.mentions?.map((m) => `@${m}`).join(" ") || "";
   const content = generateNotificationContent(message);
 
   const hasMentions = message.mentions && message.mentions.length > 0;
-  const notificationType = hasMentions ? 'mention' : message.type || 'message';
-  const channelId = hasMentions ? 'mentions' : (message.type === 'poll' || message.type === 'match' ? 'mentions' : 'messages');
+  const notificationType = hasMentions ? "mention" : message.type || "message";
+  const channelId = hasMentions
+    ? "mentions"
+    : message.type === "poll" || message.type === "match" || message.type === "dues"
+    ? "mentions"
+    : "messages";
 
-  const notifications = memberTokens.map(token => ({
+  const notifications = memberTokens.map((token) => ({
     to: token,
-    sound: 'default',
-    title: group.name || 'Group Chat',
+    sound: "default",
+    title: group.name || "Group Chat",
     body: `${message.authorName}: ${mentionText} ${content}`.trim(),
     data: {
       groupId: message.group.id,
       messageId: message.id,
       type: notificationType,
       messageType: message.type,
-      priority: 'high'
+      priority: "high",
     },
-    priority: 'high',
+    priority: "high",
     channelId,
   }));
 
   await sendPushNotification(notifications);
 }
 
-async function sendBatchedNotifications(batchKey, memberTokens) {
-  const batch = notificationBatches.get(batchKey);
-  if (!batch || !memberTokens.length) {
-    notificationBatches.delete(batchKey);
+async function sendGlobalBatchNotifications() {
+  if (!globalBatch.messages.length) {
     return;
   }
 
-  const messageCount = batch.messages.length;
-  const authors = [...new Set(batch.messages.map(m => m.authorName))];
+  const messageCount = globalBatch.messages.length;
+  const authors = [...new Set(globalBatch.messages.map((m) => m.authorName))];
+  const groups = [...new Set(globalBatch.messages.map((m) => m.groupName))];
 
-  let title = batch.groupName;
-  let body = '';
+  // Group notifications by push token to avoid duplicates
+  const tokenNotifications = new Map();
 
-  if (messageCount === 1) {
-    const msg = batch.messages[0];
-    body = `${msg.authorName}: ${msg.content}`;
-  } else if (authors.length === 1) {
-    body = `${authors[0]} sent ${messageCount} messages`;
-  } else {
-    body = `${messageCount} new messages from ${authors.slice(0, 2).join(', ')}${authors.length > 2 ? ` and ${authors.length - 2} others` : ''}`;
-  }
+  globalBatch.messages.forEach((msg) => {
+    msg.memberTokens.forEach((token) => {
+      if (!tokenNotifications.has(token)) {
+        tokenNotifications.set(token, []);
+      }
+      tokenNotifications.get(token).push(msg);
+    });
+  });
 
-  const notifications = memberTokens.map(token => ({
-    to: token,
-    sound: 'default',
-    title,
-    body,
-    data: {
-      groupId: batch.groupId,
-      messageIds: batch.messages.map(m => m.messageId),
-      type: 'batch',
-      messageCount,
-    },
-    priority: 'normal',
-    channelId: 'messages',
-  }));
+  const notifications = Array.from(tokenNotifications.entries()).map(([token, msgs]) => {
+    let title = "FutKui";
+    let body = "";
+
+    if (messageCount === 1) {
+      const msg = msgs[0];
+      title = msg.groupName;
+      body = `${msg.authorName}: ${msg.content}`;
+    } else if (groups.length === 1) {
+      title = groups[0];
+      if (authors.length === 1) {
+        body = `${authors[0]} sent ${messageCount} messages`;
+      } else {
+        body = `${messageCount} new messages from ${authors.slice(0, 2).join(", ")}${authors.length > 2 ? ` and ${authors.length - 2} others` : ""}`;
+      }
+    } else {
+      body = `${messageCount} new messages in ${groups.length} groups`;
+    }
+
+    return {
+      to: token,
+      sound: "default",
+      title,
+      body,
+      data: {
+        messageIds: msgs.map((m) => m.messageId),
+        type: "batch",
+        messageCount: msgs.length,
+      },
+      priority: "normal",
+      channelId: "messages",
+    };
+  });
 
   try {
     await sendPushNotification(notifications);
   } catch (error) {
-    console.error('Failed to send batched notifications:', error);
+    console.error("Failed to send global batch notifications:", error);
   } finally {
-    notificationBatches.delete(batchKey);
+    // Reset global batch
+    if (globalBatch.timeoutId) {
+      clearTimeout(globalBatch.timeoutId);
+    }
+    globalBatch = {
+      messages: [],
+      firstMessageTime: null,
+      timeoutId: null
+    };
   }
 }
 
-async function batchRegularNotification(message, group, memberTokens) {
-  const batchKey = message.group.id;
+async function addToGlobalBatch(message, group, memberTokens) {
   const content = generateNotificationContent(message);
 
-  if (notificationBatches.has(batchKey)) {
-    const existingBatch = notificationBatches.get(batchKey);
-    clearTimeout(existingBatch.timeoutId);
+  globalBatch.messages.push({
+    content,
+    authorName: message.authorName,
+    messageId: message.id,
+    groupName: group.name || "Group Chat",
+    memberTokens,
+  });
 
-    existingBatch.messages.push({
-      content,
-      authorName: message.authorName,
-      messageId: message.id,
-      messageType: message.type,
-    });
-
-    existingBatch.timeoutId = setTimeout(() => {
-      sendBatchedNotifications(batchKey, memberTokens);
+  // If this is the first message, start the 60s timer
+  if (globalBatch.messages.length === 1) {
+    globalBatch.firstMessageTime = Date.now();
+    globalBatch.timeoutId = setTimeout(() => {
+      sendGlobalBatchNotifications();
     }, 60000);
-  } else {
-    const timeoutId = setTimeout(() => {
-      sendBatchedNotifications(batchKey, memberTokens);
-    }, 60000);
+  }
 
-    notificationBatches.set(batchKey, {
-      groupId: message.group.id,
-      groupName: group.name || 'Group Chat',
-      messages: [{
-        content,
-        authorName: message.authorName,
-        messageId: message.id,
-        messageType: message.type,
-      }],
-      scheduledAt: Date.now(),
-      timeoutId,
-    });
+  // If we hit 100 messages, trigger immediately
+  if (globalBatch.messages.length >= 100) {
+    await sendGlobalBatchNotifications();
   }
 }
 
@@ -186,57 +209,49 @@ async function handleNewMessage(message) {
 
     const memberTokens = await getMemberPushTokens(
       group.memberships || [],
-      message.author.id
+      message.author.id,
     );
 
     if (memberTokens.length === 0) return;
 
     const hasMentions = message.mentions && message.mentions.length > 0;
-    const isImmediate = hasMentions || message.type === 'poll' || message.type === 'match';
+    const isImmediate =
+      hasMentions || message.type === "poll" || message.type === "match" || message.type === "dues";
 
     if (isImmediate) {
       await sendImmediateNotification(message, group, memberTokens);
     } else {
-      await batchRegularNotification(message, group, memberTokens);
+      await addToGlobalBatch(message, group, memberTokens);
     }
-
   } catch (error) {
-    console.error('Error handling new message:', error);
+    console.error("Error handling new message:", error);
   }
 }
 
 // Subscribe to new messages
 const sub = db.subscribeQuery(
-  { 
-    messages: { 
-      $: { limit: 100, order: { createdAt: "desc" } },
+  {
+    messages: {
+      $: { limit: 1, order: { serverCreatedAt: "desc" } },
       author: {},
-      group: {}
-    } 
+      group: {},
+    },
   },
   (payload) => {
     if (payload.type === "error") {
       console.log("InstantDB subscription error:", payload);
       // Don't close subscription on error, try to reconnect
     } else if (payload.type === "result") {
-      const messages = payload.data.messages || [];
-      
-      // Process only new messages (within last 30 seconds to avoid processing old messages on startup)
-      const thirtySecondsAgo = Date.now() - 30000;
-      const newMessages = messages.filter(msg => msg.createdAt > thirtySecondsAgo);
-      
-      newMessages.forEach(message => {
-        handleNewMessage(message);
-      });
+       handleNewMessage(payload.data.messages[0]);
     }
   },
 );
 
 console.log("🔔 Notification service started - listening for new messages");
 
-export default async function (fastify, opts) {
+export default async function (fastify) {
   // Health check endpoint
-  fastify.get('/health', async function (request, reply) {
-    return { status: 'ok', subscribed: !!sub };
+  fastify.get("/health", async function () {
+    return { status: "ok", subscribed: !!sub };
   });
 }

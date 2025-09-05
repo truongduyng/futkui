@@ -51,7 +51,7 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
       try {
         // Run bot group creation in background - don't block app access
         console.log('Starting background initialization for profile:', profileId);
-        
+
         // Bot group creation happens in background, user can access app immediately
         await ensureUserHasBotGroup(profileId);
         console.log('Background bot group creation completed for profile:', profileId);
@@ -71,7 +71,7 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
     if (profile?.id) {
       // Set complete immediately so user can access app
       setInitializationState('complete');
-      
+
       // Run background tasks without blocking
       initializeUserDataInBackground(profile.id);
     }
@@ -82,7 +82,7 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
     // Reset initialization state so the new profile gets properly initialized
     setInitializationState('idle');
     initializationRef.current = { isInitializing: false, profileId: null };
-    
+
     // Profile creation complete - the useEffect will trigger background bot group creation
     // for the newly created profile automatically
   };
