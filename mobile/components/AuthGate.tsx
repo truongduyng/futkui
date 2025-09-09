@@ -10,7 +10,9 @@ import { Alert, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInp
 import { useTranslation } from 'react-i18next';
 import { ProfileSetup } from './ProfileSetup';
 import { WebViewModal } from './WebViewModal';
+import { OnboardingScreen } from './OnboardingScreen';
 import { registerForPushNotificationsAsync } from '@/utils/notifications';
+import { OnboardingStorage } from '@/utils/onboarding';
 
 
 interface AuthGateProps {
@@ -152,6 +154,8 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
 
 export function AuthGate({ children }: AuthGateProps) {
   const [sentEmail, setSentEmail] = useState('');
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingLoading, setOnboardingLoading] = useState(true);
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
   const { t } = useTranslation();
@@ -166,13 +170,45 @@ export function AuthGate({ children }: AuthGateProps) {
     }
   }, [user]);
 
-  if (authLoading) {
+  // Check onboarding status on component mount
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      try {
+        const hasCompleted = await OnboardingStorage.hasCompletedOnboarding();
+        setShowOnboarding(!hasCompleted);
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+        setShowOnboarding(true); // Default to showing onboarding on error
+      } finally {
+        setOnboardingLoading(false);
+      }
+    };
+
+    checkOnboardingStatus();
+  }, []);
+
+  const handleOnboardingComplete = async () => {
+    try {
+      await OnboardingStorage.setOnboardingCompleted();
+      setShowOnboarding(false);
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
+      setShowOnboarding(false); // Still proceed even if storage fails
+    }
+  };
+
+  if (authLoading || onboardingLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.tint} />
         <Text style={[styles.text, { color: colors.text, marginTop: 16 }]}>{t('common.loading')}</Text>
       </View>
     );
+  }
+
+  // Show onboarding if user hasn't completed it and isn't authenticated
+  if (showOnboarding && !user) {
+    return <OnboardingScreen onComplete={handleOnboardingComplete} />;
   }
 
   if (user) {

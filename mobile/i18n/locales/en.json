@@ -601,6 +601,28 @@
     "noBlockedUsersDescription": "You haven't blocked anyone yet. You can block users to hide their messages from your view.",
     "blockedMessage": "Message from blocked user"
   },
+  "onboarding": {
+    "skip": "Skip",
+    "next": "Next",
+    "back": "Back",
+    "getStarted": "Get Started",
+    "welcome": {
+      "title": "Welcome to FutKui",
+      "subtitle": "Connect with local sports communities and organize activities together"
+    },
+    "features": {
+      "title": "Group Chat",
+      "subtitle": "Create or join sport groups and chat with fellow players in real-time"
+    },
+    "activities": {
+      "title": "Organize Activities",
+      "subtitle": "Create matches, polls, and manage group activities effortlessly"
+    },
+    "ready": {
+      "title": "Ready to Play?",
+      "subtitle": "Join thousands of players already connecting and playing together"
+    }
+  },
   "expense": {
     "addExpense": "Add Expense",
     "editExpense": "Edit Expense",

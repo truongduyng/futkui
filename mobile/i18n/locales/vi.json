@@ -593,6 +593,28 @@
     "noBlockedUsersDescription": "Bạn chưa chặn ai. Bạn có thể chặn người dùng để ẩn tin nhắn của họ khỏi chế độ xem của bạn.",
     "blockedMessage": "Tin nhắn từ người dùng bị chặn"
   },
+  "onboarding": {
+    "skip": "Bỏ qua",
+    "next": "Tiếp theo",
+    "back": "Quay lại",
+    "getStarted": "Bắt đầu",
+    "welcome": {
+      "title": "Chào mừng đến FutKui",
+      "subtitle": "Kết nối với cộng đồng thể thao địa phương và tổ chức hoạt động cùng nhau"
+    },
+    "features": {
+      "title": "Chat Nhóm",
+      "subtitle": "Tạo hoặc tham gia nhóm thể thao và trò chuyện với các cầu thủ khác theo thời gian thực"
+    },
+    "activities": {
+      "title": "Tổ Chức Hoạt Động",
+      "subtitle": "Tạo trận đấu, cuộc thăm dò và quản lý hoạt động nhóm một cách dễ dàng"
+    },
+    "ready": {
+      "title": "Sẵn Sàng Chơi?",
+      "subtitle": "Tham gia cùng hàng nghìn cầu thủ đang kết nối và chơi cùng nhau"
+    }
+  },
   "expense": {
     "addExpense": "Thêm Chi Phí",
     "editExpense": "Sửa Chi Phí",
