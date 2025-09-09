@@ -179,7 +179,7 @@ function addPost(text: string, authorId: string | undefined) {
   db.transact(
     // CRITICAL: ids must be a valid UUID, so we use `id()` to generate one
     db.tx.posts[id()]
-      .update({
+      .create({
         text,
         createdAt: Date.now(),
       })

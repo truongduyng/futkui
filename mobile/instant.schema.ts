@@ -124,6 +124,10 @@ const _schema = i.schema({
       createdAt: i.number(),
       updatedAt: i.number(),
     }),
+    errors: i.entity({
+      errorData: i.json(),
+      createdAt: i.number(),
+    }),
   },
   links: {
     checkInsUser: {

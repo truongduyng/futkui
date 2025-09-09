@@ -3,6 +3,9 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { id } from '@instantdb/react-native';
+import { instantClient } from "@/hooks/db/instantClient";
+
 
 interface Props {
   children: React.ReactNode;
@@ -26,6 +29,26 @@ class ErrorBoundary extends React.Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+
+    // Send error to InstantDB
+    try {
+      instantClient.transact([
+        instantClient.tx.errors[id()].create({
+          errorData: {
+            message: error.message,
+            stack: error.stack,
+            componentStack: errorInfo.componentStack,
+            name: error.name,
+            timestamp: Date.now(),
+          },
+          createdAt: Date.now(),
+        })
+      ]).catch((err: Error) => {
+        console.error('Failed to log error to InstantDB:', err);
+      });
+    } catch (dbError) {
+      console.error('Error while logging to InstantDB:', dbError);
+    }
   }
 
   resetError = () => {
