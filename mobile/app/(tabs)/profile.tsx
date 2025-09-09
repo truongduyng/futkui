@@ -1,6 +1,7 @@
 import { CachedAvatar } from "@/components/chat/CachedAvatar";
 import { ImageModal } from "@/components/chat/ImageModal";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
+import { SkeletonImage } from "@/components/ui/SkeletonImage";
 import { Colors } from "@/constants/Colors";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useInstantDB } from "@/hooks/db/useInstantDB";
@@ -16,7 +17,6 @@ import {
   View,
   Platform,
   StatusBar as RNStatusBar,
-  Image,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 
@@ -239,10 +239,11 @@ export default function ProfileScreen() {
                 onPress={() => handleImagePress(index)}
                 activeOpacity={0.8}
               >
-                <Image
+                <SkeletonImage
                   source={{ uri: photo }}
                   style={styles.gridPhoto}
                   resizeMode="cover"
+                  borderRadius={8}
                 />
               </TouchableOpacity>
             ))}
@@ -438,6 +439,8 @@ const styles = StyleSheet.create({
     width: "32.8%",
     aspectRatio: 0.7,
     marginBottom: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
   gridPhoto: {
     width: "100%",
