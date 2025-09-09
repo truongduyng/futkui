@@ -76,21 +76,21 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
     const updatePushTokenIfNeeded = async (profileId: string) => {
       try {
         console.log('Checking push token for existing user:', profileId);
-        
+
         // Get current push token
         const currentToken = await registerForPushNotificationsAsync();
-        
+
         if (currentToken && profile) {
           // Only update if token is different from stored one
           if (!profile.pushToken || profile.pushToken !== currentToken) {
             console.log('Updating push token for existing user');
-            
+
             await instantClient.transact([
               instantClient.tx.profiles[profileId].update({
                 pushToken: currentToken
               })
             ]);
-            
+
             console.log('Push token updated successfully for existing user');
           } else {
             console.log('Push token is up to date');
@@ -372,6 +372,17 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
     setShowLegalModal(true);
   };
 
+  const handleResetOnboarding = async () => {
+    try {
+      const { OnboardingStorage } = await import('@/utils/onboarding');
+      await OnboardingStorage.resetOnboarding();
+      Alert.alert('Dev Mode', 'Onboarding reset! Please restart the app to see onboarding again.');
+    } catch (error) {
+      console.error('Error resetting onboarding:', error);
+      Alert.alert('Error', 'Failed to reset onboarding');
+    }
+  };
+
   return (
     <>
       <Image
@@ -380,9 +391,6 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
         resizeMode="contain"
       />
       <Text style={[styles.title, { color: colors.text }]}>{t('auth.welcome')}</Text>
-      {/* <Text style={[styles.subtitle, { color: colors.text }]}>
-        {t('auth.chooseMethod')}
-      </Text> */}
 
       <TouchableOpacity
         style={styles.googleButton}
@@ -442,6 +450,18 @@ function EmailStep({ onSendEmail, colors, instantClient }: { onSendEmail: (email
         </Text>
         .
       </Text>
+
+      {/* Dev Mode: Reset Onboarding Button */}
+      {__DEV__ && (
+        <TouchableOpacity
+          style={[styles.devButton, { borderColor: colors.tabIconDefault }]}
+          onPress={handleResetOnboarding}
+        >
+          <Text style={[styles.devButtonText, { color: colors.tabIconDefault }]}>
+            🔄 Reset Onboarding (Dev)
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {legalModalData && (
         <WebViewModal
@@ -535,9 +555,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 80,
-    height: 80,
-    marginBottom: 24,
+    width: 100,
+    height: 100,
+    padding: 10,
+    marginBottom: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 60,
   },
   title: {
     fontSize: 32,
@@ -633,5 +656,18 @@ const styles = StyleSheet.create({
     marginTop: 8,
     opacity: 0.6,
     fontStyle: 'italic',
+  },
+  devButton: {
+    marginTop: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderRadius: 8,
+    borderStyle: 'dashed',
+  },
+  devButtonText: {
+    fontSize: 12,
+    textAlign: 'center',
+    opacity: 0.7,
   },
 });
