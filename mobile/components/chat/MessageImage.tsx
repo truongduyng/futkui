@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image } from 'expo-image';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Colors } from '@/constants/Colors';
 
@@ -45,7 +46,8 @@ export const MessageImage = React.memo(function MessageImage({
         <Image
           source={{ uri: imageUrl }}
           style={styles.messageImage}
-          resizeMode="cover"
+          contentFit="cover"
+          cachePolicy="memory-disk"
           onLoad={handleImageLoad}
           onError={handleImageError}
         />

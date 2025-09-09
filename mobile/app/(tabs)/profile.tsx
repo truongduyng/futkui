@@ -16,8 +16,8 @@ import {
   View,
   Platform,
   StatusBar as RNStatusBar,
-  Image,
 } from "react-native";
+import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
 
 const getSportEmoji = (sport: string) => {
@@ -242,7 +242,9 @@ export default function ProfileScreen() {
                 <Image
                   source={{ uri: photo }}
                   style={[styles.gridPhoto, { borderRadius: 8 }]}
-                  resizeMode="cover"
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                  recyclingKey={`profile-photo-${index}`}
                 />
               </TouchableOpacity>
             ))}
