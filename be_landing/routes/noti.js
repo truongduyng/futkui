@@ -46,7 +46,7 @@ async function sendPushNotification(messages) {
   }
 }
 
-async function getMemberPushTokens(groupMembers, excludeUserId) {
+async function getMemberPushTokens(groupMembers, excludeUserId, messageTimestamp) {
   const tokens = groupMembers
     .filter((member) => {
       // Admin SDK returns profile as array
@@ -55,7 +55,17 @@ async function getMemberPushTokens(groupMembers, excludeUserId) {
 
       // Check user ID - could be in profile.user array or direct
       const userId = Array.isArray(profile.user) ? profile.user[0]?.id : profile.user?.id;
-      return userId !== excludeUserId;
+      if (userId === excludeUserId) return false;
+
+      // Check if message is newer than user's last read timestamp
+      if (messageTimestamp && member.lastReadMessageAt) {
+        // Skip if user has already read messages newer than this one
+        if (messageTimestamp <= member.lastReadMessageAt) {
+          return false;
+        }
+      }
+
+      return true;
     })
     .map((member) => {
       const profile = Array.isArray(member.profile) ? member.profile[0] : member.profile;
@@ -213,6 +223,13 @@ async function handleNewMessage(message) {
       return;
     }
 
+    // Skip messages older than 5 minutes to avoid spam from old messages
+    const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+    if (message.createdAt && message.createdAt < fiveMinutesAgo) {
+      console.log('⏰ Skipping old message:', message.id, 'created at:', new Date(message.createdAt));
+      return;
+    }
+
     // Query only the fields we need
     let messageQuery;
     try {
@@ -238,7 +255,7 @@ async function handleNewMessage(message) {
             },
             memberships: {
               $: {
-                fields: ['id']
+                fields: ['id', 'lastReadMessageAt']
               },
               profile: {
                 $: {
@@ -274,6 +291,12 @@ async function handleNewMessage(message) {
       return;
     }
 
+    // Double-check message age with full message data
+    if (fullMessage.createdAt && fullMessage.createdAt < fiveMinutesAgo) {
+      console.log('⏰ Skipping old message (double-check):', fullMessage.id, 'created at:', new Date(fullMessage.createdAt));
+      return;
+    }
+
     console.log('🔍 Processing:', fullMessage.type || 'text', 'message in', group.name);
 
     // Get author's user ID for excluding from notifications
@@ -282,6 +305,7 @@ async function handleNewMessage(message) {
     const memberTokens = await getMemberPushTokens(
       group.memberships || [],
       authorUserId,
+      fullMessage.createdAt,
     );
 
     if (memberTokens.length === 0) {

@@ -17,7 +17,7 @@ async function authPlugin(fastify) {
         return reply.status(401).send({ error: 'No token provided' })
       }
 
-      console.log('Validating token:', token)
+      // console.log('Validating token:', token)
 
       // Verify token with InstantDB
       const user = await db.auth.verifyToken(token)
