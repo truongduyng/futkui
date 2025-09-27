@@ -31,6 +31,7 @@ npm run build-css-prod  # Build CSS for production
 cd mobile
 npm run build-android  # Local Android build (requires EAS CLI)
 npm run build-ios      # Local iOS build (requires EAS CLI)
+npm run build-all      # Build both iOS and Android in parallel
 
 # No specific build command for backend - uses npm start for production
 ```
@@ -49,22 +50,30 @@ FutKui is a React Native group chat app built with Expo and InstantDB for real-t
 ### Key Architecture Components
 
 **InstantDB Schema & Setup:**
-- `mobile/instant.schema.ts`: Defines database entities (groups, messages, reactions, profiles, $users, $files, checkIns, matches, polls, votes, reports, blocks, memberships)
-- `mobile/hooks/useInstantDB.ts`: Central hub for database operations and custom hooks
+- `mobile/instant.schema.ts`: Defines database entities (groups, messages, reactions, profiles, $users, $files, checkIns, matches, polls, votes, reports, blocks, memberships, duesCycles, ledgerEntries, duesMembers, errors)
+- `mobile/hooks/db/instantClient.ts`: InstantDB client initialization with app ID validation
+- `mobile/hooks/db/`: Modularized database hooks by entity type (useGroupOperations, useMessageOperations, usePollOperations, useMatchOperations, useDuesOperations, useUserOperations, useBotOperations)
+- `mobile/hooks/db/useInstantQueries.ts`: Common query patterns and data fetching
 - InstantDB app uses magic code authentication with random profile handles for anonymous-style usage
 - All entities use UUIDs generated via `id()` function from InstantDB
 
 **Mobile App Structure:**
 - `mobile/app/_layout.tsx`: Root layout with theme provider and authentication
-- `mobile/app/(tabs)/`: Tab-based navigation with index.tsx (chat) and explore.tsx
+- `mobile/app/(tabs)/`: Tab-based navigation with index.tsx (chat) and profile.tsx (user profile)
 - `mobile/app/chat/[groupId].tsx`: Individual chat screen with real-time messaging
 - `mobile/app/chat/[groupId]/profile.tsx`: Group profile and settings screen
+- `mobile/app/chat/[groupId]/finance.tsx`: Group finance and dues management screen
 - `mobile/app/activity/[groupId].tsx`: Activity screen for matches and polls
+- `mobile/app/menu.tsx`: Main menu screen
+- `mobile/app/about.tsx`: About screen
 - `mobile/components/AuthGate.tsx`: Authentication wrapper with magic code flow
-- `mobile/components/chat/`: Chat-specific components (GroupList, MessageBubble, MessageInput, CreateGroupModal, etc.)
-- `mobile/components/ui/`: Reusable UI components (IconSymbol, TabBarBackground)
-- `mobile/contexts/`: React contexts for theme, group refresh, and unread counts
-- `mobile/hooks/`: Custom hooks including the main `useInstantDB.ts`
+- `mobile/components/OnboardingScreen.tsx`: User onboarding flow
+- `mobile/components/ProfileSetup.tsx`: Profile creation and editing
+- `mobile/components/chat/`: Chat-specific components (GroupList, MessageBubble, MessageInput, etc.)
+- `mobile/components/ui/`: Reusable UI components (IconSymbol, TabBarBackground, TabIconWithBadge)
+- `mobile/contexts/`: React contexts (ThemeContext, GroupRefreshContext, UnreadCountContext)
+- `mobile/hooks/`: Custom hooks organized by purpose
+- `mobile/hooks/db/`: Database operation hooks (modularized by entity type)
 - `mobile/i18n/`: Internationalization setup with English and Vietnamese locales
 
 **Backend/Landing Structure:**
@@ -114,15 +123,19 @@ The app uses magic code authentication but automatically creates random profile 
 ## Important Implementation Notes
 
 ### Environment & Configuration
-- InstantDB app ID is configured via `EXPO_PUBLIC_INSTANT_APP_ID` environment variable in `mobile/hooks/useInstantDB.ts`
+- InstantDB app ID is configured via `EXPO_PUBLIC_INSTANT_APP_ID` environment variable
+- App ID validation prevents production issues with missing or default values
 - Backend uses dotenv for environment variables
+- Tailwind CSS with PostCSS for styling in backend
 
-### Data & Database Patterns  
+### Data & Database Patterns
 - Dates are stored as Unix timestamps (milliseconds) using `Date.now()`
 - All database entities use UUIDs generated via `id()` function from InstantDB
 - Groups use unique share links (`futkui-chat://group/[randomString]`) for joining functionality
 - Message reactions are stored as separate entities linked to messages and users
-- Unique keys like `profileGroupKey` and `blockerProfileKey` ensure data integrity
+- Unique keys like `profileGroupKey`, `blockerProfileKey`, and `profileRefKey` ensure data integrity
+- Financial data tracked through duesCycles, ledgerEntries, and duesMembers entities
+- Error logging system with structured error data storage
 
 ### Authentication & Users
 - Authentication state is managed through InstantDB's `useAuth()` hook
@@ -134,9 +147,13 @@ The app uses magic code authentication but automatically creates random profile 
 - Image uploads use R2 storage via `mobile/utils/r2Upload.ts`
 - Push notifications are handled via `mobile/utils/notifications.ts`
 - The app supports polls, matches/activities, check-ins, and RSVPs as special message types
+- Group finance management with dues cycles, payments, and ledger tracking
 - User blocking functionality with filtered message display
 - Content reporting system for messages, users, and groups
 - Internationalization (i18n) supports English and Vietnamese languages
+- User profile customization with avatars, sports preferences, and location
+- Theme switching and language selection
+- Onboarding flow for new users
 
 ### Development & Testing
 - Backend uses Node.js built-in test runner (`node --test test/**/*.test.js`)
@@ -156,5 +173,7 @@ Key InstantDB patterns used in this project:
 - Link entities using `.link()` method in transactions
 - Filter queries using `where` clauses with supported operators: `$ne`, `$gt`, `$lt`, `$gte`, `$lte`, `$in`, `$like`, `$ilike`, `$isNull`
 - Use dot notation for nested field queries: `"relation.field": value`
+- Database operations are modularized by entity type (groups, messages, polls, matches, dues, users, bot)
+- Use specialized hooks for complex operations (useChatData, useChatHandlers, useChatScroll)
 
 If the Instant MCP tools are available, use them for schema management and app creation.
