@@ -640,5 +640,20 @@
     "invalidAmount": "Please enter a valid amount",
     "createFailed": "Failed to create expense. Please try again.",
     "updateFailed": "Failed to update expense. Please try again."
+  },
+  "profileExplore": {
+    "title": "Explore",
+    "loading": "Finding profiles...",
+    "noProfiles": "No more profiles",
+    "noProfilesSubtitle": "Check back later for new people in your area",
+    "allLocations": "All locations",
+    "instructions": "Swipe left to pass, right to say hi, up to show interest",
+    "hiSent": "Hi sent!",
+    "interestSent": "Interest shown!",
+    "matchInviteFeature": "Match invite feature coming soon!",
+    "reported": "Profile reported",
+    "error": "Something went wrong",
+    "endOfProfiles": "You've seen all profiles!",
+    "checkBackLater": "Check back later for new people"
   }
 }

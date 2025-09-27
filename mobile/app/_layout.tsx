@@ -3,6 +3,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthGate } from '@/components/AuthGate';
 import { UnreadCountProvider } from '@/contexts/UnreadCountContext';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
@@ -34,10 +35,11 @@ function ThemedApp() {
   };
 
   return (
-    <NavigationThemeProvider value={navigationTheme}>
-      <UnreadCountProvider>
-        <ErrorBoundary>
-          <AuthGate>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationThemeProvider value={navigationTheme}>
+        <UnreadCountProvider>
+          <ErrorBoundary>
+            <AuthGate>
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen
@@ -68,12 +70,13 @@ function ThemedApp() {
               />
               <Stack.Screen name="+not-found" />
             </Stack>
-          </AuthGate>
-        </ErrorBoundary>
-      </UnreadCountProvider>
-      <StatusBar style={isDark ? "light" : "dark"} translucent={Platform.OS === 'android'} />
-      <Toast topOffset={Platform.OS === 'android' ? 100 : 80} />
-    </NavigationThemeProvider>
+            </AuthGate>
+          </ErrorBoundary>
+        </UnreadCountProvider>
+        <StatusBar style={isDark ? "light" : "dark"} translucent={Platform.OS === 'android'} />
+        <Toast topOffset={Platform.OS === 'android' ? 100 : 80} />
+      </NavigationThemeProvider>
+    </GestureHandlerRootView>
   );
 }
 

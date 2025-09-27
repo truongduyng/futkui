@@ -632,5 +632,20 @@
     "invalidAmount": "Vui lòng nhập số tiền hợp lệ",
     "createFailed": "Không thể tạo chi phí. Vui lòng thử lại.",
     "updateFailed": "Không thể cập nhật chi phí. Vui lòng thử lại."
+  },
+  "profileExplore": {
+    "title": "Khám Phá",
+    "loading": "Đang tìm hồ sơ...",
+    "noProfiles": "Không còn hồ sơ nào",
+    "noProfilesSubtitle": "Hãy quay lại sau để tìm những người mới trong khu vực của bạn",
+    "allLocations": "Tất cả địa điểm",
+    "instructions": "Vuốt trái để bỏ qua, phải để chào, lên để thể hiện quan tâm",
+    "hiSent": "Đã gửi lời chào!",
+    "interestSent": "Đã thể hiện quan tâm!",
+    "matchInviteFeature": "Tính năng mời thi đấu sắp ra mắt!",
+    "reported": "Đã báo cáo hồ sơ",
+    "error": "Đã xảy ra lỗi",
+    "endOfProfiles": "Bạn đã xem hết tất cả hồ sơ!",
+    "checkBackLater": "Hãy quay lại sau để xem những người mới"
   }
 }

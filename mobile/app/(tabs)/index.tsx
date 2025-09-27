@@ -1,297 +1,377 @@
-import { GroupModal } from '@/components/chat/GroupModal';
-import { GroupList } from '@/components/chat/GroupList';
-import { Colors } from '@/constants/Colors';
-import { GroupRefreshProvider } from '@/contexts/GroupRefreshContext';
+import React, { useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  SafeAreaView,
+  StatusBar,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  FlatList,
+} from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  runOnJS,
+  interpolate,
+  withTiming,
+} from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useUnreadCount } from '@/contexts/UnreadCountContext';
+import { Colors } from '@/constants/Colors';
 import { useInstantDB } from '@/hooks/db/useInstantDB';
-import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Animated, SafeAreaView, StyleSheet, Text, View, Platform, StatusBar as RNStatusBar } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/useToast';
 
-export default function ChatScreen() {
-  const { t } = useTranslation();
-  const { isDark } = useTheme();
-  const colors = isDark ? Colors.dark : Colors.light;
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [shareLink, setShareLink] = useState("");
-  const [isJoining, setIsJoining] = useState(false);
-  const router = useRouter();
-  const { showSuccess, showError } = useToast();
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const CARD_HEIGHT = screenHeight * 0.7;
+const SWIPE_THRESHOLD = screenWidth * 0.3;
 
-  const { useGroups, useLastMessages, useProfile, createGroup, queryGroupByShareLink, joinGroup } = useInstantDB();
-  const { setTotalUnreadCount } = useUnreadCount();
+interface ProfileData {
+  id: string;
+  handle: string;
+  displayName?: string;
+  avatarUrl?: string;
+  sports?: any[];
+  location?: string;
+  photos?: string[];
+}
 
-  // Use real-time hooks with better coordination
-  const { data: profileData, isLoading: profileLoading, error: profileError } = useProfile();
-  const currentProfile = profileData?.profiles?.[0];
+interface ProfileCardProps {
+  profile: ProfileData;
+  index: number;
+  colors: any;
+  onSwipeComplete: (direction: 'left' | 'right' | 'up') => void;
+  isActive: boolean;
+}
 
-  // Only fetch groups after we have profile data
-  const { data: groupsData, isLoading: groupsLoading, error: groupsError } = useGroups();
+function ProfileCard({ profile, index, colors, onSwipeComplete, isActive }: ProfileCardProps) {
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const rotate = useSharedValue(0);
+  const scale = useSharedValue(1);
 
-  // Extract groups first to get group IDs
-  const profile = groupsData?.profiles?.[0];
-  const baseGroups = useMemo(() =>
-    (profile?.memberships || [])
-      .map((membership: any) => membership.group)
-      .filter((group: any) => group && group.id),
-    [profile?.memberships]
-  );
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      scale.value = withSpring(0.95);
+    })
+    .onUpdate((event) => {
+      translateX.value = event.translationX;
+      translateY.value = event.translationY;
+      rotate.value = interpolate(
+        event.translationX,
+        [-screenWidth, screenWidth],
+        [-30, 30]
+      );
+    })
+    .onEnd((event) => {
+      const { translationX, translationY, velocityX, velocityY } = event;
 
-  // Get group IDs for useLastMessages - only when we have groups
-  const groupIds = useMemo(() => baseGroups.map((group: any) => group.id), [baseGroups]);
+      scale.value = withSpring(1);
 
-  // Use real-time last messages - only fetch when we have group IDs
-  const { data: lastMessagesData, isLoading: lastMessagesLoading, error: lastMessagesError } = useLastMessages(
-    groupIds.length > 0 ? groupIds : []
-  );
+      // Determine swipe direction
+      const isSwipeRight = translationX > SWIPE_THRESHOLD || velocityX > 500;
+      const isSwipeLeft = translationX < -SWIPE_THRESHOLD || velocityX < -500;
+      const isSwipeUp = translationY < -SWIPE_THRESHOLD || velocityY < -500;
 
-  // Calculate combined loading state and error state
-  const isLoading = groupsLoading || profileLoading || lastMessagesLoading;
-  const error = groupsError || profileError || lastMessagesError;
-
-  // Animated value for skeleton loading
-  const animatedValue = React.useRef(new Animated.Value(0)).current;
-
-  // Start skeleton animation
-  React.useEffect(() => {
-    const startAnimation = () => {
-      Animated.sequence([
-        Animated.timing(animatedValue, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(animatedValue, {
-          toValue: 0,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        if (isLoading) {
-          startAnimation();
-        }
-      });
-    };
-
-    if (isLoading) {
-      startAnimation();
-    }
-  }, [isLoading, animatedValue]);
-
-  // Skeleton loading component
-  const SkeletonLoader = () => {
-    const opacity = animatedValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0.3, 0.7],
-    });
-
-    return (
-      <View style={styles.skeletonContainer}>
-        <View style={[styles.skeletonHeader, { backgroundColor: colors.background }]}>
-          <Animated.View style={[styles.skeletonTitle, { opacity, backgroundColor: colors.tabIconDefault }]} />
-          <View style={styles.skeletonHeaderButtons}>
-            <Animated.View style={[styles.skeletonButton, { opacity, backgroundColor: colors.tabIconDefault }]} />
-            <Animated.View style={[styles.skeletonButton, { opacity, backgroundColor: colors.tabIconDefault }]} />
-          </View>
-        </View>
-
-        {[1, 2, 3, 4, 5].map((index) => (
-          <View key={index} style={[styles.skeletonGroupItem, { backgroundColor: colors.background }]}>
-            <Animated.View style={[styles.skeletonAvatar, { opacity, backgroundColor: colors.tabIconDefault }]} />
-            <View style={styles.skeletonGroupInfo}>
-              <Animated.View style={[styles.skeletonGroupName, { opacity, backgroundColor: colors.tabIconDefault }]} />
-              <Animated.View style={[styles.skeletonLastMessage, { opacity, backgroundColor: colors.tabIconDefault }]} />
-            </View>
-          </View>
-        ))}
-      </View>
-    );
-  };
-
-  // Calculate unread counts for each group - first create memberships map
-  const membershipsMap = useMemo(() => {
-    return new Map((profile?.memberships || []).map((m: any) => [m.group?.id, m]));
-  }, [profile?.memberships]);
-
-  // Calculate total unread messages directly from membership data
-  const unreadData = useMemo(() => {
-    if (!lastMessagesData?.messages || !membershipsMap.size) {
-      return { messages: [] };
-    }
-
-    const unreadMessages = lastMessagesData.messages.filter((msg: any) => {
-      const membership = membershipsMap.get(msg.group?.id);
-      return membership?.lastReadMessageAt && msg.createdAt > membership.lastReadMessageAt;
-    });
-
-    return { messages: unreadMessages };
-  }, [lastMessagesData?.messages, membershipsMap]);
-
-
-  // Simple refresh function for pull-to-refresh (real-time queries auto-update)
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    // Simulate a brief refresh delay since real-time queries auto-update
-    setTimeout(() => setIsRefreshing(false), 500);
-  }, []);
-
-  const handleGroupPress = (group: any) => {
-    router.push({
-      pathname: '/chat/[groupId]' as any,
-      params: { groupId: group.id }
-    });
-  };
-
-  const handleCreateGroup = async (groupData: { name: string; description: string; avatarUrl: string; sports: string[]; rule?: string }) => {
-    if (!currentProfile) {
-      showError(t('common.error'), t('groups.waitProfileLoad'));
-      return;
-    }
-
-    try {
-      await createGroup({
-        ...groupData,
-        creatorId: currentProfile.id, // Use profile ID as creator ID
-      });
-    } catch (error) {
-      showError(t('common.error'), t('groups.failedCreateGroup'));
-      console.error('Error creating group:', error);
-    }
-  };
-
-  const handleJoinViaLink = async () => {
-    if (!shareLink.trim()) {
-      showError(t('common.error'), t('groups.pleaseEnterLink'));
-      return;
-    }
-
-    if (!currentProfile) {
-      showError(t('common.error'), t('groups.waitProfileLoad'));
-      return;
-    }
-
-    setIsJoining(true);
-
-    try {
-      // Query group by share link directly from database
-      const result = await queryGroupByShareLink(shareLink.trim());
-      const group = result?.data?.groups?.[0];
-
-      if (group && group.id) {
-        // Check if user is already a member
-        const isAlreadyMember = group.memberships?.some(
-          (membership: any) => membership?.profile?.id === currentProfile.id,
-        );
-
-        if (isAlreadyMember) {
-          showError(
-            t('groups.alreadyMember'),
-            `${t('groups.alreadyMemberMessage')} "${group.name}".`,
-          );
-          setShareLink("");
-          return;
-        }
-
-        try {
-          await joinGroup(group.id, currentProfile.id);
-          showSuccess(t('common.success'), `${t('groups.joinedGroup')} ${group.name}`);
-          setShareLink("");
-        } catch {
-          showError(t('common.error'), t('groups.failedJoinGroup'));
-        }
+      if (isSwipeRight) {
+        translateX.value = withTiming(screenWidth * 1.5, { duration: 300 });
+        runOnJS(onSwipeComplete)('right');
+      } else if (isSwipeLeft) {
+        translateX.value = withTiming(-screenWidth * 1.5, { duration: 300 });
+        runOnJS(onSwipeComplete)('left');
+      } else if (isSwipeUp) {
+        translateY.value = withTiming(-screenHeight, { duration: 300 });
+        runOnJS(onSwipeComplete)('up');
       } else {
-        showError(t('common.error'), t('groups.groupNotFound'));
+        // Spring back to center
+        translateX.value = withSpring(0);
+        translateY.value = withSpring(0);
+        rotate.value = withSpring(0);
       }
-    } catch (error) {
-      console.error("Error finding group:", error);
-      showError(t('common.error'), t('groups.failedFindGroup'));
-    } finally {
-      setIsJoining(false);
-    }
-  };
+    });
 
-  // Combine groups with their last messages
-  const groups = useMemo(() => {
-    const getLastMessageForGroup = (groupId: string) => {
-      if (!lastMessagesData?.messages) return null;
-      return lastMessagesData.messages.find((message: any) => message.group?.id === groupId);
-    };
-
-    return (profile?.memberships || [])
-      .map((membership: any) => membership.group)
-      .filter((group: any) => group && group.id)
-      .map((group: any) => ({
-        ...group,
-        messages: [getLastMessageForGroup(group.id)].filter(Boolean) // Add last message as array for compatibility
-      }))
-      .sort((a: any, b: any) => {
-        // Pin bot group (admin.handle === 'fk') to the top
-        const aIsBot = a.creator?.handle === 'fk';
-        const bIsBot = b.creator?.handle === 'fk';
-
-        if (aIsBot && !bIsBot) return -1;
-        if (!aIsBot && bIsBot) return 1;
-
-        // For non-bot groups, sort by most recent message or creation date
-        const aLastMessage = a.messages?.[0];
-        const bLastMessage = b.messages?.[0];
-
-        const aTime = aLastMessage?.createdAt || a.createdAt || 0;
-        const bTime = bLastMessage?.createdAt || b.createdAt || 0;
-
-        return bTime - aTime;
-      });
-  }, [profile?.memberships, lastMessagesData?.messages]);
-
-  // Calculate total unread count and update context
-  const totalUnreadCount = useMemo(() => {
-    if (!unreadData?.messages) return 0;
-    return unreadData.messages.length;
-  }, [unreadData?.messages]);
-
-  // Update unread count in context
-  useEffect(() => {
-    setTotalUnreadCount(totalUnreadCount);
-  }, [totalUnreadCount, setTotalUnreadCount]);
+  const cardStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { rotate: `${rotate.value}deg` },
+      { scale: scale.value },
+    ],
+  }));
 
   return (
-    <GroupRefreshProvider refreshGroups={async () => {}}>
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background, paddingTop: Platform.OS === 'android' ? RNStatusBar.currentHeight : 0 }]}>
-        {isLoading ? (
-          <SkeletonLoader />
-        ) : error ? (
-          <View style={styles.errorContainer}>
-            <Text style={[styles.errorText, { color: 'red' }]}>{t('groups.errorLoading')} {error.message}</Text>
+    <View style={styles.fullScreenCardContainer}>
+      <GestureDetector gesture={panGesture}>
+        <Animated.View style={[styles.fullScreenCard, cardStyle]}>
+          {profile.photos?.[0] || profile.avatarUrl ? (
+            <Image
+              source={{ uri: profile.photos?.[0] || profile.avatarUrl }}
+              style={styles.profileImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={[styles.placeholderImage, { backgroundColor: colors.border }]}>
+              <Ionicons name="person" size={80} color={colors.tabIconDefault} />
+            </View>
+          )}
+
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.8)']}
+            style={styles.gradient}
+          />
+
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>
+              {profile.displayName || profile.handle}
+            </Text>
+            <Text style={styles.profileHandle}>@{profile.handle}</Text>
+
+            {profile.location && (
+              <View style={styles.locationContainer}>
+                <Ionicons name="location-outline" size={16} color="#fff" />
+                <Text style={styles.locationText}>{profile.location}</Text>
+              </View>
+            )}
+
+            {profile.sports && profile.sports.length > 0 && (
+              <View style={styles.sportsContainer}>
+                {profile.sports.slice(0, 3).map((sport, sportIndex) => (
+                  <View key={sportIndex} style={styles.sportTag}>
+                    <Text style={styles.sportText}>
+                      {typeof sport === 'string' ? sport : sport.sport}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
-        ) : (
-          <GroupList
-            groups={groups}
-            memberships={profile?.memberships || []}
-            unreadData={unreadData}
-            onGroupPress={handleGroupPress}
-            onCreateGroup={() => setShowCreateModal(true)}
-            onRefresh={handleRefresh}
-            isRefreshing={isRefreshing}
-            shareLink={shareLink}
-            onShareLinkChange={setShareLink}
-            onJoinViaLink={handleJoinViaLink}
-            isJoining={isJoining}
+        </Animated.View>
+      </GestureDetector>
+    </View>
+  );
+}
+
+export default function ExploreScreen() {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+  const { t } = useTranslation();
+  const { instantClient } = useInstantDB();
+  const { user } = instantClient.useAuth();
+  const { showSuccess, showInfo, showError } = useToast();
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [profiles, setProfiles] = useState<ProfileData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  // Fetch user's profile for location filtering
+  const { data: profileData } = instantClient.useQuery({
+    profiles: {
+      $: { where: { "user.id": user?.id } }
+    }
+  });
+
+  // Fetch other users' profiles for exploration
+  const { data: exploreData, isLoading } = instantClient.useQuery(
+    user?.id ? {
+      profiles: {
+        $: {
+          where: {
+            "user.id": { $ne: user.id }
+          }
+        }
+      }
+    } : {}
+  );
+
+  React.useEffect(() => {
+    if (profileData?.profiles?.[0]) {
+      setUserProfile(profileData.profiles[0]);
+    }
+  }, [profileData]);
+
+  React.useEffect(() => {
+    if (exploreData?.profiles) {
+      // Show all profiles without location filtering
+      let filteredProfiles = exploreData.profiles;
+
+      // Filter out bot profile (handle 'fk') for better user experience
+      filteredProfiles = filteredProfiles.filter((profile: any) => profile.handle !== 'fk');
+
+      // Shuffle profiles for variety
+      const shuffled = [...filteredProfiles].sort(() => Math.random() - 0.5);
+      setProfiles(shuffled);
+      setLoading(false);
+
+      console.log(`Showing ${shuffled.length} profiles from ${exploreData.profiles.length} total`);
+    }
+  }, [exploreData]);
+
+  const handleSwipeComplete = useCallback((direction: 'left' | 'right' | 'up') => {
+    const currentProfile = profiles[currentIndex];
+    if (!currentProfile) return;
+
+    if (direction === 'right') {
+      // Send "Hi" action
+      showSuccess(t('profileExplore.hiSent', 'Hi sent!'));
+    } else if (direction === 'up') {
+      // Send "Interest" action
+      showSuccess(t('profileExplore.interestSent', 'Interest shown!'));
+    }
+    // For all swipes, move to next profile
+    if (currentIndex < profiles.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  }, [currentIndex, profiles, showSuccess, t]);
+
+  const handleMatchInvite = useCallback(async () => {
+    const currentProfile = profiles[currentIndex];
+    if (!currentProfile || !userProfile) return;
+
+    try {
+      // This would typically open a modal to create a match invitation
+      showInfo(t('profileExplore.matchInviteFeature', 'Match invite feature coming soon!'));
+    } catch {
+      showError(t('profileExplore.error', 'Something went wrong'));
+    }
+  }, [currentIndex, profiles, userProfile, showInfo, showError, t]);
+
+
+  if (loading || isLoading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.tint} />
+          <Text style={[styles.loadingText, { color: colors.text }]}>
+            {t('profileExplore.loading', 'Finding profiles...')}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (profiles.length === 0 && !loading && !isLoading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+        <View style={styles.emptyContainer}>
+          <Ionicons name="search-outline" size={80} color={colors.tabIconDefault} />
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>
+            {t('profileExplore.noProfiles', 'No more profiles')}
+          </Text>
+          <Text style={[styles.emptySubtitle, { color: colors.tabIconDefault }]}>
+            {t('profileExplore.noProfilesSubtitle', 'Check back later for new people in your area')}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+
+      {/* Header */}
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          {t('profileExplore.title', 'Explore')}
+        </Text>
+        <Text style={[styles.headerSubtitle, { color: colors.tabIconDefault }]}>
+          {userProfile?.location || t('profileExplore.allLocations', 'All locations')}
+        </Text>
+      </View>
+
+      {/* Profile Cards - TikTok Style FlatList */}
+      <FlatList
+        data={profiles}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item, index }) => (
+          <ProfileCard
+            profile={item}
+            index={index}
+            colors={colors}
+            onSwipeComplete={handleSwipeComplete}
+            isActive={index === currentIndex}
           />
         )}
+        style={styles.flatListContainer}
+        showsVerticalScrollIndicator={false}
+        pagingEnabled={true}
+        snapToInterval={screenHeight - 120} // Account for header height
+        snapToAlignment="start"
+        decelerationRate="fast"
+        bounces={false}
+        initialNumToRender={2}
+        maxToRenderPerBatch={1}
+        windowSize={3}
+        removeClippedSubviews={true}
+        onMomentumScrollEnd={(event) => {
+          const newIndex = Math.round(event.nativeEvent.contentOffset.y / (screenHeight - 120));
+          setCurrentIndex(newIndex);
+        }}
+        getItemLayout={(_, index) => ({
+          length: screenHeight - 120,
+          offset: (screenHeight - 120) * index,
+          index,
+        })}
+        ListFooterComponent={() => (
+          <View style={[styles.endContainer, { height: screenHeight - 120 }]}>
+            <Ionicons name="checkmark-circle" size={60} color={colors.tint} />
+            <Text style={[styles.endTitle, { color: colors.text }]}>
+              {t('profileExplore.endOfProfiles', "You've seen all profiles!")}
+            </Text>
+            <Text style={[styles.endSubtitle, { color: colors.tabIconDefault }]}>
+              {t('profileExplore.checkBackLater', 'Check back later for new people')}
+            </Text>
+          </View>
+        )}
+      />
 
-        <GroupModal
-          mode="create"
-          visible={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onSubmit={handleCreateGroup}
-        />
+      {/* Action Buttons */}
+      <View style={styles.actionContainer}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.passButton]}
+          onPress={() => handleSwipeComplete('left')}
+        >
+          <Ionicons name="close" size={30} color="#fff" />
+        </TouchableOpacity>
 
-      </SafeAreaView>
-    </GroupRefreshProvider>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.hiButton]}
+          onPress={() => handleSwipeComplete('right')}
+        >
+          <Ionicons name="hand-right-outline" size={28} color="#fff" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionButton, styles.interestButton]}
+          onPress={() => handleSwipeComplete('up')}
+        >
+          <Ionicons name="heart" size={28} color="#fff" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionButton, styles.matchButton]}
+          onPress={handleMatchInvite}
+        >
+          <Ionicons name="football-outline" size={28} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Swipe Instructions */}
+      <View style={styles.instructionsContainer}>
+        <Text style={[styles.instructionsText, { color: colors.tabIconDefault }]}>
+          {t('profileExplore.instructions', 'Swipe left to pass, right to say hi, up to show interest')}
+        </Text>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -305,73 +385,206 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
+    marginTop: 16,
     fontSize: 16,
   },
-  errorContainer: {
-    padding: 16,
-    alignItems: 'center',
-  },
-  errorText: {
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  // Skeleton styles
-  skeletonContainer: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  skeletonHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    marginBottom: 8,
-  },
-  skeletonTitle: {
-    width: 80,
-    height: 28,
-    borderRadius: 4,
-  },
-  skeletonHeaderButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  skeletonButton: {
-    width: 80,
-    height: 32,
-    borderRadius: 16,
-  },
-  skeletonGroupItem: {
-    flexDirection: 'row',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginVertical: 4,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  skeletonAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 12,
-  },
-  skeletonGroupInfo: {
+  emptyContainer: {
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 24,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 16,
+    marginTop: 8,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    marginTop: 4,
+  },
+  cardContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  card: {
+    width: screenWidth - 40,
+    height: CARD_HEIGHT,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholderImage: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '50%',
+  },
+  profileInfo: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+  },
+  profileName: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  profileHandle: {
+    fontSize: 18,
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: 12,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  locationText: {
+    color: '#fff',
+    fontSize: 16,
+    marginLeft: 4,
+  },
+  sportsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
-  skeletonGroupName: {
-    height: 16,
-    borderRadius: 4,
-    width: '70%',
+  sportTag: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
-  skeletonLastMessage: {
-    height: 14,
-    borderRadius: 4,
-    width: '90%',
+  sportText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    paddingVertical: 20,
+    gap: 20,
+  },
+  actionButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  passButton: {
+    backgroundColor: '#FF4458',
+  },
+  hiButton: {
+    backgroundColor: '#42A5F5',
+  },
+  interestButton: {
+    backgroundColor: '#FF6B6B',
+  },
+  matchButton: {
+    backgroundColor: '#4CAF50',
+  },
+  instructionsContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  instructionsText: {
+    textAlign: 'center',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  flatListContainer: {
+    flex: 1,
+  },
+  fullScreenCardContainer: {
+    height: screenHeight - 120, // Account for header and action buttons
+    width: screenWidth,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  fullScreenCard: {
+    width: screenWidth - 40,
+    height: screenHeight * 0.75,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  endContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 40,
+  },
+  endTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  endSubtitle: {
+    fontSize: 16,
+    marginTop: 8,
+    textAlign: 'center',
+    lineHeight: 24,
   },
 });
