@@ -1,20 +1,20 @@
-import { Colors } from '@/constants/Colors';
-import { useTheme } from '@/contexts/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { 
-  Modal, 
-  SafeAreaView, 
-  StyleSheet, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
+import { Colors } from "@/constants/Colors";
+import { useTheme } from "@/contexts/ThemeContext";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import {
+  Modal,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
   View,
   FlatList,
-  Platform
-} from 'react-native';
-import { useTranslation } from 'react-i18next';
-import provinces from '@/utils/data/provinces.json';
+  Platform,
+} from "react-native";
+import { useTranslation } from "react-i18next";
+import provinces from "@/utils/data/provinces.json";
 
 interface Province {
   code: string;
@@ -28,44 +28,67 @@ interface LocationSelectorProps {
   selectedLocation?: string;
 }
 
-export function LocationSelector({ visible, onClose, onSelect, selectedLocation }: LocationSelectorProps) {
+const normalizeText = (text: string): string => {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "d");
+};
+
+export function LocationSelector({
+  visible,
+  onClose,
+  onSelect,
+  selectedLocation,
+}: LocationSelectorProps) {
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredProvinces = provinces.filter(province =>
-    province.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProvinces = provinces.filter((province) => {
+    const normalizedLabel = normalizeText(province.label);
+    const normalizedQuery = normalizeText(searchQuery);
+    return normalizedLabel.includes(normalizedQuery);
+  });
 
   const handleSelect = (province: Province) => {
     onSelect(province);
     onClose();
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   const renderProvinceItem = ({ item }: { item: Province }) => {
     const isSelected = selectedLocation === item.code;
-    
+
     return (
       <TouchableOpacity
         style={[
           styles.provinceItem,
           { borderBottomColor: colors.tabIconDefault },
-          isSelected && { backgroundColor: colors.tint + '20' }
+          isSelected && { backgroundColor: colors.tint + "20" },
         ]}
         onPress={() => handleSelect(item)}
         activeOpacity={0.7}
       >
-        <Text style={[
-          styles.provinceText,
-          { color: colors.text },
-          isSelected && { color: colors.tint, fontWeight: '600' }
-        ]}>
+        <Text
+          style={[
+            styles.provinceText,
+            { color: colors.text },
+            isSelected && { color: colors.tint, fontWeight: "600" },
+          ]}
+        >
           {item.label}
         </Text>
         {isSelected && (
-          <Ionicons name="checkmark" size={20} color={colors.tint} />
+          <Ionicons
+            name="checkmark"
+            size={20}
+            color={colors.tint}
+            style={{ marginRight: 12 }}
+          />
         )}
       </TouchableOpacity>
     );
@@ -78,31 +101,54 @@ export function LocationSelector({ visible, onClose, onSelect, selectedLocation 
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={[styles.header, { borderBottomColor: colors.tabIconDefault }]}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+      >
+        <View
+          style={[styles.header, { borderBottomColor: colors.tabIconDefault }]}
+        >
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Ionicons name="close" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.text }]}>
-            {t('profile.selectLocation')}
+            {t("profile.selectLocation")}
           </Text>
           <View style={styles.placeholder} />
         </View>
 
         <View style={styles.content}>
-          <View style={[styles.searchContainer, { borderColor: colors.icon, backgroundColor: colors.background }]}>
-            <Ionicons name="search-outline" size={20} color={colors.tabIconDefault} />
+          <View
+            style={[
+              styles.searchContainer,
+              {
+                borderColor: colors.tabIconDefault,
+                backgroundColor: colors.background,
+              },
+            ]}
+          >
+            <Ionicons
+              name="search-outline"
+              size={20}
+              color={colors.tabIconDefault}
+            />
             <TextInput
               style={[styles.searchInput, { color: colors.text }]}
-              placeholder={t('profile.searchLocation')}
+              placeholder={t("profile.searchLocation")}
               placeholderTextColor={colors.tabIconDefault}
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoCorrect={false}
             />
             {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={20} color={colors.tabIconDefault} />
+              <TouchableOpacity
+                onPress={() => setSearchQuery("")}
+                style={styles.clearButton}
+              >
+                <Ionicons
+                  name="close-circle"
+                  size={20}
+                  color={colors.tabIconDefault}
+                />
               </TouchableOpacity>
             )}
           </View>
@@ -126,9 +172,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
@@ -136,12 +182,12 @@ const styles = StyleSheet.create({
   closeButton: {
     width: 32,
     height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   placeholder: {
     width: 32,
@@ -151,8 +197,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 16,
@@ -176,16 +222,19 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   provinceItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 16,
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
     borderBottomWidth: 0.5,
-    marginHorizontal: -16,
+  },
+  clearButton: {
+    padding: 4,
   },
   provinceText: {
     fontSize: 16,
     flex: 1,
+    marginLeft: 12,
   },
 });
