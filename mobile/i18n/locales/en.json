@@ -169,7 +169,8 @@
     "enterClubLink": "Enter club link..."
   },
   "navigation": {
-    "clubs": "Clubs"
+    "clubs": "Clubs",
+    "chat": "Chat"
   },
   "explore": {
     "menu": "Settings",
@@ -647,7 +648,6 @@
     "noProfiles": "No more profiles",
     "noProfilesSubtitle": "Check back later for new people in your area",
     "allLocations": "All locations",
-    "instructions": "Swipe left to pass, right to say hi, up to show interest",
     "hiSent": "Hi sent!",
     "interestSent": "Interest shown!",
     "matchInviteFeature": "Match invite feature coming soon!",

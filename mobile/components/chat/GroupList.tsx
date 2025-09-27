@@ -245,7 +245,7 @@ export function GroupList({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>{t('navigation.clubs')}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t('navigation.chat')}</Text>
         <View style={styles.headerButtons}>
           <TouchableOpacity
             style={[styles.createButton, { backgroundColor: colors.tint }]}
