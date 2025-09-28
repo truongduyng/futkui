@@ -373,20 +373,18 @@ export function MessageInput({
       <View
         style={[styles.inputContainer, { backgroundColor: colors.card }]}
       >
-        {!isDirectMessage && (
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => setShowActionMenu(true)}
-            disabled={disabled || isSending}
-            activeOpacity={0.6}
-          >
-            <Ionicons
-              name="add"
-              size={20}
-              color={disabled || isSending ? colors.tabIconDefault + "40" : colors.tabIconDefault}
-            />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={isDirectMessage ? pickImage : () => setShowActionMenu(true)}
+          disabled={disabled || isSending}
+          activeOpacity={0.6}
+        >
+          <Ionicons
+            name={isDirectMessage ? "camera" : "add"}
+            size={20}
+            color={disabled || isSending ? colors.tabIconDefault + "40" : colors.tabIconDefault}
+          />
+        </TouchableOpacity>
 
         <TextInput
           ref={inputRef}

@@ -5,7 +5,6 @@ import {
   Platform,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
@@ -19,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { useToast } from "@/hooks/useToast";
 
 import { MessageInput } from "@/components/chat/MessageInput";
+import { MessageImage } from "@/components/chat/MessageImage";
 import { ImageModal } from "@/components/chat/ImageModal";
 import { LoadingStates } from "@/components/chat/LoadingStates";
 
@@ -124,7 +124,7 @@ export default function DMChatScreen() {
     setSelectedImageUrl(imageUrl);
   }, []);
 
-  // Simple message renderer for DMs (no polls, matches, etc.)
+  // Message renderer for DMs with proper image support
   const renderMessage = useCallback(({ item: message }: { item: any }) => {
     const isCurrentUser = message.author?.id === currentProfile?.id;
 
@@ -136,18 +136,24 @@ export default function DMChatScreen() {
         <View style={[
           styles.messageBubble,
           {
-            backgroundColor: isCurrentUser ? colors.tint : colors.border,
+            backgroundColor: message.imageUrl ? 'transparent' : (isCurrentUser ? colors.tint : colors.border),
+            padding: message.imageUrl ? 0 : 12,
           }
         ]}>
           {message.imageUrl && (
-            <TouchableOpacity onPress={() => handleImagePress(message.imageUrl)}>
-              <Text style={[styles.messageText, { color: isCurrentUser ? 'white' : colors.text }]}>
-                [Image]
-              </Text>
-            </TouchableOpacity>
+            <MessageImage
+              imageUrl={message.imageUrl}
+              onImagePress={handleImagePress}
+            />
           )}
           {message.content && (
-            <Text style={[styles.messageText, { color: isCurrentUser ? 'white' : colors.text }]}>
+            <Text style={[
+              styles.messageText,
+              {
+                color: isCurrentUser ? 'white' : colors.text,
+                marginTop: message.imageUrl ? 8 : 0
+              }
+            ]}>
               {message.content}
             </Text>
           )}
@@ -231,6 +237,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 16,
     minWidth: 44,
+    overflow: 'hidden',
   },
   messageText: {
     fontSize: 16,

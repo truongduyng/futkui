@@ -18,7 +18,6 @@ interface DM {
   participantKey: string;
   createdAt: number;
   lastMessageAt?: number;
-  isDM: boolean;
   participant1?: DMParticipant;
   participant2?: DMParticipant;
   messages: {
@@ -51,6 +50,14 @@ export function DMList({
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
+
+  console.log('📋 DMList Debug:', {
+    dmsCount: dms?.length || 0,
+    currentUserId,
+    firstDM: dms?.[0],
+    safeDMsLength: (dms || []).length
+  });
+
 
   const getOtherParticipant = React.useCallback((dm: DM) => {
     // Return the participant that is not the current user
@@ -193,6 +200,13 @@ export function DMList({
 
   // Ensure dms is always an array
   const safeDMs = dms || [];
+
+  console.log('📱 DMList Render:', {
+    safeDMsLength: safeDMs.length,
+    isEmpty: safeDMs.length === 0,
+    renderingEmptyState: safeDMs.length === 0,
+    firstItem: safeDMs[0]
+  });
 
   return (
     <View style={styles.container}>

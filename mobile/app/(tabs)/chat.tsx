@@ -32,7 +32,8 @@ export default function ChatScreen() {
     useDMs,
     createGroup,
     queryGroupByShareLink,
-    joinGroup
+    joinGroup,
+    instantClient
   } = useInstantDB();
   const { setTotalUnreadCount } = useUnreadCount();
 
@@ -45,6 +46,7 @@ export default function ChatScreen() {
 
   // Fetch DMs for current user
   const { data: dmsData, isLoading: dmsLoading, error: dmsError } = useDMs();
+
 
   // Extract groups first to get group IDs
   const profile = groupsData?.profiles?.[0];
@@ -286,28 +288,39 @@ export default function ChatScreen() {
 
   // Process DMs data
   const dms = useMemo(() => {
-    if (!dmsData?.profiles?.[0]) return [];
+    if (!dmsData?.profiles?.[0]) {
+      return [];
+    }
 
     const profile = dmsData.profiles[0];
-    const allConversations = [
-      ...(profile.conversationsAsParticipant1 || []),
-      ...(profile.conversationsAsParticipant2 || [])
-    ];
+
+    // Process conversations where current user is participant1
+    const asParticipant1 = (profile.conversationsAsParticipant1 || []).map((conv: any) => ({
+      ...conv,
+      participant1: profile, // Current user
+      participant2: conv.participant2,
+      messages: (conv.messages || []).slice(0, 1)
+    }));
+
+    // Process conversations where current user is participant2
+    const asParticipant2 = (profile.conversationsAsParticipant2 || []).map((conv: any) => ({
+      ...conv,
+      participant1: conv.participant1,
+      participant2: profile, // Current user
+      messages: (conv.messages || []).slice(0, 1)
+    }));
+
+    const allConversations = [...asParticipant1, ...asParticipant2];
+
+    console.log('💬 Processed conversations:', allConversations.length, allConversations);
 
     return allConversations
-      .filter((conv: any) =>
-        (conv.participant1 || conv.participant2) // At least one participant exists
-      )
-      .map((conv: any) => ({
-        ...conv,
-        isDM: true,
-        messages: (conv.messages || []).slice(0, 1) // Take only the latest message for list display
-      }))
+      .filter((conv: any) => conv.participant1 && conv.participant2) // Both participants must exist
       .sort((a: any, b: any) => {
         const aLastMessage = a.messages?.[0];
         const bLastMessage = b.messages?.[0];
-        const aTime = aLastMessage?.createdAt || a.createdAt || 0;
-        const bTime = bLastMessage?.createdAt || b.createdAt || 0;
+        const aTime = aLastMessage?.createdAt || a.lastMessageAt || a.createdAt || 0;
+        const bTime = bLastMessage?.createdAt || b.lastMessageAt || b.createdAt || 0;
         return bTime - aTime;
       });
   }, [dmsData]);

@@ -51,7 +51,7 @@ function ThemedApp() {
                 }}
               />
               <Stack.Screen
-                name="dm/[dmId]"
+                name="dm/[conversationId]"
                 options={{
                   headerShown: true,
                   title: 'Direct Message',
