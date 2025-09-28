@@ -655,5 +655,16 @@
     "error": "Something went wrong",
     "endOfProfiles": "You've seen all profiles!",
     "checkBackLater": "Check back later for new people"
+  },
+  "dm": {
+    "directMessages": "Direct Messages",
+    "groups": "Groups",
+    "noDMs": "No direct messages yet",
+    "startDMPrompt": "Start a conversation with someone from Explore",
+    "dmWith": "{{name}}",
+    "matchInvitation": "Hi! I saw your profile and would love to connect for a match. Are you interested?",
+    "dmCreated": "Direct message started",
+    "dmCreateError": "Failed to start conversation",
+    "conversation": "Conversation with {{name}}"
   }
 }

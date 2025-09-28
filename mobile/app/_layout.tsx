@@ -51,6 +51,14 @@ function ThemedApp() {
                 }}
               />
               <Stack.Screen
+                name="dm/[dmId]"
+                options={{
+                  headerShown: true,
+                  title: 'Direct Message',
+                  presentation: 'card'
+                }}
+              />
+              <Stack.Screen
                 name="about"
                 options={{
                   title: t('explore.about'),

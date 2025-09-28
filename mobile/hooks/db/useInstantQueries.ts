@@ -288,6 +288,79 @@ export function useInstantQueries() {
     });
   };
 
+  const useDMs = () => {
+    const { user } = db.useAuth();
+    if (!user) {
+      return { data: null, isLoading: false, error: null };
+    }
+
+    return db.useQuery({
+      profiles: {
+        $: { where: { "user.id": user.id } },
+        conversationsAsParticipant1: {
+          $: { where: { isDM: true } },
+          participant2: {},
+          messages: {
+            $: {
+              order: { serverCreatedAt: 'desc' },
+              limit: 1
+            },
+            author: {},
+          },
+        },
+        conversationsAsParticipant2: {
+          $: { where: { isDM: true } },
+          participant1: {},
+          messages: {
+            $: {
+              order: { serverCreatedAt: 'desc' },
+              limit: 1
+            },
+            author: {},
+          },
+        },
+      },
+    });
+  };
+
+  const useDMMessages = (dmId: string, limit = 30) => {
+    if (!dmId) {
+      return { data: null, isLoading: false, error: null };
+    }
+
+    return db.useQuery({
+      messages: {
+        $: {
+          where: { "conversation.id": dmId },
+          order: { serverCreatedAt: 'desc' },
+          limit: limit,
+        },
+        author: {},
+        reactions: {
+          user: {},
+        },
+        conversation: {
+          participant1: {},
+          participant2: {},
+        },
+      },
+    });
+  };
+
+  const useDMUnreadCounts = (dmIds: string[]) => {
+    const { user } = db.useAuth();
+    if (!dmIds || dmIds.length === 0) {
+      return { data: null, isLoading: false, error: null };
+    }
+
+    return db.useQuery({
+      messages: {
+        $: { where: { "conversation.id": { in: dmIds } } },
+        conversation: {},
+      },
+    });
+  };
+
   // QueryOnce versions for non-real-time scenarios
   const queryAllGroupsOnce = useCallback(async () => {
     return await db.queryOnce({
@@ -436,6 +509,9 @@ export function useInstantQueries() {
     useBlockedUsers,
     useIsBlocked,
     useUnreadCount,
+    useDMs,
+    useDMMessages,
+    useDMUnreadCounts,
     queryAllGroupsOnce,
     queryGroupByShareLink,
     queryGroupsOnce,

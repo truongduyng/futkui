@@ -7,6 +7,7 @@ import { useMatchOperations } from './useMatchOperations';
 import { useDuesOperations } from './useDuesOperations';
 import { useUserOperations } from './useUserOperations';
 import { useBotOperations } from './useBotOperations';
+import { useDMOperations } from './useDMOperations';
 
 export { instantClient };
 
@@ -16,6 +17,7 @@ export function useInstantDB() {
   const botOps = useBotOperations();
   const messageOps = useMessageOperations();
   const userOps = useUserOperations();
+  const dmOps = useDMOperations();
 
   // Group operations need bot operations
   const groupOps = useGroupOperations();
@@ -43,6 +45,9 @@ export function useInstantDB() {
     useUnreadCount: queries.useUnreadCount,
     useBlockedUsers: queries.useBlockedUsers,
     useIsBlocked: queries.useIsBlocked,
+    useDMs: queries.useDMs,
+    useDMMessages: queries.useDMMessages,
+    useDMUnreadCounts: queries.useDMUnreadCounts,
 
     // Query once functions
     queryAllGroupsOnce: queries.queryAllGroupsOnce,
@@ -133,5 +138,11 @@ export function useInstantDB() {
     reportUser: userOps.reportUser,
     blockUser: userOps.blockUser,
     unblockUser: userOps.unblockUser,
+
+    // DM operations
+    createOrGetDM: dmOps.createOrGetDM,
+    sendDMMessage: dmOps.sendDMMessage,
+    markDMAsRead: dmOps.markDMAsRead,
+    getDMUnreadCount: dmOps.getDMUnreadCount,
   };
 }

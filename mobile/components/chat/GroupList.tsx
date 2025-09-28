@@ -43,7 +43,6 @@ interface GroupListProps {
   memberships: any[];
   unreadData?: any;
   onGroupPress: (group: Group) => void;
-  onCreateGroup: () => void;
   onRefresh?: () => Promise<void>;
   isRefreshing?: boolean;
   // Join club functionality
@@ -58,7 +57,6 @@ export function GroupList({
   memberships,
   unreadData,
   onGroupPress,
-  onCreateGroup,
   onRefresh,
   isRefreshing = false,
   shareLink,
@@ -89,14 +87,6 @@ export function GroupList({
       <Text style={[styles.emptyStateMessage, { color: colors.tabIconDefault }]}>
         {t('empty.createOrJoin')}
       </Text>
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.emptyStateButton, { backgroundColor: colors.tint }]}
-          onPress={onCreateGroup}
-        >
-          <Text style={styles.emptyStateButtonText}>{t('empty.createGroupButton')}</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 
@@ -244,17 +234,6 @@ export function GroupList({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>{t('navigation.chat')}</Text>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity
-            style={[styles.createButton, { backgroundColor: colors.tint }]}
-            onPress={onCreateGroup}
-          >
-            <Text style={styles.createButtonText}>+</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
 
       {onJoinViaLink && onShareLinkChange && (
         <View style={styles.joinSection}>
@@ -349,47 +328,6 @@ export function GroupList({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  headerButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  languageButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  languageButtonText: {
-    fontSize: 16,
-  },
-  createButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  createButtonText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: '600',
-    textAlign: 'center',
-    lineHeight: 20,
   },
   listContainer: {
     paddingHorizontal: 16,

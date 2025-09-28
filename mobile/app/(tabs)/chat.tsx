@@ -1,5 +1,7 @@
 import { GroupModal } from '@/components/chat/GroupModal';
 import { GroupList } from '@/components/chat/GroupList';
+// import { DMList } from '@/components/chat/DMList';
+// import { TabBar } from '@/components/chat/TabBar';
 import { Colors } from '@/constants/Colors';
 import { GroupRefreshProvider } from '@/contexts/GroupRefreshContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -7,9 +9,10 @@ import { useUnreadCount } from '@/contexts/UnreadCountContext';
 import { useInstantDB } from '@/hooks/db/useInstantDB';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Animated, SafeAreaView, StyleSheet, Text, View, Platform, StatusBar as RNStatusBar } from 'react-native';
+import { Animated, SafeAreaView, StyleSheet, Text, View, Platform, StatusBar as RNStatusBar, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/useToast';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function ChatScreen() {
   const { t } = useTranslation();
@@ -18,10 +21,19 @@ export default function ChatScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [isJoining, setIsJoining] = useState(false);
+  const [activeTab, setActiveTab] = useState<'groups' | 'dms'>('groups');
   const router = useRouter();
   const { showSuccess, showError } = useToast();
 
-  const { useGroups, useLastMessages, useProfile, createGroup, queryGroupByShareLink, joinGroup } = useInstantDB();
+  const {
+    useGroups,
+    useLastMessages,
+    useProfile,
+    // useDMs,
+    createGroup,
+    queryGroupByShareLink,
+    joinGroup
+  } = useInstantDB();
   const { setTotalUnreadCount } = useUnreadCount();
 
   // Use real-time hooks with better coordination
@@ -30,6 +42,9 @@ export default function ChatScreen() {
 
   // Only fetch groups after we have profile data
   const { data: groupsData, isLoading: groupsLoading, error: groupsError } = useGroups();
+
+  // Fetch DMs for current user (disabled for now)
+  // const { data: dmsData, isLoading: dmsLoading, error: dmsError } = useDMs();
 
   // Extract groups first to get group IDs
   const profile = groupsData?.profiles?.[0];
@@ -146,6 +161,23 @@ export default function ChatScreen() {
     });
   };
 
+  // const handleDMPress = (dm: any) => {
+  //   router.push({
+  //     pathname: '/dm/[dmId]' as any,
+  //     params: { dmId: dm.id }
+  //   });
+  // };
+
+  // const handleTabChange = (tabKey: string) => {
+  //   setActiveTab(tabKey as 'groups' | 'dms');
+  // };
+
+  // const tabs = [
+  //   { key: 'groups', title: t('dm.groups') },
+  //   // TODO: Re-enable when DM system is fully implemented
+  //   // { key: 'dms', title: t('dm.directMessages') },
+  // ];
+
   const handleCreateGroup = async (groupData: { name: string; description: string; avatarUrl: string; sports: string[]; rule?: string }) => {
     if (!currentProfile) {
       showError(t('common.error'), t('groups.waitProfileLoad'));
@@ -261,6 +293,17 @@ export default function ChatScreen() {
   return (
     <GroupRefreshProvider refreshGroups={async () => {}}>
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background, paddingTop: Platform.OS === 'android' ? RNStatusBar.currentHeight : 0 }]}>
+        {/* Header with title and create button */}
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.text }]}>{t('navigation.chat')}</Text>
+          <TouchableOpacity
+            style={[styles.createButton, { backgroundColor: colors.tint }]}
+            onPress={() => setShowCreateModal(true)}
+          >
+            <Ionicons name="add" size={20} color="white" />
+          </TouchableOpacity>
+        </View>
+
         {isLoading ? (
           <SkeletonLoader />
         ) : error ? (
@@ -273,7 +316,6 @@ export default function ChatScreen() {
             memberships={profile?.memberships || []}
             unreadData={unreadData}
             onGroupPress={handleGroupPress}
-            onCreateGroup={() => setShowCreateModal(true)}
             onRefresh={handleRefresh}
             isRefreshing={isRefreshing}
             shareLink={shareLink}
@@ -298,6 +340,24 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  createButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingContainer: {
     flex: 1,

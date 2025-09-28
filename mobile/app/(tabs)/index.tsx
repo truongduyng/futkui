@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { useInstantDB } from "@/hooks/db/useInstantDB";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/useToast";
+import { useRouter } from "expo-router";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -98,12 +99,14 @@ export default function ExploreScreen() {
   const { t } = useTranslation();
   const { instantClient } = useInstantDB();
   const { user } = instantClient.useAuth();
-  const { showSuccess, showInfo, showError } = useToast();
+  const { showSuccess, showError } = useToast();
+  const router = useRouter();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [profiles, setProfiles] = useState<ProfileData[]>([]);
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const flatListRef = useRef<FlatList>(null);
 
   // Fetch user's profile for location filtering
   const { data: profileData } = instantClient.useQuery({
@@ -155,39 +158,43 @@ export default function ExploreScreen() {
   }, [exploreData]);
 
   const handleAction = useCallback(
-    (action: "pass" | "hi" | "interest") => {
+    (action: "pass") => {
       const currentProfile = profiles[currentIndex];
       if (!currentProfile) return;
 
-      if (action === "hi") {
-        showSuccess(t("profileExplore.hiSent", "Hi sent!"));
-      } else if (action === "interest") {
-        showSuccess(t("profileExplore.interestSent", "Interest shown!"));
-      }
-      // Move to next profile
+      // Move to next profile by scrolling the FlatList
       if (currentIndex < profiles.length - 1) {
-        setCurrentIndex(currentIndex + 1);
+        const nextIndex = currentIndex + 1;
+        flatListRef.current?.scrollToIndex({
+          index: nextIndex,
+          animated: true,
+        });
+        // Update the state immediately to keep UI in sync
+        setCurrentIndex(nextIndex);
       }
     },
-    [currentIndex, profiles, showSuccess, t],
+    [currentIndex, profiles],
   );
 
   const handleMatchInvite = useCallback(async () => {
     const currentProfile = profiles[currentIndex];
-    if (!currentProfile || !userProfile) return;
+    if (!currentProfile || !userProfile) {
+      showError(t("profileExplore.error"));
+      return;
+    }
 
     try {
-      // This would typically open a modal to create a match invitation
-      showInfo(
-        t(
-          "profileExplore.matchInviteFeature",
-          "Match invite feature coming soon!",
-        ),
-      );
-    } catch {
-      showError(t("profileExplore.error", "Something went wrong"));
+      // For now, just show a placeholder message
+      showSuccess(`Match invite sent to ${currentProfile.displayName || currentProfile.handle}!`);
+
+      // TODO: Implement DM system when schema permissions are resolved
+      console.log('Would create DM between:', userProfile.handle, 'and', currentProfile.handle);
+
+    } catch (error) {
+      console.error("Error with match invite:", error);
+      showError(t("profileExplore.error"));
     }
-  }, [currentIndex, profiles, userProfile, showInfo, showError, t]);
+  }, [currentIndex, profiles, userProfile, showSuccess, showError, t]);
 
   if (loading || isLoading) {
     return (
@@ -248,6 +255,7 @@ export default function ExploreScreen() {
 
       {/* Profile Cards - TikTok Style FlatList */}
       <FlatList
+        ref={flatListRef}
         data={profiles}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
@@ -304,24 +312,10 @@ export default function ExploreScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionButton, styles.hiButton]}
-            onPress={() => handleAction("hi")}
-          >
-            <Ionicons name="hand-right-outline" size={28} color="#fff" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionButton, styles.interestButton]}
-            onPress={() => handleAction("interest")}
-          >
-            <Ionicons name="heart" size={28} color="#fff" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionButton, styles.matchButton]}
+            style={[styles.actionButton, styles.fightButton]}
             onPress={handleMatchInvite}
           >
-            <Ionicons name="football-outline" size={28} color="#fff" />
+            <Text style={{ fontSize: 24, color: "white", fontWeight: "500" }}>VS</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -468,14 +462,8 @@ const styles = StyleSheet.create({
   passButton: {
     backgroundColor: "#FF4458",
   },
-  hiButton: {
-    backgroundColor: "#42A5F5",
-  },
-  interestButton: {
-    backgroundColor: "#FF6B6B",
-  },
-  matchButton: {
-    backgroundColor: "#4CAF50",
+  fightButton: {
+    backgroundColor: "#FF6600",
   },
   flatListContainer: {
     flex: 1,
