@@ -187,11 +187,20 @@ export default function ExploreScreen() {
       // Create or get DM between current user and selected profile
       const conversationId = await createOrGetDM(userProfile.id, currentProfile.id);
 
+      if (currentIndex < profiles.length - 1) {
+        const nextIndex = currentIndex + 1;
+        flatListRef.current?.scrollToIndex({
+          index: nextIndex,
+          animated: true,
+        });
+        // Update the state immediately to keep UI in sync
+        setCurrentIndex(nextIndex);
+      }
+
       showSuccess(`Starting chat with ${currentProfile.displayName || currentProfile.handle}!`);
 
       // Navigate to the DM chat - we'll need a special route for conversations
       router.push(`/dm/${conversationId}`);
-
     } catch (error) {
       console.error("Error creating DM:", error);
       showError(t("profileExplore.error"));

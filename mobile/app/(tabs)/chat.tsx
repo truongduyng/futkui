@@ -32,8 +32,7 @@ export default function ChatScreen() {
     useDMs,
     createGroup,
     queryGroupByShareLink,
-    joinGroup,
-    instantClient
+    joinGroup
   } = useInstantDB();
   const { setTotalUnreadCount } = useUnreadCount();
 
