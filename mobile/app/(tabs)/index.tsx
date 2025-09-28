@@ -46,7 +46,7 @@ function ProfileCard({
           photos={profile.photos || []}
           avatarUrl={profile.avatarUrl}
           autoSlide={true}
-          autoSlideInterval={8000}
+          autoSlideInterval={4500}
           showDots={true}
           colors={colors}
           style={styles.carouselStyle}
@@ -261,9 +261,6 @@ export default function ExploreScreen() {
 
       {/* Absolute Header */}
       <View style={[styles.header]}>
-        <Text style={[styles.headerTitle, { color: "#fff" }]}>
-          {t("profileExplore.title", "Explore")}
-        </Text>
         <Text
           style={[styles.headerSubtitle, { color: "rgba(255,255,255,0.8)" }]}
         >
