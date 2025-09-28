@@ -169,7 +169,10 @@
     "enterClubLink": "Nhập link câu lạc bộ..."
   },
   "navigation": {
-    "clubs": "Câu lạc bộ"
+    "clubs": "Câu lạc bộ",
+    "chat": "Trò chuyện",
+    "explore": "Khám phá",
+    "profile": "Hồ sơ"
   },
   "explore": {
     "menu": "Cài đặt",
@@ -646,7 +649,7 @@
     "matchInviteFeature": "Tính năng mời thi đấu sắp ra mắt!",
     "reported": "Đã báo cáo hồ sơ",
     "error": "Đã xảy ra lỗi",
-    "endOfProfiles": "Bạn đã xem hết tất cả hồ sơ!",
+    "endOfProfiles": "Hết rồi bạn ơi",
     "checkBackLater": "Hãy quay lại sau để xem những người mới"
   }
 }
