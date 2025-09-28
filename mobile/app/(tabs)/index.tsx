@@ -451,13 +451,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 40,
     paddingVertical: 20,
-    gap: 20,
+    gap: 64,
     backgroundColor: "transparent",
   },
   actionButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -470,10 +470,10 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   passButton: {
-    backgroundColor: "#FF4458",
+    backgroundColor: Colors.light.accent,
   },
   fightButton: {
-    backgroundColor: "#FF6600",
+    backgroundColor: Colors.light.tint,
   },
   flatListContainer: {
     flex: 1,
