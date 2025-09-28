@@ -48,11 +48,12 @@ function ProfileCard({
           autoSlide={true}
           autoSlideInterval={8000}
           showDots={true}
+          colors={colors}
           style={styles.carouselStyle}
         />
 
         <View style={styles.profileInfo}>
-          <Text style={styles.profileName}>
+          <Text style={[styles.profileName]}>
             {profile.displayName || profile.handle}
           </Text>
 
@@ -60,12 +61,13 @@ function ProfileCard({
             <View style={styles.sportsContainer}>
               {profile.sports.slice(0, 3).map((sportItem, sportIndex) => {
                 // Handle both old format (object with sport property) and new format (string)
-                const sport = typeof sportItem === 'string' ? sportItem : sportItem.sport;
+                const sport =
+                  typeof sportItem === "string" ? sportItem : sportItem.sport;
                 if (!sport) return null;
 
                 return (
-                  <View key={sportIndex} style={styles.sportTag}>
-                    <Text style={styles.sportText}>
+                  <View key={sportIndex} style={[styles.sportTag]}>
+                    <Text style={[styles.sportText]}>
                       {t(`sports.${sport.toLowerCase()}`)}
                     </Text>
                   </View>
@@ -106,6 +108,11 @@ export default function ExploreScreen() {
     user?.id
       ? {
           profiles: {
+            $:{
+              where: {
+                avatarUrl: { $isNull: false }
+              }
+            },
             user: {
               $: {
                 where: {
@@ -146,22 +153,20 @@ export default function ExploreScreen() {
   }, [exploreData]);
 
   const handleAction = useCallback(() => {
-      const currentProfile = profiles[currentIndex];
-      if (!currentProfile) return;
+    const currentProfile = profiles[currentIndex];
+    if (!currentProfile) return;
 
-      // Move to next profile by scrolling the FlatList
-      if (currentIndex < profiles.length - 1) {
-        const nextIndex = currentIndex + 1;
-        flatListRef.current?.scrollToIndex({
-          index: nextIndex,
-          animated: true,
-        });
-        // Update the state immediately to keep UI in sync
-        setCurrentIndex(nextIndex);
-      }
-    },
-    [currentIndex, profiles],
-  );
+    // Move to next profile by scrolling the FlatList
+    if (currentIndex < profiles.length - 1) {
+      const nextIndex = currentIndex + 1;
+      flatListRef.current?.scrollToIndex({
+        index: nextIndex,
+        animated: true,
+      });
+      // Update the state immediately to keep UI in sync
+      setCurrentIndex(nextIndex);
+    }
+  }, [currentIndex, profiles]);
 
   const handleMatchInvite = useCallback(async () => {
     const currentProfile = profiles[currentIndex];

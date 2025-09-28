@@ -18,6 +18,7 @@ interface PhotoCarouselProps {
   autoSlideInterval?: number;
   showDots?: boolean;
   style?: any;
+  colors?: any;
 }
 
 export default function PhotoCarousel({
@@ -27,6 +28,7 @@ export default function PhotoCarousel({
   autoSlideInterval = 3000,
   showDots = true,
   style,
+  colors,
 }: PhotoCarouselProps) {
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -106,8 +108,12 @@ export default function PhotoCarousel({
   if (allImages.length === 0) {
     return (
       <View style={[styles.container, style]}>
-        <View style={styles.placeholderImage}>
-          <Ionicons name="person" size={80} color="#999" />
+        <View style={[styles.placeholderImage]}>
+          <Ionicons
+            name="person"
+            size={80}
+            color={colors?.tabIconDefault || "#999"}
+          />
         </View>
       </View>
     );
@@ -151,7 +157,16 @@ export default function PhotoCarousel({
               key={index}
               style={[
                 styles.dot,
-                index === currentIndex ? styles.activeDot : styles.inactiveDot,
+                {
+                  borderColor: colors?.border || "rgba(255,255,255,0.3)",
+                  backgroundColor:
+                    index === currentIndex
+                      ? colors?.text || "#fff"
+                      : colors?.tabIconDefault
+                      ? `${colors.tabIconDefault}4D`
+                      : "rgba(255,255,255,0.3)",
+                },
+                index === currentIndex && styles.activeDotShadow,
               ]}
               onPress={() => handleDotPress(index)}
             />
@@ -180,7 +195,7 @@ const styles = StyleSheet.create({
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "rgba(0,0,0,0.3)",
   },
   dotsContainer: {
     position: "absolute",
@@ -205,9 +220,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.3)",
   },
-  activeDot: {
-    backgroundColor: "#fff",
-    borderColor: "#fff",
+  activeDotShadow: {
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -216,9 +229,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 4,
-  },
-  inactiveDot: {
-    backgroundColor: "rgba(255,255,255,0.3)",
-    borderColor: "rgba(255,255,255,0.5)",
   },
 });
