@@ -651,5 +651,17 @@
     "error": "Đã xảy ra lỗi",
     "endOfProfiles": "Hết rồi bạn ơi",
     "checkBackLater": "Hãy quay lại sau để xem những người mới"
+  },
+  "dm": {
+    "directMessages": "Tin nhắn riêng",
+    "groups": "Nhóm",
+    "noDMs": "Chưa có tin nhắn riêng nào",
+    "startDMPrompt": "Bắt đầu cuộc trò chuyện với ai đó từ Khám phá",
+    "dmWith": "{{name}}",
+    "matchInvitation": "Xin chào! Mình đã xem hồ sơ của bạn và muốn kết nối để thi đấu. Bạn có quan tâm không?",
+    "dmCreated": "Đã bắt đầu tin nhắn riêng",
+    "dmCreateError": "Không thể bắt đầu cuộc trò chuyện",
+    "conversation": "Cuộc trò chuyện với {{name}}",
+    "startingChatWith": "Đang bắt đầu trò chuyện với {{name}}!"
   }
 }

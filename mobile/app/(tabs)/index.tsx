@@ -85,7 +85,7 @@ export default function ExploreScreen() {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
   const { t } = useTranslation();
-  const { instantClient, createOrGetDM } = useInstantDB();
+  const { instantClient, createOrGetDM, sendDMMessage } = useInstantDB();
   const { user } = instantClient.useAuth();
   const { showSuccess, showError } = useToast();
   const router = useRouter();
@@ -182,6 +182,14 @@ export default function ExploreScreen() {
         currentProfile.id,
       );
 
+      // Auto-send a match invitation message
+      await sendDMMessage({
+        conversationId,
+        content: t("dm.matchInvitation"),
+        authorId: userProfile.id,
+        authorName: userProfile.displayName || userProfile.handle,
+      });
+
       if (currentIndex < profiles.length - 1) {
         const nextIndex = currentIndex + 1;
         flatListRef.current?.scrollToIndex({
@@ -193,9 +201,9 @@ export default function ExploreScreen() {
       }
 
       showSuccess(
-        `Starting chat with ${
-          currentProfile.displayName || currentProfile.handle
-        }!`,
+        t("dm.startingChatWith", {
+          name: currentProfile.displayName || currentProfile.handle,
+        }),
       );
 
       // Navigate to the DM chat - we'll need a special route for conversations
@@ -212,6 +220,7 @@ export default function ExploreScreen() {
     showError,
     t,
     createOrGetDM,
+    sendDMMessage,
     router,
   ]);
 

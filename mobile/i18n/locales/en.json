@@ -669,6 +669,7 @@
     "matchInvitation": "Hi! I saw your profile and would love to connect for a match. Are you interested?",
     "dmCreated": "Direct message started",
     "dmCreateError": "Failed to start conversation",
-    "conversation": "Conversation with {{name}}"
+    "conversation": "Conversation with {{name}}",
+    "startingChatWith": "Starting chat with {{name}}!"
   }
 }
