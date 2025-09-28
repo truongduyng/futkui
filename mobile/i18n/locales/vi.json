@@ -198,6 +198,8 @@
     "done": "Xong"
   },
   "chat": {
+    "groups": "Nhóm",
+    "directMessages": "Tin nhắn riêng",
     "typeMessage": "Nhập tin nhắn...",
     "sendImage": "Gửi hình ảnh",
     "createPoll": "Tạo bình chọn",

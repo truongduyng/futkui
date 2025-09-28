@@ -113,6 +113,10 @@ export function DMList({
     const lastMessage = getLastMessage(dm);
     const unreadCount = unreadCounts[dm.id] || 0;
 
+    if (!otherParticipant) {
+      return null;
+    }
+
     return (
       <TouchableOpacity
         style={[styles.dmItem, { backgroundColor: colors.card }]}

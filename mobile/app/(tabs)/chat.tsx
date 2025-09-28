@@ -1,7 +1,7 @@
 import { GroupModal } from '@/components/chat/GroupModal';
 import { GroupList } from '@/components/chat/GroupList';
-// import { DMList } from '@/components/chat/DMList';
-// import { TabBar } from '@/components/chat/TabBar';
+import { DMList } from '@/components/chat/DMList';
+import { TabBar } from '@/components/chat/TabBar';
 import { Colors } from '@/constants/Colors';
 import { GroupRefreshProvider } from '@/contexts/GroupRefreshContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -29,7 +29,7 @@ export default function ChatScreen() {
     useGroups,
     useLastMessages,
     useProfile,
-    // useDMs,
+    useDMs,
     createGroup,
     queryGroupByShareLink,
     joinGroup
@@ -43,8 +43,8 @@ export default function ChatScreen() {
   // Only fetch groups after we have profile data
   const { data: groupsData, isLoading: groupsLoading, error: groupsError } = useGroups();
 
-  // Fetch DMs for current user (disabled for now)
-  // const { data: dmsData, isLoading: dmsLoading, error: dmsError } = useDMs();
+  // Fetch DMs for current user
+  const { data: dmsData, isLoading: dmsLoading, error: dmsError } = useDMs();
 
   // Extract groups first to get group IDs
   const profile = groupsData?.profiles?.[0];
@@ -64,8 +64,8 @@ export default function ChatScreen() {
   );
 
   // Calculate combined loading state and error state
-  const isLoading = groupsLoading || profileLoading || lastMessagesLoading;
-  const error = groupsError || profileError || lastMessagesError;
+  const isLoading = groupsLoading || profileLoading || lastMessagesLoading || dmsLoading;
+  const error = groupsError || profileError || lastMessagesError || dmsError;
 
   // Animated value for skeleton loading
   const animatedValue = React.useRef(new Animated.Value(0)).current;
@@ -161,22 +161,21 @@ export default function ChatScreen() {
     });
   };
 
-  // const handleDMPress = (dm: any) => {
-  //   router.push({
-  //     pathname: '/dm/[dmId]' as any,
-  //     params: { dmId: dm.id }
-  //   });
-  // };
+  const handleDMPress = (dm: any) => {
+    router.push({
+      pathname: '/dm/[conversationId]' as any,
+      params: { conversationId: dm.id }
+    });
+  };
 
-  // const handleTabChange = (tabKey: string) => {
-  //   setActiveTab(tabKey as 'groups' | 'dms');
-  // };
+  const handleTabChange = (tabKey: string) => {
+    setActiveTab(tabKey as 'groups' | 'dms');
+  };
 
-  // const tabs = [
-  //   { key: 'groups', title: t('dm.groups') },
-  //   // TODO: Re-enable when DM system is fully implemented
-  //   // { key: 'dms', title: t('dm.directMessages') },
-  // ];
+  const tabs = [
+    { key: 'groups', title: t('chat.groups', 'Groups') },
+    { key: 'dms', title: t('chat.directMessages', 'Direct Messages') },
+  ];
 
   const handleCreateGroup = async (groupData: { name: string; description: string; avatarUrl: string; sports: string[]; rule?: string }) => {
     if (!currentProfile) {
@@ -285,6 +284,34 @@ export default function ChatScreen() {
     return unreadData.messages.length;
   }, [unreadData?.messages]);
 
+  // Process DMs data
+  const dms = useMemo(() => {
+    if (!dmsData?.profiles?.[0]) return [];
+
+    const profile = dmsData.profiles[0];
+    const allConversations = [
+      ...(profile.conversationsAsParticipant1 || []),
+      ...(profile.conversationsAsParticipant2 || [])
+    ];
+
+    return allConversations
+      .filter((conv: any) =>
+        (conv.participant1 || conv.participant2) // At least one participant exists
+      )
+      .map((conv: any) => ({
+        ...conv,
+        isDM: true,
+        messages: (conv.messages || []).slice(0, 1) // Take only the latest message for list display
+      }))
+      .sort((a: any, b: any) => {
+        const aLastMessage = a.messages?.[0];
+        const bLastMessage = b.messages?.[0];
+        const aTime = aLastMessage?.createdAt || a.createdAt || 0;
+        const bTime = bLastMessage?.createdAt || b.createdAt || 0;
+        return bTime - aTime;
+      });
+  }, [dmsData]);
+
   // Update unread count in context
   useEffect(() => {
     setTotalUnreadCount(totalUnreadCount);
@@ -296,13 +323,22 @@ export default function ChatScreen() {
         {/* Header with title and create button */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text }]}>{t('navigation.chat')}</Text>
-          <TouchableOpacity
-            style={[styles.createButton, { backgroundColor: colors.tint }]}
-            onPress={() => setShowCreateModal(true)}
-          >
-            <Ionicons name="add" size={20} color="white" />
-          </TouchableOpacity>
+          {activeTab === 'groups' && (
+            <TouchableOpacity
+              style={[styles.createButton, { backgroundColor: colors.tint }]}
+              onPress={() => setShowCreateModal(true)}
+            >
+              <Ionicons name="add" size={20} color="white" />
+            </TouchableOpacity>
+          )}
         </View>
+
+        {/* Tab Navigation */}
+        <TabBar
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
 
         {isLoading ? (
           <SkeletonLoader />
@@ -310,7 +346,7 @@ export default function ChatScreen() {
           <View style={styles.errorContainer}>
             <Text style={[styles.errorText, { color: 'red' }]}>{t('groups.errorLoading')} {error.message}</Text>
           </View>
-        ) : (
+        ) : activeTab === 'groups' ? (
           <GroupList
             groups={groups}
             memberships={profile?.memberships || []}
@@ -322,6 +358,14 @@ export default function ChatScreen() {
             onShareLinkChange={setShareLink}
             onJoinViaLink={handleJoinViaLink}
             isJoining={isJoining}
+          />
+        ) : (
+          <DMList
+            dms={dms}
+            currentUserId={currentProfile?.id || ''}
+            onDMPress={handleDMPress}
+            onRefresh={handleRefresh}
+            isRefreshing={isRefreshing}
           />
         )}
 

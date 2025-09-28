@@ -63,6 +63,7 @@ interface MessageInputProps {
   userMembership?: {
     role?: string;
   };
+  isDirectMessage?: boolean;
 }
 
 export function MessageInput({
@@ -73,6 +74,7 @@ export function MessageInput({
   members = [],
   disabled,
   userMembership,
+  isDirectMessage = false,
 }: MessageInputProps) {
   const { t } = useTranslation();
   const [message, setMessage] = useState("");
@@ -371,18 +373,20 @@ export function MessageInput({
       <View
         style={[styles.inputContainer, { backgroundColor: colors.card }]}
       >
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setShowActionMenu(true)}
-          disabled={disabled || isSending}
-          activeOpacity={0.6}
-        >
-          <Ionicons
-            name="add"
-            size={20}
-            color={disabled || isSending ? colors.tabIconDefault + "40" : colors.tabIconDefault}
-          />
-        </TouchableOpacity>
+        {!isDirectMessage && (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => setShowActionMenu(true)}
+            disabled={disabled || isSending}
+            activeOpacity={0.6}
+          >
+            <Ionicons
+              name="add"
+              size={20}
+              color={disabled || isSending ? colors.tabIconDefault + "40" : colors.tabIconDefault}
+            />
+          </TouchableOpacity>
+        )}
 
         <TextInput
           ref={inputRef}
@@ -436,12 +440,13 @@ export function MessageInput({
         onCreateMatch={handleCreateMatch}
       />
 
-      <Modal
-        visible={showActionMenu}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowActionMenu(false)}
-      >
+      {!isDirectMessage && (
+        <Modal
+          visible={showActionMenu}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowActionMenu(false)}
+        >
         <TouchableOpacity
           style={styles.actionMenuOverlay}
           activeOpacity={1}
@@ -500,6 +505,7 @@ export function MessageInput({
           </View>
         </TouchableOpacity>
       </Modal>
+      )}
 
       <CreateDuesCycleModal
         visible={showDuesModal}

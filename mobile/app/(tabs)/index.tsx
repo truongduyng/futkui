@@ -97,7 +97,7 @@ export default function ExploreScreen() {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
   const { t } = useTranslation();
-  const { instantClient } = useInstantDB();
+  const { instantClient, createOrGetDM } = useInstantDB();
   const { user } = instantClient.useAuth();
   const { showSuccess, showError } = useToast();
   const router = useRouter();
@@ -184,17 +184,19 @@ export default function ExploreScreen() {
     }
 
     try {
-      // For now, just show a placeholder message
-      showSuccess(`Match invite sent to ${currentProfile.displayName || currentProfile.handle}!`);
+      // Create or get DM between current user and selected profile
+      const conversationId = await createOrGetDM(userProfile.id, currentProfile.id);
 
-      // TODO: Implement DM system when schema permissions are resolved
-      console.log('Would create DM between:', userProfile.handle, 'and', currentProfile.handle);
+      showSuccess(`Starting chat with ${currentProfile.displayName || currentProfile.handle}!`);
+
+      // Navigate to the DM chat - we'll need a special route for conversations
+      router.push(`/dm/${conversationId}`);
 
     } catch (error) {
-      console.error("Error with match invite:", error);
+      console.error("Error creating DM:", error);
       showError(t("profileExplore.error"));
     }
-  }, [currentIndex, profiles, userProfile, showSuccess, showError, t]);
+  }, [currentIndex, profiles, userProfile, showSuccess, showError, t, createOrGetDM, router]);
 
   if (loading || isLoading) {
     return (

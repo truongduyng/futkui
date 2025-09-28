@@ -199,6 +199,8 @@
     "done": "Done"
   },
   "chat": {
+    "groups": "Groups",
+    "directMessages": "Direct Messages",
     "typeMessage": "Type a message...",
     "sendImage": "Send image",
     "createPoll": "Create poll",

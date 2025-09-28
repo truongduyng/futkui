@@ -28,6 +28,11 @@ const _schema = i.schema({
       sports: i.json().optional(),
       balance: i.number().optional(),
     }),
+    conversations: i.entity({
+      createdAt: i.number(),
+      lastMessageAt: i.number().optional(),
+      participantKey: i.string().unique().indexed(), // "id1_id2" sorted for uniqueness
+    }),
     matches: i.entity({
       closedAt: i.number().optional(),
       createdAt: i.number(),
@@ -513,6 +518,42 @@ const _schema = i.schema({
         on: "profiles",
         has: "many",
         label: "duesMembers",
+      },
+    },
+    conversationsParticipant1: {
+      forward: {
+        on: "conversations",
+        has: "one",
+        label: "participant1",
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "conversationsAsParticipant1",
+      },
+    },
+    conversationsParticipant2: {
+      forward: {
+        on: "conversations",
+        has: "one",
+        label: "participant2",
+      },
+      reverse: {
+        on: "profiles",
+        has: "many",
+        label: "conversationsAsParticipant2",
+      },
+    },
+    conversationsMessages: {
+      forward: {
+        on: "conversations",
+        has: "many",
+        label: "messages",
+      },
+      reverse: {
+        on: "messages",
+        has: "one",
+        label: "conversation",
       },
     },
   },

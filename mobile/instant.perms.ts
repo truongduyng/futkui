@@ -43,10 +43,12 @@ const rules = {
       "auth.id in data.ref('user.user.id')",
       "isGroupMember",
       "auth.id in data.ref('message.group.memberships.profile.user.id')",
+      "isConversationParticipant",
+      "auth.id in data.ref('message.conversation.participant1.user.id') || auth.id in data.ref('message.conversation.participant2.user.id')",
     ],
     allow: {
       view: "true",
-      create: "isAuthenticated && isGroupMember",
+      create: "isAuthenticated && (isGroupMember || isConversationParticipant)",
       delete: "isOwner",
       update: "isOwner",
     },
@@ -115,6 +117,20 @@ const rules = {
       update: "isCheckInOwner",
     },
   },
+  conversations: {
+    bind: [
+      "isAuthenticated",
+      "auth.id != null",
+      "isParticipant",
+      "auth.id in data.ref('participant1.user.id') || auth.id in data.ref('participant2.user.id')",
+    ],
+    allow: {
+      view: "isParticipant",
+      create: "isAuthenticated",
+      delete: "false",
+      update: "isParticipant",
+    },
+  },
   messages: {
     bind: [
       "isAuthenticated",
@@ -123,12 +139,14 @@ const rules = {
       "auth.id in data.ref('author.user.id')",
       "isGroupMember",
       "auth.id in data.ref('group.memberships.profile.user.id')",
+      "isConversationParticipant",
+      "auth.id in data.ref('conversation.participant1.user.id') || auth.id in data.ref('conversation.participant2.user.id')",
     ],
     allow: {
       view: "true",
-      create: "isAuthenticated && isGroupMember",
+      create: "isAuthenticated && (isGroupMember || isConversationParticipant)",
       delete: "isAuthor",
-      update: "isAuthor || isGroupMember",
+      update: "isAuthor || isGroupMember || isConversationParticipant",
     },
   },
   colors: {

@@ -9,43 +9,43 @@ export function useDMOperations() {
   const createOrGetDM = useCallback(
     async (participant1Id: string, participant2Id: string) => {
       try {
-        // Sort participant IDs alphabetically for consistent DM identification
+        // Sort participant IDs alphabetically for consistent conversation identification
         const sortedIds = [participant1Id, participant2Id].sort();
-        const dmKey = `DM_${sortedIds[0]}_${sortedIds[1]}`;
+        const participantKey = `${sortedIds[0]}_${sortedIds[1]}`;
 
-        // Check if any messages already exist for this DM pair
-        const existingMessages = await db.queryOnce({
-          messages: {
+        // Check if conversation already exists
+        const existingConversation = await db.queryOnce({
+          conversations: {
             $: {
               where: {
-                content: { $like: `%${dmKey}%` },
-                type: 'dm_init'
+                participantKey: participantKey,
               }
             },
+            participant1: {},
+            participant2: {},
           },
         });
 
-        if (existingMessages.data.messages && existingMessages.data.messages.length > 0) {
-          // Return the DM key as ID for consistency
-          return dmKey;
+        if (existingConversation.data.conversations && existingConversation.data.conversations.length > 0) {
+          return existingConversation.data.conversations[0].id;
         }
 
-        // Create a DM initialization message to establish the conversation
-        const messageId = id();
+        // Create new conversation
+        const conversationId = id();
+        const now = Date.now();
+
         await db.transact([
-          db.tx.messages[messageId].update({
-            content: dmKey, // Store DM key in content for identification
-            authorName: 'System',
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-            type: 'dm_init', // Special type to identify DM initialization
-            mentions: [],
+          db.tx.conversations[conversationId].update({
+            participantKey: participantKey,
+            createdAt: now,
+            lastMessageAt: now,
           }).link({
-            author: sortedIds[0] // Link to first participant
+            participant1: sortedIds[0],
+            participant2: sortedIds[1],
           }),
         ]);
 
-        return dmKey;
+        return conversationId;
       } catch (error) {
         console.error('Error creating/getting DM:', error);
         throw error;
@@ -56,7 +56,7 @@ export function useDMOperations() {
 
   const sendDMMessage = useCallback(
     async (messageData: {
-      dmId: string;
+      conversationId: string;
       content: string;
       authorId: string;
       authorName: string;
@@ -76,19 +76,24 @@ export function useDMOperations() {
       }
 
       const messageId = id();
+      const now = Date.now();
+
       const result = await db.transact([
         db.tx.messages[messageId].update({
           content: messageData.content || '',
           authorName: messageData.authorName,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
+          createdAt: now,
+          updatedAt: now,
           imageUrl: imageUrl,
           type: imageUrl ? 'image' : 'text',
           mentions: messageData.mentions || [],
-          // Store DM key in mentions for filtering
-          dmKey: messageData.dmId,
         }).link({
-          author: messageData.authorId
+          author: messageData.authorId,
+          conversation: messageData.conversationId,
+        }),
+        // Update conversation's lastMessageAt
+        db.tx.conversations[messageData.conversationId].update({
+          lastMessageAt: now,
         }),
       ]);
 
@@ -98,17 +103,35 @@ export function useDMOperations() {
   );
 
   const markDMAsRead = useCallback(
-    async (dmId: string, profileId: string) => {
-      console.log('Marking DM as read:', dmId, profileId);
-      // Simple implementation - could be extended
+    async (conversationId: string, profileId: string) => {
+      try {
+        // For now, we'll implement read status tracking later
+        // This could be done with a separate readStatus entity
+        console.log(`Marking conversation ${conversationId} as read for profile ${profileId}`);
+      } catch (error) {
+        console.error('Error marking DM as read:', error);
+      }
     },
     [db]
   );
 
   const getDMUnreadCount = useCallback(
-    async (dmId: string, profileId: string) => {
+    async (conversationId: string, profileId: string) => {
       try {
-        return 0; // Simplified for now
+        // Count unread messages - simplified for now
+        // In a full implementation, you'd track read status per user
+        const messagesQuery = await db.queryOnce({
+          messages: {
+            $: {
+              where: {
+                "conversation.id": conversationId,
+                "author.id": { $ne: profileId }, // Don't count own messages
+              }
+            }
+          }
+        });
+
+        return messagesQuery.data.messages?.length || 0;
       } catch (error) {
         console.error('Error getting DM unread count:', error);
         return 0;

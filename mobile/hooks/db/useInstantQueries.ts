@@ -298,23 +298,19 @@ export function useInstantQueries() {
       profiles: {
         $: { where: { "user.id": user.id } },
         conversationsAsParticipant1: {
-          $: { where: { isDM: true } },
           participant2: {},
           messages: {
             $: {
-              order: { serverCreatedAt: 'desc' },
-              limit: 1
+              order: { createdAt: 'desc' },
             },
             author: {},
           },
         },
         conversationsAsParticipant2: {
-          $: { where: { isDM: true } },
           participant1: {},
           messages: {
             $: {
-              order: { serverCreatedAt: 'desc' },
-              limit: 1
+              order: { createdAt: 'desc' },
             },
             author: {},
           },
@@ -323,40 +319,44 @@ export function useInstantQueries() {
     });
   };
 
-  const useDMMessages = (dmId: string, limit = 30) => {
-    if (!dmId) {
+  const useDMMessages = (conversationId: string, limit = 30) => {
+    if (!conversationId) {
       return { data: null, isLoading: false, error: null };
     }
 
     return db.useQuery({
       messages: {
         $: {
-          where: { "conversation.id": dmId },
-          order: { serverCreatedAt: 'desc' },
+          where: { "conversation.id": conversationId },
+          order: { createdAt: 'desc' },
           limit: limit,
         },
-        author: {},
-        reactions: {
+        author: {
           user: {},
         },
-        conversation: {
-          participant1: {},
-          participant2: {},
+        reactions: {
+          user: {},
         },
       },
     });
   };
 
-  const useDMUnreadCounts = (dmIds: string[]) => {
+  const useDMUnreadCounts = (conversationIds: string[]) => {
     const { user } = db.useAuth();
-    if (!dmIds || dmIds.length === 0) {
+    if (!conversationIds || conversationIds.length === 0 || !user) {
       return { data: null, isLoading: false, error: null };
     }
 
     return db.useQuery({
       messages: {
-        $: { where: { "conversation.id": { in: dmIds } } },
+        $: {
+          where: {
+            "conversation.id": { $in: conversationIds },
+            "author.user.id": { $ne: user.id }, // Don't count own messages
+          }
+        },
         conversation: {},
+        author: {},
       },
     });
   };
