@@ -59,8 +59,7 @@
     "expo-media-library": "~17.1.7",
     "expo-file-system": "~18.1.11",
     "expo-store-review": "~8.1.5",
-    "react-native-get-random-values": "~1.11.0",
-    "expo-linear-gradient": "~14.1.5"
+    "react-native-get-random-values": "~1.11.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

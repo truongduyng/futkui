@@ -6,7 +6,6 @@ import {
   Dimensions,
   StatusBar,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
   FlatList,
 } from "react-native";
@@ -14,10 +13,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Colors } from "@/constants/Colors";
 import { useInstantDB } from "@/hooks/db/useInstantDB";
-import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/useToast";
 import { useRouter } from "expo-router";
+import PhotoCarousel from "@/components/ui/PhotoCarousel";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -34,57 +33,44 @@ interface ProfileData {
 function ProfileCard({
   profile,
   colors,
+  t,
 }: {
   profile: ProfileData;
   colors: any;
+  t: any;
 }) {
   return (
     <View style={styles.fullScreenCardContainer}>
       <View style={styles.fullScreenCard}>
-        {profile.photos?.[0] || profile.avatarUrl ? (
-          <Image
-            source={{ uri: profile.photos?.[0] || profile.avatarUrl }}
-            style={styles.profileImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <View
-            style={[
-              styles.placeholderImage,
-              { backgroundColor: colors.border },
-            ]}
-          >
-            <Ionicons name="person" size={80} color={colors.tabIconDefault} />
-          </View>
-        )}
-
-        <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.8)"]}
-          style={styles.gradient}
+        <PhotoCarousel
+          photos={profile.photos || []}
+          avatarUrl={profile.avatarUrl}
+          autoSlide={true}
+          autoSlideInterval={8000}
+          showDots={true}
+          style={styles.carouselStyle}
         />
 
         <View style={styles.profileInfo}>
           <Text style={styles.profileName}>
             {profile.displayName || profile.handle}
           </Text>
-          <Text style={styles.profileHandle}>@{profile.handle}</Text>
-
-          {profile.location && (
-            <View style={styles.locationContainer}>
-              <Ionicons name="location-outline" size={16} color="#fff" />
-              <Text style={styles.locationText}>{profile.location}</Text>
-            </View>
-          )}
 
           {profile.sports && profile.sports.length > 0 && (
             <View style={styles.sportsContainer}>
-              {profile.sports.slice(0, 3).map((sport, sportIndex) => (
-                <View key={sportIndex} style={styles.sportTag}>
-                  <Text style={styles.sportText}>
-                    {typeof sport === "string" ? sport : sport.sport}
-                  </Text>
-                </View>
-              ))}
+              {profile.sports.slice(0, 3).map((sportItem, sportIndex) => {
+                // Handle both old format (object with sport property) and new format (string)
+                const sport = typeof sportItem === 'string' ? sportItem : sportItem.sport;
+                if (!sport) return null;
+
+                return (
+                  <View key={sportIndex} style={styles.sportTag}>
+                    <Text style={styles.sportText}>
+                      {t(`sports.${sport.toLowerCase()}`)}
+                    </Text>
+                  </View>
+                );
+              })}
             </View>
           )}
         </View>
@@ -120,9 +106,11 @@ export default function ExploreScreen() {
     user?.id
       ? {
           profiles: {
-            $: {
-              where: {
-                "user.id": { $ne: user.id },
+            user: {
+              $: {
+                where: {
+                  id: { $ne: user.id },
+                },
               },
             },
           },
@@ -157,8 +145,7 @@ export default function ExploreScreen() {
     }
   }, [exploreData]);
 
-  const handleAction = useCallback(
-    (action: "pass") => {
+  const handleAction = useCallback(() => {
       const currentProfile = profiles[currentIndex];
       if (!currentProfile) return;
 
@@ -185,7 +172,10 @@ export default function ExploreScreen() {
 
     try {
       // Create or get DM between current user and selected profile
-      const conversationId = await createOrGetDM(userProfile.id, currentProfile.id);
+      const conversationId = await createOrGetDM(
+        userProfile.id,
+        currentProfile.id,
+      );
 
       if (currentIndex < profiles.length - 1) {
         const nextIndex = currentIndex + 1;
@@ -197,7 +187,11 @@ export default function ExploreScreen() {
         setCurrentIndex(nextIndex);
       }
 
-      showSuccess(`Starting chat with ${currentProfile.displayName || currentProfile.handle}!`);
+      showSuccess(
+        `Starting chat with ${
+          currentProfile.displayName || currentProfile.handle
+        }!`,
+      );
 
       // Navigate to the DM chat - we'll need a special route for conversations
       router.push(`/dm/${conversationId}`);
@@ -205,7 +199,16 @@ export default function ExploreScreen() {
       console.error("Error creating DM:", error);
       showError(t("profileExplore.error"));
     }
-  }, [currentIndex, profiles, userProfile, showSuccess, showError, t, createOrGetDM, router]);
+  }, [
+    currentIndex,
+    profiles,
+    userProfile,
+    showSuccess,
+    showError,
+    t,
+    createOrGetDM,
+    router,
+  ]);
 
   if (loading || isLoading) {
     return (
@@ -270,7 +273,7 @@ export default function ExploreScreen() {
         data={profiles}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <ProfileCard profile={item} colors={colors} />
+          <ProfileCard profile={item} colors={colors} t={t} />
         )}
         style={styles.flatListContainer}
         showsVerticalScrollIndicator={false}
@@ -317,7 +320,7 @@ export default function ExploreScreen() {
         <View style={styles.actionContainer}>
           <TouchableOpacity
             style={[styles.actionButton, styles.passButton]}
-            onPress={() => handleAction("pass")}
+            onPress={handleAction}
           >
             <Ionicons name="close" size={30} color="#fff" />
           </TouchableOpacity>
@@ -326,7 +329,9 @@ export default function ExploreScreen() {
             style={[styles.actionButton, styles.fightButton]}
             onPress={handleMatchInvite}
           >
-            <Text style={{ fontSize: 24, color: "white", fontWeight: "500" }}>VS</Text>
+            <Text style={{ fontSize: 24, color: "white", fontWeight: "500" }}>
+              VS
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -382,28 +387,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
   },
-  profileImage: {
+  carouselStyle: {
     width: "100%",
     height: "100%",
-  },
-  placeholderImage: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  gradient: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: "50%",
+    zIndex: 2,
   },
   profileInfo: {
     position: "absolute",
     bottom: 200, // Move up to avoid overlap with action buttons
     left: 20,
     right: 20,
+    zIndex: 2,
   },
   profileName: {
     fontSize: 28,
@@ -432,7 +426,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sportTag: {
-    backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: "rgba(0,0,0,0.4)",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,

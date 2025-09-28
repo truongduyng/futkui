@@ -75,7 +75,7 @@ const _schema = i.schema({
       pushToken: i.string().optional(),
       sports: i.json().optional(),
       level: i.string().optional(),
-      location: i.string().optional(),
+      location: i.string().optional().indexed(),
       photos: i.json().optional(),
     }),
     reactions: i.entity({
