@@ -30,58 +30,63 @@ interface ProfileData {
   photos?: string[];
 }
 
-
-function ProfileCard({ profile, colors }: { profile: ProfileData; colors: any }) {
+function ProfileCard({
+  profile,
+  colors,
+}: {
+  profile: ProfileData;
+  colors: any;
+}) {
   return (
     <View style={styles.fullScreenCardContainer}>
       <View style={styles.fullScreenCard}>
-          {profile.photos?.[0] || profile.avatarUrl ? (
-            <Image
-              source={{ uri: profile.photos?.[0] || profile.avatarUrl }}
-              style={styles.profileImage}
-              resizeMode="cover"
-            />
-          ) : (
-            <View
-              style={[
-                styles.placeholderImage,
-                { backgroundColor: colors.border },
-              ]}
-            >
-              <Ionicons name="person" size={80} color={colors.tabIconDefault} />
+        {profile.photos?.[0] || profile.avatarUrl ? (
+          <Image
+            source={{ uri: profile.photos?.[0] || profile.avatarUrl }}
+            style={styles.profileImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View
+            style={[
+              styles.placeholderImage,
+              { backgroundColor: colors.border },
+            ]}
+          >
+            <Ionicons name="person" size={80} color={colors.tabIconDefault} />
+          </View>
+        )}
+
+        <LinearGradient
+          colors={["transparent", "rgba(0,0,0,0.8)"]}
+          style={styles.gradient}
+        />
+
+        <View style={styles.profileInfo}>
+          <Text style={styles.profileName}>
+            {profile.displayName || profile.handle}
+          </Text>
+          <Text style={styles.profileHandle}>@{profile.handle}</Text>
+
+          {profile.location && (
+            <View style={styles.locationContainer}>
+              <Ionicons name="location-outline" size={16} color="#fff" />
+              <Text style={styles.locationText}>{profile.location}</Text>
             </View>
           )}
 
-          <LinearGradient
-            colors={["transparent", "rgba(0,0,0,0.8)"]}
-            style={styles.gradient}
-          />
-
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>
-              {profile.displayName || profile.handle}
-            </Text>
-            <Text style={styles.profileHandle}>@{profile.handle}</Text>
-
-            {profile.location && (
-              <View style={styles.locationContainer}>
-                <Ionicons name="location-outline" size={16} color="#fff" />
-                <Text style={styles.locationText}>{profile.location}</Text>
-              </View>
-            )}
-
-            {profile.sports && profile.sports.length > 0 && (
-              <View style={styles.sportsContainer}>
-                {profile.sports.slice(0, 3).map((sport, sportIndex) => (
-                  <View key={sportIndex} style={styles.sportTag}>
-                    <Text style={styles.sportText}>
-                      {typeof sport === "string" ? sport : sport.sport}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
+          {profile.sports && profile.sports.length > 0 && (
+            <View style={styles.sportsContainer}>
+              {profile.sports.slice(0, 3).map((sport, sportIndex) => (
+                <View key={sportIndex} style={styles.sportTag}>
+                  <Text style={styles.sportText}>
+                    {typeof sport === "string" ? sport : sport.sport}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -186,9 +191,7 @@ export default function ExploreScreen() {
 
   if (loading || isLoading) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: colors.background }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.tint} />
@@ -202,9 +205,7 @@ export default function ExploreScreen() {
 
   if (profiles.length === 0 && !loading && !isLoading) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: colors.background }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
         <View style={styles.emptyContainer}>
           <Ionicons
@@ -229,17 +230,17 @@ export default function ExploreScreen() {
   }
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
       {/* Absolute Header */}
       <View style={[styles.header]}>
-        <Text style={[styles.headerTitle, { color: '#fff' }]}>
+        <Text style={[styles.headerTitle, { color: "#fff" }]}>
           {t("profileExplore.title", "Explore")}
         </Text>
-        <Text style={[styles.headerSubtitle, { color: 'rgba(255,255,255,0.8)' }]}>
+        <Text
+          style={[styles.headerSubtitle, { color: "rgba(255,255,255,0.8)" }]}
+        >
           {userProfile?.location ||
             t("profileExplore.allLocations", "All locations")}
         </Text>
@@ -250,10 +251,7 @@ export default function ExploreScreen() {
         data={profiles}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <ProfileCard
-            profile={item}
-            colors={colors}
-          />
+          <ProfileCard profile={item} colors={colors} />
         )}
         style={styles.flatListContainer}
         showsVerticalScrollIndicator={false}
@@ -295,36 +293,38 @@ export default function ExploreScreen() {
         )}
       />
 
-      {/* Action Buttons */}
-      <View style={styles.actionContainer}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.passButton]}
-          onPress={() => handleAction("pass")}
-        >
-          <Ionicons name="close" size={30} color="#fff" />
-        </TouchableOpacity>
+      {/* Action Buttons - Hide when at end of profiles list */}
+      {currentIndex < profiles.length && (
+        <View style={styles.actionContainer}>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.passButton]}
+            onPress={() => handleAction("pass")}
+          >
+            <Ionicons name="close" size={30} color="#fff" />
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.actionButton, styles.hiButton]}
-          onPress={() => handleAction("hi")}
-        >
-          <Ionicons name="hand-right-outline" size={28} color="#fff" />
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.hiButton]}
+            onPress={() => handleAction("hi")}
+          >
+            <Ionicons name="hand-right-outline" size={28} color="#fff" />
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.actionButton, styles.interestButton]}
-          onPress={() => handleAction("interest")}
-        >
-          <Ionicons name="heart" size={28} color="#fff" />
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.interestButton]}
+            onPress={() => handleAction("interest")}
+          >
+            <Ionicons name="heart" size={28} color="#fff" />
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.actionButton, styles.matchButton]}
-          onPress={handleMatchInvite}
-        >
-          <Ionicons name="football-outline" size={28} color="#fff" />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.matchButton]}
+            onPress={handleMatchInvite}
+          >
+            <Ionicons name="football-outline" size={28} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
