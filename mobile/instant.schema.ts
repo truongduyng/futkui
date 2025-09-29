@@ -71,6 +71,7 @@ const _schema = i.schema({
       avatarUrl: i.string().optional(),
       createdAt: i.number(),
       displayName: i.string().optional(),
+      description: i.string().optional(),
       handle: i.string().unique().indexed(),
       pushToken: i.string().optional(),
       sports: i.json().optional(),

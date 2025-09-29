@@ -1,9 +1,9 @@
 [
+  { "code": "ho-chi-minh", "label": "Tp. Hồ Chí Minh" },
   { "code": "ha-noi", "label": "Hà Nội" },
-  { "code": "ho-chi-minh", "label": "Hồ Chí Minh" },
-  { "code": "hai-phong", "label": "Hải Phòng" },
   { "code": "da-nang", "label": "Đà Nẵng" },
   { "code": "can-tho", "label": "Cần Thơ" },
+  { "code": "hai-phong", "label": "Hải Phòng" },
   { "code": "an-giang", "label": "An Giang" },
   { "code": "ba-ria-vung-tau", "label": "Bà Rịa - Vũng Tàu" },
   { "code": "bac-giang", "label": "Bắc Giang" },

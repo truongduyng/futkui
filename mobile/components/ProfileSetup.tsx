@@ -30,6 +30,7 @@ interface ExistingProfile {
   id: string;
   handle: string;
   displayName?: string;
+  description?: string;
   avatarUrl?: string;
   sports?: string[] | { sport: string; level: string; }[]; // Support both old and new format
   location?: string;
@@ -60,6 +61,7 @@ export function ProfileSetup({
   const { t } = useTranslation();
   const [handle, setHandle] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [description, setDescription] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
@@ -79,6 +81,7 @@ export function ProfileSetup({
       // Pre-fill form with existing profile data
       setHandle(existingProfile.handle || '');
       setDisplayName(existingProfile.displayName || '');
+      setDescription(existingProfile.description || '');
 
       // Handle location - find the province code if location is stored as label
       const existingLocation = existingProfile.location || '';
@@ -345,6 +348,7 @@ export function ProfileSetup({
         const profileTransaction = instantClient.tx.profiles[profileId].update({
           handle: handle.toLowerCase(),
           displayName: displayName.trim(),
+          description: description.trim() || undefined,
           ...(avatarUrl && { avatarUrl }),
           sports: selectedSports.length > 0 ? selectedSports : undefined,
           location: location.trim() || undefined,
@@ -366,6 +370,7 @@ export function ProfileSetup({
           .update({
             handle: handle.toLowerCase(),
             displayName: displayName.trim(),
+            description: description.trim() || undefined,
             createdAt: Date.now(),
             pushToken: pushToken || undefined,
             avatarUrl: avatarUrl || undefined,
@@ -388,7 +393,7 @@ export function ProfileSetup({
     } finally {
       setIsSubmitting(false);
     }
-  }, [handle, displayName, selectedImage, selectedPhotos, selectedSports, location, mode, existingProfile, instantClient, showError, t, onProfileCreated, onProfileUpdated, userId]);
+  }, [handle, displayName, description, selectedImage, selectedPhotos, selectedSports, location, mode, existingProfile, instantClient, showError, t, onProfileCreated, onProfileUpdated, userId]);
 
   // Expose handleSubmit to parent if onSubmitPress is provided
   React.useEffect(() => {
@@ -505,6 +510,29 @@ export function ProfileSetup({
               value={displayName}
               onChangeText={setDisplayName}
               maxLength={50}
+            />
+
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {t("profile.description")}
+            </Text>
+            <TextInput
+              style={[
+                styles.input,
+                styles.multilineInput,
+                {
+                  borderColor: colors.icon,
+                  color: colors.text,
+                  backgroundColor: colors.background,
+                },
+              ]}
+              placeholder={t("profile.placeholderDescription")}
+              placeholderTextColor={colors.tabIconDefault}
+              value={description}
+              onChangeText={setDescription}
+              maxLength={200}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
             />
 
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -724,6 +752,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     marginBottom: 4,
+  },
+  multilineInput: {
+    height: 80,
+    paddingVertical: 12,
   },
   inputHint: {
     fontSize: 12,

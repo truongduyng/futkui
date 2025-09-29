@@ -13,6 +13,7 @@ interface ProfileEditModalProps {
     id: string;
     handle: string;
     displayName?: string;
+    description?: string;
     avatarUrl?: string;
     sports?: string[] | { sport: string; level: string; }[]; // Support both old and new format
     location?: string;

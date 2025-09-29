@@ -155,6 +155,13 @@ export default function ProfileScreen() {
             @{currentProfile.handle}
           </Text>
 
+          {/* Description */}
+          {currentProfile.description && (
+            <Text style={[styles.description, { color: colors.text }]}>
+              {currentProfile.description}
+            </Text>
+          )}
+
           {/* Email and Location */}
           {(currentProfile.location || user?.email) && (
             <View style={styles.locationContainer}>
@@ -353,6 +360,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 8,
     textAlign: "center",
+  },
+  description: {
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 12,
+    marginHorizontal: 20,
+    lineHeight: 20,
   },
   locationContainer: {
     flexDirection: "row",
