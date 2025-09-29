@@ -17,6 +17,8 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/useToast";
 import { useRouter } from "expo-router";
 import PhotoCarousel from "@/components/ui/PhotoCarousel";
+import { SportFilterBottomSheet } from "@/components/ui/FilterBottomSheet";
+import { LocationSelector } from "@/components/LocationSelector";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -94,6 +96,10 @@ export default function ExploreScreen() {
   const [profiles, setProfiles] = useState<ProfileData[]>([]);
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [showSportFilter, setShowSportFilter] = useState(false);
+  const [showLocationSelector, setShowLocationSelector] = useState(false);
+  const [selectedSports, setSelectedSports] = useState<string[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState("");
   const flatListRef = useRef<FlatList>(null);
 
   // Fetch user's profile for location filtering
@@ -108,10 +114,10 @@ export default function ExploreScreen() {
     user?.id
       ? {
           profiles: {
-            $:{
+            $: {
               where: {
-                avatarUrl: { $isNull: false }
-              }
+                avatarUrl: { $isNull: false },
+              },
             },
             user: {
               $: {
@@ -128,6 +134,7 @@ export default function ExploreScreen() {
   React.useEffect(() => {
     if (profileData?.profiles?.[0]) {
       setUserProfile(profileData.profiles[0]);
+      setSelectedLocation(profileData.profiles[0].location || "");
     }
   }, [profileData]);
 
@@ -141,6 +148,27 @@ export default function ExploreScreen() {
         (profile: any) => profile.handle !== "fk",
       );
 
+      // Apply filters
+      if (selectedLocation.trim()) {
+        filteredProfiles = filteredProfiles.filter((profile: any) =>
+          profile.location
+            ?.toLowerCase()
+            .includes(selectedLocation.toLowerCase()),
+        );
+      }
+
+      if (selectedSports.length > 0) {
+        filteredProfiles = filteredProfiles.filter((profile: any) => {
+          if (!profile.sports || profile.sports.length === 0) return false;
+
+          return profile.sports.some((sportItem: any) => {
+            const sport =
+              typeof sportItem === "string" ? sportItem : sportItem.sport;
+            return sport && selectedSports.includes(sport.toLowerCase());
+          });
+        });
+      }
+
       // Shuffle profiles for variety
       const shuffled = [...filteredProfiles].sort(() => Math.random() - 0.5);
       setProfiles(shuffled);
@@ -150,7 +178,7 @@ export default function ExploreScreen() {
         `Showing ${shuffled.length} profiles from ${exploreData.profiles.length} total`,
       );
     }
-  }, [exploreData]);
+  }, [exploreData, selectedSports, selectedLocation]);
 
   const handleAction = useCallback(() => {
     const currentProfile = profiles[currentIndex];
@@ -224,6 +252,34 @@ export default function ExploreScreen() {
     router,
   ]);
 
+  const handleApplySports = useCallback((sports: string[]) => {
+    setSelectedSports(sports);
+    setCurrentIndex(0); // Reset to first profile when filters change
+  }, []);
+
+  const handleLocationSelect = useCallback((province: any) => {
+    setSelectedLocation(province.label);
+    setCurrentIndex(0); // Reset to first profile when filters change
+  }, []);
+
+  const getLocationDisplayText = () => {
+    return (
+      selectedLocation ||
+      userProfile?.location ||
+      t("profileExplore.allLocations", "All locations")
+    );
+  };
+
+  const getSportsDisplayText = () => {
+    if (selectedSports.length === 0) {
+      return t("filters.sports", "Sports");
+    } else if (selectedSports.length === 1) {
+      return t(`sports.${selectedSports[0]}`);
+    } else {
+      return t("filters.multipleSports", { count: selectedSports.length });
+    }
+  };
+
   if (loading || isLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -238,44 +294,79 @@ export default function ExploreScreen() {
     );
   }
 
-  if (profiles.length === 0 && !loading && !isLoading) {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
-        <View style={styles.emptyContainer}>
-          <Ionicons
-            name="search-outline"
-            size={80}
-            color={colors.tabIconDefault}
-          />
-          <Text style={[styles.emptyTitle, { color: colors.text }]}>
-            {t("profileExplore.noProfiles", "No more profiles")}
-          </Text>
-          <Text
-            style={[styles.emptySubtitle, { color: colors.tabIconDefault }]}
-          >
-            {t(
-              "profileExplore.noProfilesSubtitle",
-              "Check back later for new people in your area",
-            )}
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
       {/* Absolute Header */}
       <View style={[styles.header]}>
-        <Text
-          style={[styles.headerSubtitle, { color: "rgba(255,255,255,0.8)" }]}
-        >
-          {userProfile?.location ||
-            t("profileExplore.allLocations", "All locations")}
-        </Text>
+        <View style={styles.filterRow}>
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              {
+                backgroundColor: selectedLocation
+                  ? `${Colors.light.tint}90`
+                  : "rgba(0,0,0,0.3)",
+                borderColor: "rgba(255,255,255,0.2)",
+              },
+            ]}
+            onPress={() => setShowLocationSelector(true)}
+          >
+            <Ionicons
+              name="location-outline"
+              size={16}
+              color="rgba(255,255,255,0.9)"
+            />
+            <Text
+              style={[
+                styles.filterButtonText,
+                { color: "rgba(255,255,255,0.9)" },
+              ]}
+            >
+              {getLocationDisplayText()}
+            </Text>
+            <Ionicons
+              name="chevron-down"
+              size={16}
+              color="rgba(255,255,255,0.7)"
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              styles.sportFilterButton,
+              {
+                backgroundColor:
+                  selectedSports.length > 0
+                    ? `${Colors.light.tint}90`
+                    : "rgba(0,0,0,0.3)",
+                borderColor: "rgba(255,255,255,0.2)",
+              },
+            ]}
+            onPress={() => setShowSportFilter(true)}
+          >
+            <Ionicons
+              name="fitness-outline"
+              size={16}
+              color="rgba(255,255,255,0.9)"
+            />
+            <Text
+              style={[
+                styles.filterButtonText,
+                { color: "rgba(255,255,255,0.9)" },
+              ]}
+            >
+              {getSportsDisplayText()}
+            </Text>
+            <Ionicons
+              name="chevron-down"
+              size={16}
+              color="rgba(255,255,255,0.7)"
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Profile Cards - TikTok Style FlatList */}
@@ -308,6 +399,26 @@ export default function ExploreScreen() {
           offset: screenHeight * index,
           index,
         })}
+        ListEmptyComponent={() => (
+          <View style={[styles.emptyContainer, { height: screenHeight - 150 }]}>
+            <Ionicons
+              name="search-outline"
+              size={80}
+              color={colors.tabIconDefault}
+            />
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              {t("profileExplore.noProfiles", "No more profiles")}
+            </Text>
+            <Text
+              style={[styles.emptySubtitle, { color: colors.tabIconDefault }]}
+            >
+              {t(
+                "profileExplore.noProfilesSubtitle",
+                "Check back later for new people in your area",
+              )}
+            </Text>
+          </View>
+        )}
         ListFooterComponent={() => (
           <View style={[styles.endContainer, { height: screenHeight }]}>
             <Ionicons name="checkmark-circle" size={60} color={colors.tint} />
@@ -346,6 +457,22 @@ export default function ExploreScreen() {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Location Selector */}
+      <LocationSelector
+        visible={showLocationSelector}
+        onClose={() => setShowLocationSelector(false)}
+        onSelect={handleLocationSelect}
+        selectedLocation={selectedLocation}
+      />
+
+      {/* Sport Filter Bottom Sheet */}
+      <SportFilterBottomSheet
+        isVisible={showSportFilter}
+        onClose={() => setShowSportFilter(false)}
+        onApplySports={handleApplySports}
+        initialSports={selectedSports}
+      />
     </View>
   );
 }
@@ -389,6 +516,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     zIndex: 10,
+    alignItems: "center",
+  },
+  filterRow: {
+    flexDirection: "row",
+    gap: 12,
+    width: "100%",
+    justifyContent: "center",
   },
   headerTitle: {
     fontSize: 28,
@@ -397,6 +531,26 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 14,
     marginTop: 4,
+  },
+  filterButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    gap: 6,
+    flex: 1,
+    maxWidth: 180,
+  },
+  sportFilterButton: {
+    maxWidth: 180,
+  },
+  filterButtonText: {
+    fontSize: 14,
+    fontWeight: "500",
+    flex: 1,
+    textAlign: "center",
   },
   carouselStyle: {
     width: "100%",

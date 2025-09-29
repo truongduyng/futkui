@@ -671,5 +671,14 @@
     "dmCreateError": "Failed to start conversation",
     "conversation": "Conversation with {{name}}",
     "startingChatWith": "Starting chat with {{name}}!"
+  },
+  "filters": {
+    "title": "Filters",
+    "location": "Location",
+    "sports": "Sports",
+    "enterLocation": "Enter location",
+    "clear": "Clear",
+    "apply": "Apply Filters",
+    "multipleSports": "{{count}} sports"
   }
 }

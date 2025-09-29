@@ -663,5 +663,14 @@
     "dmCreateError": "Không thể bắt đầu cuộc trò chuyện",
     "conversation": "Cuộc trò chuyện với {{name}}",
     "startingChatWith": "Đang bắt đầu trò chuyện với {{name}}!"
+  },
+  "filters": {
+    "title": "Bộ lọc",
+    "location": "Vị trí",
+    "sports": "Thể thao",
+    "enterLocation": "Nhập vị trí",
+    "clear": "Xóa",
+    "apply": "Áp dụng bộ lọc",
+    "multipleSports": "{{count}} môn thể thao"
   }
 }
