@@ -19,39 +19,21 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
+import SPORTS_OPTIONS from "@/constants/Sports";
 
 const getSportEmoji = (sport: string) => {
-  switch (sport.toLowerCase()) {
-    case "football":
-      return "⚽";
-    case "basketball":
-      return "🏀";
-    case "tennis":
-      return "🎾";
-    case "pickleball":
-      return "🏓";
-    case "volleyball":
-      return "🏐";
-    case "badminton":
-      return "🏸";
-    case "table_tennis":
-      return "🏓";
-    case "swimming":
-      return "🏊";
-    case "running":
-      return "🏃";
-    case "cycling":
-      return "🚴";
-    default:
-      return "🏃";
-  }
+  const sportOption = SPORTS_OPTIONS.find(
+    (option) => option.nameKey === `sports.${sport.toLowerCase()}`,
+  );
+  return sportOption?.emoji || "🏃";
 };
 
 const maskEmail = (email: string) => {
-  const [localPart, domain] = email.split('@');
-  const maskedLocal = localPart.length > 2
-    ? `${localPart.charAt(0)}***${localPart.charAt(localPart.length - 1)}`
-    : `${localPart.charAt(0)}***`;
+  const [localPart, domain] = email.split("@");
+  const maskedLocal =
+    localPart.length > 2
+      ? `${localPart.charAt(0)}***${localPart.charAt(localPart.length - 1)}`
+      : `${localPart.charAt(0)}***`;
   return `${maskedLocal}@${domain}`;
 };
 
@@ -177,19 +159,38 @@ export default function ProfileScreen() {
           {(currentProfile.location || user?.email) && (
             <View style={styles.locationContainer}>
               {user?.email && (
-                <Text style={[styles.locationText, { color: colors.tabIconDefault }]}>
+                <Text
+                  style={[
+                    styles.locationText,
+                    { color: colors.tabIconDefault },
+                  ]}
+                >
                   {maskEmail(user.email)}
                 </Text>
               )}
               {user?.email && currentProfile.location && (
-                <Text style={[styles.locationText, { color: colors.tabIconDefault }]}>
-                  {' • '}
+                <Text
+                  style={[
+                    styles.locationText,
+                    { color: colors.tabIconDefault },
+                  ]}
+                >
+                  {" • "}
                 </Text>
               )}
               {currentProfile.location && (
                 <>
-                  <Ionicons name="location-outline" size={16} color={colors.tabIconDefault} />
-                  <Text style={[styles.locationText, { color: colors.tabIconDefault }]}>
+                  <Ionicons
+                    name="location-outline"
+                    size={16}
+                    color={colors.tabIconDefault}
+                  />
+                  <Text
+                    style={[
+                      styles.locationText,
+                      { color: colors.tabIconDefault },
+                    ]}
+                  >
                     {currentProfile.location}
                   </Text>
                 </>
@@ -202,7 +203,8 @@ export default function ProfileScreen() {
             <View style={styles.badgesContainer}>
               {currentProfile.sports.map((sportItem: any, index: number) => {
                 // Handle both old format (object with sport property) and new format (string)
-                const sport = typeof sportItem === 'string' ? sportItem : sportItem.sport;
+                const sport =
+                  typeof sportItem === "string" ? sportItem : sportItem.sport;
                 if (!sport) return null;
 
                 return (
@@ -441,7 +443,7 @@ const styles = StyleSheet.create({
     aspectRatio: 0.7,
     marginBottom: 4,
     borderRadius: 8,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   gridPhoto: {
     width: "100%",

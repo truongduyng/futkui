@@ -81,10 +81,8 @@
   },
   "sports": {
     "football": "Football",
-    "basketball": "Basketball",
     "tennis": "Tennis",
     "pickleball": "Pickleball",
-    "volleyball": "Volleyball",
     "badminton": "Badminton",
     "table_tennis": "Table Tennis",
     "swimming": "Swimming",

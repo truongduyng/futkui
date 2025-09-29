@@ -1,10 +1,8 @@
 const SPORTS_OPTIONS = [
   { emoji: '⚽', nameKey: 'sports.football' },
   { emoji: '🏓', nameKey: 'sports.pickleball' },
-  { emoji: '🏀', nameKey: 'sports.basketball' },
-  { emoji: '🎾', nameKey: 'sports.tennis' },
-  { emoji: '🏐', nameKey: 'sports.volleyball' },
   { emoji: '🏸', nameKey: 'sports.badminton' },
+  { emoji: '🎾', nameKey: 'sports.tennis' },
   { emoji: '🏓', nameKey: 'sports.table_tennis' },
   { emoji: '🏊', nameKey: 'sports.swimming' },
   { emoji: '🏃', nameKey: 'sports.running' },
@@ -12,7 +10,7 @@ const SPORTS_OPTIONS = [
 ];
 
 export const SPORTS_KEYS = [
-  'football', 'basketball', 'tennis', 'pickleball', 'volleyball',
+  'football', 'tennis', 'pickleball',
   'badminton', 'table_tennis', 'swimming', 'running', 'cycling',
 ];
 
