@@ -117,6 +117,8 @@
     "placeholderHandle": "Enter username (3-20 characters)",
     "displayName": "Display Name",
     "placeholderDisplayName": "Enter your display name",
+    "description": "Description",
+    "placeholderDescription": "Describe your skill level and playing time to be displayed for others for game matching. e.g., Beginner football player, available weekends 6-8pm...",
     "profilePicture": "Profile Picture",
     "profilePhoto": "Profile Photo",
     "selectImage": "Select Image",

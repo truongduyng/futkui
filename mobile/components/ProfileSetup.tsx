@@ -360,7 +360,7 @@ export function ProfileSetup({
       } else {
         // Coordinate profile creation operations sequentially
         console.log('Creating new profile for user:', userId);
-        
+
         // 1. Get push notification token first (this is quick and doesn't depend on other operations)
         const pushToken = await registerForPushNotificationsAsync();
         console.log('Push token obtained:', pushToken ? 'success' : 'failed');

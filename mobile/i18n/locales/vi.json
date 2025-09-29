@@ -117,6 +117,8 @@
     "placeholderHandle": "Nhập tên người dùng (3-20 ký tự)",
     "displayName": "Tên hiển thị",
     "placeholderDisplayName": "Nhập tên hiển thị của bạn",
+    "description": "Mô tả",
+    "placeholderDescription": "Miêu tả về trình độ, thời gian chơi của bạn để hiển thị cho người khác để ghép trận. VD: Cầu thủ bóng đá mới bắt đầu, rảnh cuối tuần 6-8h tối...",
     "profilePicture": "Ảnh đại diện",
     "profilePhoto": "Ảnh hồ sơ",
     "selectImage": "Chọn hình ảnh",
