@@ -134,7 +134,7 @@ export default function ExploreScreen() {
   React.useEffect(() => {
     if (profileData?.profiles?.[0]) {
       setUserProfile(profileData.profiles[0]);
-      setSelectedLocation(profileData.profiles[0].location || "");
+      // Default to empty string (all locations) instead of user's location
     }
   }, [profileData]);
 
@@ -265,7 +265,6 @@ export default function ExploreScreen() {
   const getLocationDisplayText = () => {
     return (
       selectedLocation ||
-      userProfile?.location ||
       t("profileExplore.allLocations", "All locations")
     );
   };
