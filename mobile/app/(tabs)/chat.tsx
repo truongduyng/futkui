@@ -303,8 +303,6 @@ export default function ChatScreen() {
 
     const allConversations = [...asParticipant1, ...asParticipant2];
 
-    console.log('💬 Processed conversations:', allConversations.length, allConversations);
-
     return allConversations
       .filter((conv: any) => conv.participant1 && conv.participant2) // Both participants must exist
       .sort((a: any, b: any) => {
