@@ -68,12 +68,6 @@ export function GroupList({
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
-  // Check if user only has bot groups
-  const nonBotGroups = React.useMemo(() =>
-    (groups || []).filter(group => group.creator?.handle !== 'fk'),
-    [groups]
-  );
-  const hasOnlyBotGroups = nonBotGroups.length === 0 && (groups || []).length > 0;
 
   // Helper function to get unread count for a group from the provided data
   const getUnreadCount = React.useCallback((groupId: string) => {
@@ -82,7 +76,7 @@ export function GroupList({
   }, [unreadData]);
 
   const renderEmptyState = () => (
-    <View style={hasOnlyBotGroups ? styles.botOnlyFooterContainer : styles.emptyStateContainer}>
+    <View style={styles.emptyStateContainer}>
       <Text style={[styles.emptyStateTitle, { color: colors.text }]}>{t('empty.noGroupsYet')}</Text>
       <Text style={[styles.emptyStateMessage, { color: colors.tabIconDefault }]}>
         {t('empty.createOrJoin')}
@@ -140,24 +134,11 @@ export function GroupList({
 
   const GroupItem = React.useCallback(function GroupItem({ group, onPress }: { group: Group; onPress: (group: Group) => void }) {
     const lastMessage = getLastMessage(group);
-    const isBotGroup = group.creator?.handle === 'fk';
     const unreadCount = getUnreadCount(group.id);
 
-    // Configuration object to reduce if/else statements
+    // Configuration object for styling
     const groupConfig = React.useMemo(() => {
       const currentColors = isDark ? Colors.dark : Colors.light;
-
-      if (isBotGroup) {
-        return {
-          itemStyles: [styles.groupItem, { backgroundColor: currentColors.card, borderLeftWidth: 4, borderLeftColor: currentColors.tint }],
-          avatarStyles: [styles.avatarContainer, { backgroundColor: currentColors.tint, borderWidth: 2, borderColor: currentColors.tint }],
-          avatarTextStyles: [styles.avatarText, { fontSize: 24 }],
-          nameStyles: [styles.groupName, { color: currentColors.tint, fontWeight: '700' as const }],
-          messageStyles: [styles.lastMessage, { color: currentColors.tint, fontStyle: 'italic' as const }, unreadCount > 0 && { fontWeight: '600' as const, color: currentColors.text }].filter(Boolean),
-          avatarContent: group.avatarUrl,
-          showImage: !!group.avatarUrl
-        };
-      }
 
       return {
         itemStyles: [styles.groupItem, { backgroundColor: currentColors.card }],
@@ -168,7 +149,7 @@ export function GroupList({
         avatarContent: group.avatar || group.name.charAt(0).toUpperCase(),
         showImage: !!group.avatarUrl
       };
-    }, [isBotGroup, group.avatar, group.name, group.avatarUrl, unreadCount]);
+    }, [group.avatar, group.name, group.avatarUrl, unreadCount]);
 
     return (
       <TouchableOpacity
@@ -309,7 +290,7 @@ export function GroupList({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={safeGroups.length === 0 ? styles.emptyListContainer : styles.listContainer}
         ListEmptyComponent={renderEmptyState}
-        ListFooterComponent={hasOnlyBotGroups ? renderEmptyState : undefined}
+        ListFooterComponent={undefined}
         refreshControl={
           onRefresh ? (
             <RefreshControl
@@ -533,13 +514,5 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: '600',
-  },
-  // Bot-only footer styles
-  botOnlyFooterContainer: {
-    paddingHorizontal: 32,
-    paddingTop: 32,
-    paddingBottom: 100, // Extra bottom padding to prevent tab bar overlap
-    alignItems: 'center',
-    marginTop: 28,
   },
 });

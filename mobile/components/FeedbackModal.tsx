@@ -30,7 +30,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   const borderColor = useThemeColor({}, 'border');
   const buttonColor = useThemeColor({}, 'tint');
   const { showSuccess, showError } = useToast();
-  const { instantClient, ensureUserHasBotGroup, sendMessage, useProfile } = useInstantDB();
+  const { instantClient, ensureUserHasBotConversation, sendDMMessage, useProfile } = useInstantDB();
   const { user } = instantClient.useAuth();
   const profileQuery = useProfile();
 
@@ -49,13 +49,13 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
     try {
       const profile = profileQuery.data.profiles[0];
 
-      // Ensure user has a bot group for feedback
-      const botGroupId = await ensureUserHasBotGroup(profile.id);
+      // Ensure user has a bot conversation for feedback
+      const botConversationId = await ensureUserHasBotConversation(profile.id);
 
-      if (botGroupId) {
-        // Send feedback as message to bot group
-        await sendMessage({
-          groupId: botGroupId,
+      if (botConversationId) {
+        // Send feedback as message to bot conversation
+        await sendDMMessage({
+          conversationId: botConversationId,
           content: `${feedback.trim()}`,
           authorId: profile.id,
           authorName: profile.displayName || profile.handle || 'User',

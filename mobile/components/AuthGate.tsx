@@ -23,7 +23,7 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
   const { t } = useTranslation();
-  const { instantClient, useProfile, ensureUserHasBotGroup } = useInstantDB();
+  const { instantClient, useProfile, ensureUserHasBotConversation } = useInstantDB();
   const { user } = instantClient.useAuth();
   const initializationRef = useRef<{
     isInitializing: boolean;
@@ -52,12 +52,12 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
       initializationRef.current.profileId = profileId;
 
       try {
-        // Run bot group creation in background - don't block app access
+        // Run bot conversation creation in background - don't block app access
         console.log('Starting background initialization for profile:', profileId);
 
-        // Bot group creation happens in background, user can access app immediately
-        await ensureUserHasBotGroup(profileId);
-        console.log('Background bot group creation completed for profile:', profileId);
+        // Bot conversation creation happens in background, user can access app immediately
+        await ensureUserHasBotConversation(profileId);
+        console.log('Background bot conversation creation completed for profile:', profileId);
 
         // Update push token for existing users (non-blocking)
         await updatePushTokenIfNeeded(profileId);
@@ -110,7 +110,7 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
       // Run background tasks without blocking
       initializeUserDataInBackground(profile.id);
     }
-  }, [profile?.id, ensureUserHasBotGroup, instantClient, profile]);
+  }, [profile?.id, ensureUserHasBotConversation, instantClient, profile]);
 
   const handleProfileCreated = () => {
     setShowProfileSetup(false);
@@ -118,7 +118,7 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
     setInitializationState('idle');
     initializationRef.current = { isInitializing: false, profileId: null };
 
-    // Profile creation complete - the useEffect will trigger background bot group creation
+    // Profile creation complete - the useEffect will trigger background bot conversation creation
     // for the newly created profile automatically
   };
 

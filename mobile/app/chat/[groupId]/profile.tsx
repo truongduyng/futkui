@@ -64,7 +64,6 @@ export default function GroupProfileScreen() {
       .filter((member) => member.id && member.handle) || [];
 
   const isCurrentUserAdmin = userMembership?.role === "admin";
-  const isBotGroup = group?.creator?.handle === 'fk';
 
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [showReportModal, setShowReportModal] = React.useState(false);
@@ -73,11 +72,6 @@ export default function GroupProfileScreen() {
   const { user: currentUser } = instantClient.useAuth();
 
   const handleShareGroup = useCallback(async () => {
-    // Prevent sharing bot groups
-    if (isBotGroup) {
-      showError(t('common.error'), t('groupProfile.cannotShareBotGroup'));
-      return;
-    }
     if (group?.shareLink) {
       try {
         const shareMessage = `${t('groupProfile.joinGroupMessage', { groupName: group.name })}\nhttps://futkui.com/download\n\n${t('groupProfile.downloadAppMessage', { groupCode: group.shareLink })}`;
@@ -91,7 +85,7 @@ export default function GroupProfileScreen() {
         showError(t('common.error'), t('groupProfile.failedToCopyLink'));
       }
     }
-  }, [group?.shareLink, group?.name, isBotGroup, t, showSuccess, showError]);
+  }, [group?.shareLink, group?.name, t, showSuccess, showError]);
 
   // Get recent activities (polls, matches, messages)
   const recentActivities =
@@ -112,31 +106,24 @@ export default function GroupProfileScreen() {
       navigation.setOptions({
         title: group.name,
         headerRight: () => (
-          !isBotGroup ? (
-            <TouchableOpacity
-              onPress={handleShareGroup}
-              style={{
-                minWidth: 44,
-                minHeight: 44,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="share-outline" size={20} color={colors.tint} />
-            </TouchableOpacity>
-          ) : null
+          <TouchableOpacity
+            onPress={handleShareGroup}
+            style={{
+              minWidth: 44,
+              minHeight: 44,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="share-outline" size={20} color={colors.tint} />
+          </TouchableOpacity>
         ),
       });
     }
-  }, [group?.name, navigation, colors, handleShareGroup, isBotGroup]);
+  }, [group?.name, navigation, colors, handleShareGroup]);
 
   const handleLeaveGroup = () => {
-    // Prevent leaving bot groups
-    if (isBotGroup) {
-      showError(t('common.error'), t('groupProfile.cannotLeaveBotGroup'));
-      return;
-    }
 
     Alert.alert(
       t('groupProfile.leaveGroup'),
@@ -543,9 +530,8 @@ export default function GroupProfileScreen() {
           </View>
         </View>
 
-        {/* Actions - Hide for bot groups */}
-        {!isBotGroup && (
-          <View style={styles.section}>
+        {/* Actions */}
+        <View style={styles.section}>
 
             <View style={[styles.dangerZone, { backgroundColor: "#FF8C0010", marginBottom: 12 }]}>
               <TouchableOpacity
@@ -588,7 +574,6 @@ export default function GroupProfileScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        )}
       </ScrollView>
 
       {/* Edit Group Modal */}

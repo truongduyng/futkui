@@ -428,8 +428,6 @@
     "leaveGroupConfirm": "Bạn có chắc chắn muốn rời khỏi nhóm này?",
     "leave": "Rời",
     "failedToLeaveGroup": "Không thể rời nhóm",
-    "cannotShareBotGroup": "Không thể chia sẻ nhóm bot",
-    "cannotLeaveBotGroup": "Không thể rời khỏi trợ lý bot cá nhân của bạn",
     "rule": "Quy tắc",
     "noRules": "Chưa có quy tắc nào cho nhóm này",
     "noActivities": "Chưa có hoạt động nào"

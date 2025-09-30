@@ -2,9 +2,11 @@ import { useCallback } from 'react';
 import { id } from '@instantdb/react-native';
 import { instantClient } from './instantClient';
 import { getTranslation } from '../../i18n';
+import { useDMOperations } from './useDMOperations';
 
 export function useBotOperations() {
   const db = instantClient;
+  const { createOrGetDM, sendDMMessage } = useDMOperations();
 
   // Bot constants
   const BOT_HANDLE = 'fk';
@@ -84,89 +86,58 @@ export function useBotOperations() {
     ]);
   }, [db]);
 
-  const createBotGroup = useCallback(async (userProfileId: string) => {
+  const sendConversationWelcomeMessage = useCallback(async (conversationId: string, botProfileId: string) => {
+    const welcomeMessage = getTranslation('chat.welcomeMessage');
+
+    await sendDMMessage({
+      conversationId,
+      content: welcomeMessage,
+      authorId: botProfileId,
+      authorName: 'FutKui Bot',
+    });
+  }, [sendDMMessage]);
+
+  const createBotConversation = useCallback(async (userProfileId: string) => {
     try {
       // Ensure bot profile exists first and get its ID
       const botProfileId = await ensureBotProfile();
 
-      // Check if user already has a bot group
-      const existingBotGroup = await db.queryOnce({
-        memberships: {
+      // Create or get existing conversation between bot and user
+      const conversationId = await createOrGetDM(botProfileId, userProfileId);
+
+      // Check if this is a new conversation by checking if it has any messages
+      const existingMessages = await db.queryOnce({
+        messages: {
           $: {
             where: {
-              "profile.id": userProfileId,
-              "group.creator.handle": BOT_HANDLE
+              "conversation.id": conversationId
             }
-          },
-          group: {
-            creator: {}
           }
         }
       });
 
-      if (existingBotGroup.data.memberships && existingBotGroup.data.memberships.length > 0) {
-        // User already has a bot group, return the existing group ID
-        return existingBotGroup.data.memberships[0].group?.id;
+      // If no messages exist, send welcome message
+      if (!existingMessages.data.messages || existingMessages.data.messages.length === 0) {
+        await sendConversationWelcomeMessage(conversationId, botProfileId);
       }
 
-      const groupId = id();
-      const membershipId = id();
-      const botMembershipId = id();
-      const shareLink = Math.random().toString(36).substring(2, 8).toUpperCase();
-
-      // Create group with bot as admin and add user as member
-      await db.transact([
-        // Create the group
-        db.tx.groups[groupId].update({
-          name: getTranslation('bot.groupName'),
-          description: getTranslation('bot.groupDescription'),
-          avatarUrl: 'https://futkui.com/public/images/logo-fk.jpg',
-          creatorId: botProfileId,
-          createdAt: Date.now(),
-          shareLink,
-        }).link({ creator: botProfileId }),
-
-        // Add bot as admin member
-        db.tx.memberships[botMembershipId].update({
-          createdAt: Date.now(),
-          role: 'admin',
-          profileGroupKey: `${botProfileId}_${groupId}`,
-        }).link({
-          group: groupId,
-          profile: botProfileId
-        }),
-
-        // Add user as member
-        db.tx.memberships[membershipId].update({
-          createdAt: Date.now(),
-          role: 'member',
-          profileGroupKey: `${userProfileId}_${groupId}`,
-        }).link({
-          group: groupId,
-          profile: userProfileId
-        }),
-      ]);
-
-      // Send welcome message from bot
-      await sendWelcomeMessage(groupId, botProfileId);
-
-      return groupId;
+      return conversationId;
     } catch (error) {
-      console.error('Error creating bot group:', error);
+      console.error('Error creating bot conversation:', error);
       throw error;
     }
-  }, [db, ensureBotProfile, sendWelcomeMessage]);
+  }, [db, ensureBotProfile, createOrGetDM, sendConversationWelcomeMessage]);
 
-  const ensureUserHasBotGroup = useCallback(async (userProfileId: string) => {
+  const ensureUserHasBotConversation = useCallback(async (userProfileId: string) => {
     try {
-      const result = await createBotGroup(userProfileId);
+      const result = await createBotConversation(userProfileId);
       return result;
     } catch (error) {
-      console.error('Error in ensureUserHasBotGroup:', error);
+      console.error('Error in ensureUserHasBotConversation:', error);
       // Don't throw the error to prevent breaking the app
       return null;
     }
-  }, [createBotGroup]);
+  }, [createBotConversation]);
 
   // Function to ensure bot is a member of an existing group
   const ensureBotInGroup = useCallback(async (groupId: string) => {
@@ -211,8 +182,9 @@ export function useBotOperations() {
     getBotProfile,
     sendWelcomeMessage,
     sendGroupWelcomeMessage,
-    createBotGroup,
-    ensureUserHasBotGroup,
+    sendConversationWelcomeMessage,
+    createBotConversation,
+    ensureUserHasBotConversation,
     ensureBotInGroup,
     BOT_HANDLE,
   };

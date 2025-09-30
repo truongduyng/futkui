@@ -46,7 +46,6 @@ export default function ChatScreen() {
   // Fetch DMs for current user
   const { data: dmsData, isLoading: dmsLoading, error: dmsError } = useDMs();
 
-
   // Extract groups first to get group IDs
   const profile = groupsData?.profiles?.[0];
   const baseGroups = useMemo(() =>
@@ -261,14 +260,7 @@ export default function ChatScreen() {
         messages: [getLastMessageForGroup(group.id)].filter(Boolean) // Add last message as array for compatibility
       }))
       .sort((a: any, b: any) => {
-        // Pin bot group (admin.handle === 'fk') to the top
-        const aIsBot = a.creator?.handle === 'fk';
-        const bIsBot = b.creator?.handle === 'fk';
-
-        if (aIsBot && !bIsBot) return -1;
-        if (!aIsBot && bIsBot) return 1;
-
-        // For non-bot groups, sort by most recent message or creation date
+        // Sort groups by most recent message or creation date
         const aLastMessage = a.messages?.[0];
         const bLastMessage = b.messages?.[0];
 
@@ -316,6 +308,17 @@ export default function ChatScreen() {
     return allConversations
       .filter((conv: any) => conv.participant1 && conv.participant2) // Both participants must exist
       .sort((a: any, b: any) => {
+        // Pin bot conversation (participant with handle 'fk') to the top
+        const aOtherParticipant = a.participant1?.handle !== profile.handle ? a.participant1 : a.participant2;
+        const bOtherParticipant = b.participant1?.handle !== profile.handle ? b.participant1 : b.participant2;
+
+        const aIsBot = aOtherParticipant?.handle === 'fk';
+        const bIsBot = bOtherParticipant?.handle === 'fk';
+
+        if (aIsBot && !bIsBot) return -1;
+        if (!aIsBot && bIsBot) return 1;
+
+        // For non-bot conversations, sort by most recent message or creation date
         const aLastMessage = a.messages?.[0];
         const bLastMessage = b.messages?.[0];
         const aTime = aLastMessage?.createdAt || a.lastMessageAt || a.createdAt || 0;

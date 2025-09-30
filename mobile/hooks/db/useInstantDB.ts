@@ -129,7 +129,7 @@ export function useInstantDB() {
     closeDuesCycle: duesOps.closeDuesCycle,
 
     // Bot operations
-    ensureUserHasBotGroup: botOps.ensureUserHasBotGroup,
+    ensureUserHasBotConversation: botOps.ensureUserHasBotConversation,
     ensureBotInGroup: botOps.ensureBotInGroup,
     getBotProfile: botOps.getBotProfile,
 

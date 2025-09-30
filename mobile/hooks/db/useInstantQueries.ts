@@ -366,7 +366,6 @@ export function useInstantQueries() {
     return await db.queryOnce({
       groups: {
         $: {
-          where: { "creator.handle": { $ne: 'fk' } as any },
           order: { serverCreatedAt: 'desc' },
           limit: 7
         },
