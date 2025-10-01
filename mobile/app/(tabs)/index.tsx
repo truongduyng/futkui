@@ -383,9 +383,9 @@ export default function ExploreScreen() {
         snapToAlignment="start"
         decelerationRate="fast"
         bounces={false}
-        initialNumToRender={2}
-        maxToRenderPerBatch={1}
-        windowSize={3}
+        initialNumToRender={7}
+        maxToRenderPerBatch={11}
+        windowSize={11}
         removeClippedSubviews={true}
         onMomentumScrollEnd={(event) => {
           const newIndex = Math.round(
