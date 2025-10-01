@@ -132,7 +132,7 @@ export function GroupList({
     }
   }, []);
 
-  const GroupItem = React.useCallback(function GroupItem({ group, onPress }: { group: Group; onPress: (group: Group) => void }) {
+  const GroupItem = React.memo(function GroupItem({ group, onPress }: { group: Group; onPress: (group: Group) => void }) {
     const lastMessage = getLastMessage(group);
     const unreadCount = getUnreadCount(group.id);
 
@@ -151,10 +151,14 @@ export function GroupList({
       };
     }, [group.avatar, group.name, group.avatarUrl, unreadCount]);
 
+    const handlePress = React.useCallback(() => {
+      onPress(group);
+    }, [onPress, group]);
+
     return (
       <TouchableOpacity
         style={groupConfig.itemStyles}
-        onPress={() => onPress(group)}
+        onPress={handlePress}
       >
         <View style={groupConfig.avatarStyles}>
           {groupConfig.showImage ? (
@@ -207,7 +211,7 @@ export function GroupList({
         </View>
       </TouchableOpacity>
     );
-  }, [getLastMessage, getUnreadCount, colors.tabIconDefault, formatTime, getMessagePreview, isDark]);
+  });
 
   const renderGroup = React.useCallback(({ item: group }: { item: Group }) => {
     return <GroupItem group={group} onPress={onGroupPress} />;

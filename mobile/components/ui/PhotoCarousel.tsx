@@ -21,7 +21,7 @@ interface PhotoCarouselProps {
   colors?: any;
 }
 
-export default function PhotoCarousel({
+const PhotoCarousel = React.memo(function PhotoCarousel({
   photos = [],
   avatarUrl,
   autoSlide = true,
@@ -147,6 +147,10 @@ export default function PhotoCarousel({
           offset: screenWidth * index,
           index,
         })}
+        initialNumToRender={1}
+        maxToRenderPerBatch={2}
+        windowSize={3}
+        removeClippedSubviews={true}
       />
 
       {/* Dots Indicator */}
@@ -175,7 +179,9 @@ export default function PhotoCarousel({
       )}
     </View>
   );
-}
+});
+
+export default PhotoCarousel;
 
 const styles = StyleSheet.create({
   container: {

@@ -32,7 +32,7 @@ interface ProfileData {
   photos?: string[];
 }
 
-function ProfileCard({
+const ProfileCard = React.memo(function ProfileCard({
   profile,
   colors,
   t,
@@ -41,6 +41,31 @@ function ProfileCard({
   colors: any;
   t: any;
 }) {
+  // Memoize sports rendering to avoid re-calculations
+  const sportTags = React.useMemo(() => {
+    if (!profile.sports || profile.sports.length === 0) return null;
+
+    return profile.sports.slice(0, 3).map((sportItem, sportIndex) => {
+      // Handle both old format (object with sport property) and new format (string)
+      const sport =
+        typeof sportItem === "string" ? sportItem : sportItem.sport;
+      if (!sport) return null;
+
+      return (
+        <View key={sportIndex} style={[styles.sportTag]}>
+          <Text style={[styles.sportText]}>
+            {t(`sports.${sport.toLowerCase()}`)}
+          </Text>
+        </View>
+      );
+    });
+  }, [profile.sports, t]);
+
+  const displayName = React.useMemo(
+    () => profile.displayName || profile.handle,
+    [profile.displayName, profile.handle]
+  );
+
   return (
     <View style={styles.fullScreenCardContainer}>
       <View style={styles.fullScreenCard}>
@@ -55,33 +80,16 @@ function ProfileCard({
         />
 
         <View style={styles.profileInfo}>
-          <Text style={[styles.profileName]}>
-            {profile.displayName || profile.handle}
-          </Text>
+          <Text style={[styles.profileName]}>{displayName}</Text>
 
-          {profile.sports && profile.sports.length > 0 && (
-            <View style={styles.sportsContainer}>
-              {profile.sports.slice(0, 3).map((sportItem, sportIndex) => {
-                // Handle both old format (object with sport property) and new format (string)
-                const sport =
-                  typeof sportItem === "string" ? sportItem : sportItem.sport;
-                if (!sport) return null;
-
-                return (
-                  <View key={sportIndex} style={[styles.sportTag]}>
-                    <Text style={[styles.sportText]}>
-                      {t(`sports.${sport.toLowerCase()}`)}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
+          {sportTags && (
+            <View style={styles.sportsContainer}>{sportTags}</View>
           )}
         </View>
       </View>
     </View>
   );
-}
+});
 
 export default function ExploreScreen() {
   const { isDark } = useTheme();
@@ -383,9 +391,9 @@ export default function ExploreScreen() {
         snapToAlignment="start"
         decelerationRate="fast"
         bounces={false}
-        initialNumToRender={7}
-        maxToRenderPerBatch={11}
-        windowSize={11}
+        initialNumToRender={2}
+        maxToRenderPerBatch={3}
+        windowSize={5}
         removeClippedSubviews={true}
         onMomentumScrollEnd={(event) => {
           const newIndex = Math.round(

@@ -107,10 +107,14 @@ export function DMList({
     </View>
   );
 
-  const DMItem = React.useCallback(function DMItem({ dm, onPress }: { dm: DM; onPress: (dm: DM) => void }) {
+  const DMItem = React.memo(function DMItem({ dm, onPress }: { dm: DM; onPress: (dm: DM) => void }) {
     const otherParticipant = getOtherParticipant(dm);
     const lastMessage = getLastMessage(dm);
     const unreadCount = unreadCounts[dm.id] || 0;
+
+    const handlePress = React.useCallback(() => {
+      onPress(dm);
+    }, [onPress, dm]);
 
     if (!otherParticipant) {
       return null;
@@ -119,7 +123,7 @@ export function DMList({
     return (
       <TouchableOpacity
         style={[styles.dmItem, { backgroundColor: colors.card }]}
-        onPress={() => onPress(dm)}
+        onPress={handlePress}
       >
         <View style={styles.avatarContainer}>
           {otherParticipant.avatarUrl ? (
@@ -184,7 +188,7 @@ export function DMList({
         </View>
       </TouchableOpacity>
     );
-  }, [getOtherParticipant, getLastMessage, unreadCounts, colors, formatTime, getMessagePreview]);
+  });
 
   const renderDM = React.useCallback(({ item: dm }: { item: DM }) => {
     return <DMItem dm={dm} onPress={onDMPress} />;
