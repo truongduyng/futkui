@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title, description: 'Admin dashboard for FutKui' }) %>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div>
+          <h1 class="text-xl font-bold text-gray-900">FutKui Admin</h1>
+          <p class="text-sm text-gray-500">Logged in as <%= profile.handle %></p>
+        </div>
+        <div class="flex gap-3">
+          <a href="/admin/profiles/new" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+            Create Profile
+          </a>
+          <form method="POST" action="/admin/logout" class="inline">
+            <button type="submit" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+              Logout
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-6">
+      <form method="GET" action="/admin/dashboard" class="flex gap-4">
+        <input
+          type="text"
+          name="search"
+          value="<%= search %>"
+          placeholder="Search by handle, name, or email..."
+          class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+        >
+        <button type="submit" class="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-gray-900 transition-colors">
+          Search
+        </button>
+        <% if (search) { %>
+          <a href="/admin/dashboard" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors">
+            Clear
+          </a>
+        <% } %>
+      </form>
+    </div>
+
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">
+          Profiles (<%= total %>)
+        </h2>
+      </div>
+
+      <% if (profiles.length === 0) { %>
+        <div class="p-8 text-center text-gray-500">
+          <p>No profiles found</p>
+        </div>
+      <% } else { %>
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avatar</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Handle</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Display Name</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Groups</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% profiles.forEach(profile => { %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <% if (profile.avatarUrl) { %>
+                    <img src="<%= profile.avatarUrl %>" alt="<%= profile.handle %>" class="w-8 h-8 rounded-full object-cover">
+                  <% } else { %>
+                    <div class="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center text-purple-700 font-semibold text-sm">
+                      <%= profile.handle.charAt(0).toUpperCase() %>
+                    </div>
+                  <% } %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="font-medium text-gray-900"><%= profile.handle %></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-gray-900"><%= profile.displayName || '-' %></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-gray-600"><%= profile.user?.email || '-' %></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 py-1 text-xs font-medium rounded-full <%= profile.type === 'admin' ? 'bg-red-100 text-red-800' : profile.type === 'system_bot' ? 'bg-blue-100 text-blue-800' : profile.type === 'user_bot' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' %>">
+                    <%= profile.type || 'user' %>
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+                  <%= profile.memberships?.length || 0 %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <div class="flex gap-2">
+                    <a href="/admin/profiles/<%= profile.id %>" class="text-purple-600 hover:text-purple-800 font-medium">
+                      Edit
+                    </a>
+                    <form method="POST" action="/admin/profiles/<%= profile.id %>/delete" onsubmit="return confirm('Are you sure you want to delete this profile? This action cannot be undone.')" class="inline">
+                      <button type="submit" class="text-red-600 hover:text-red-800 font-medium">
+                        Delete
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+
+        <% if (totalPages > 1) { %>
+          <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div class="text-sm text-gray-700">
+              Page <%= page %> of <%= totalPages %>
+            </div>
+            <div class="flex gap-2">
+              <% if (page > 1) { %>
+                <a href="/admin/dashboard?page=<%= page - 1 %><%= search ? '&search=' + search : '' %>" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                  Previous
+                </a>
+              <% } %>
+              <% if (page < totalPages) { %>
+                <a href="/admin/dashboard?page=<%= page + 1 %><%= search ? '&search=' + search : '' %>" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                  Next
+                </a>
+              <% } %>
+            </div>
+          </div>
+        <% } %>
+      <% } %>
+    </div>
+  </main>
+</body>
+</html>

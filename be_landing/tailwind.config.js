@@ -1,6 +1,9 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: ["./views/**/*.{html,ejs}"],
+export default {
+  content: [
+    "./views/**/*.{html,ejs}",
+    "./views/**/**/*.{html,ejs}", // Include nested directories like admin
+  ],
   theme: {
     extend: {},
   },

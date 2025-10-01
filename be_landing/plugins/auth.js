@@ -11,7 +11,10 @@ async function authPlugin(fastify) {
   // Custom authentication decorator
   fastify.decorate('authenticate', async function (request, reply) {
     try {
-      const token = request.headers['authorization']?.replace('Bearer ', '') || request.headers['token']
+      // Get token from header, cookie, or query parameter
+      const token = request.headers['authorization']?.replace('Bearer ', '') ||
+                    request.headers['token'] ||
+                    request.cookies?.admin_token
 
       if (!token) {
         return reply.status(401).send({ error: 'No token provided' })
@@ -32,6 +35,41 @@ async function authPlugin(fastify) {
       console.error('Token validation error:', error)
       fastify.log.error('Token validation error:', error)
       return reply.status(401).send({ error: 'Authentication failed' })
+    }
+  })
+
+  // Admin role requirement decorator
+  fastify.decorate('requireAdmin', async function (request, reply) {
+    try {
+      // Query user's profile
+      const query = {
+        profiles: {
+          $: {
+            where: {
+              'user.id': request.user.id
+            }
+          },
+          user: {}
+        }
+      }
+
+      const result = await db.query(query)
+      const profile = result.profiles?.[0]
+
+      if (!profile) {
+        return reply.status(403).send({ error: 'Profile not found' })
+      }
+
+      if (profile.type !== 'admin') {
+        return reply.status(403).send({ error: 'Admin access required' })
+      }
+
+      // Store profile in request for later use
+      request.profile = profile
+    } catch (error) {
+      console.error('Admin check error:', error)
+      fastify.log.error('Admin check error:', error)
+      return reply.status(403).send({ error: 'Admin verification failed' })
     }
   })
 }
