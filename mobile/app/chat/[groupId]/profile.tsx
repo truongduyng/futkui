@@ -140,7 +140,7 @@ export default function GroupProfileScreen() {
               if (userMembership?.id) {
                 await leaveGroup(userMembership.id);
                 // Navigate back to the main group list instead of group chat
-                router.push('/(tabs)');
+                router.push('/(tabs)/chat');
               }
             } catch (error) {
               console.error("Error leaving group:", error);
@@ -283,8 +283,8 @@ export default function GroupProfileScreen() {
           >
             <Ionicons name="wallet-outline" size={16} color={colors.tint} />
             <Text style={[styles.balanceText, { color: colors.text }]}>
-              {new Intl.NumberFormat('vi-VN', { 
-                style: 'currency', 
+              {new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
                 currency: 'VND',
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0
