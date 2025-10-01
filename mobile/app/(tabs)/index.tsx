@@ -255,13 +255,27 @@ export default function ExploreScreen() {
         currentProfile.id,
       );
 
-      // Auto-send a match invitation message
-      await sendDMMessage({
-        conversationId,
-        content: t("dm.matchInvitation"),
-        authorId: userProfile.id,
-        authorName: userProfile.displayName || userProfile.handle,
+      // Check if there are any existing messages in the conversation
+      const messagesQuery = await instantClient.queryOnce({
+        messages: {
+          $: {
+            where: {
+              "conversation.id": conversationId,
+            },
+            limit: 1,
+          }
+        }
       });
+
+      // Auto-send a match invitation message only if there are no messages yet
+      if (!messagesQuery.data.messages || messagesQuery.data.messages.length === 0) {
+        await sendDMMessage({
+          conversationId,
+          content: t("dm.matchInvitation"),
+          authorId: userProfile.id,
+          authorName: userProfile.displayName || userProfile.handle,
+        });
+      }
 
       if (currentIndex < profiles.length - 1) {
         const nextIndex = currentIndex + 1;
@@ -295,6 +309,7 @@ export default function ExploreScreen() {
     createOrGetDM,
     sendDMMessage,
     router,
+    instantClient,
   ]);
 
   const handleApplySports = useCallback(async (sports: string[]) => {
