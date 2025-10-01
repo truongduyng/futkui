@@ -30,12 +30,22 @@ export function useBotOperations() {
             handle: BOT_HANDLE,
             displayName: 'FutKui Bot',
             createdAt: Date.now(),
+            type: 'system_bot',
           })
           // Note: No user link since we can't create users in $users namespace
         ]);
         return botProfileId;
       } else {
-        return botQuery.data.profiles[0].id;
+        // Update existing bot profile to have type 'system_bot' if it doesn't have it
+        const existingBot = botQuery.data.profiles[0];
+        if (!existingBot.type || existingBot.type !== 'system_bot') {
+          await db.transact([
+            db.tx.profiles[existingBot.id].update({
+              type: 'system_bot',
+            })
+          ]);
+        }
+        return existingBot.id;
       }
     } catch (error) {
       console.error('Error ensuring bot profile:', error);

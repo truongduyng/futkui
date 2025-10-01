@@ -377,6 +377,7 @@ export function ProfileSetup({
             sports: selectedSports.length > 0 ? selectedSports : undefined,
             location: location.trim() || undefined,
             photos: photoUrls.length > 0 ? photoUrls : undefined,
+            type: "user",
           })
           .link({ user: userId! });
 

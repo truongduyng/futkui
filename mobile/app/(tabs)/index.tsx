@@ -151,9 +151,9 @@ export default function ExploreScreen() {
       // Show all profiles without location filtering
       let filteredProfiles = exploreData.profiles;
 
-      // Filter out bot profile (handle 'fk') for better user experience
+      // Filter out system bot profiles for better user experience
       filteredProfiles = filteredProfiles.filter(
-        (profile: any) => profile.handle !== "fk",
+        (profile: any) => profile.type !== 'system_bot',
       );
 
       // Apply filters

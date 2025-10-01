@@ -306,12 +306,12 @@ export default function ChatScreen() {
     return allConversations
       .filter((conv: any) => conv.participant1 && conv.participant2) // Both participants must exist
       .sort((a: any, b: any) => {
-        // Pin bot conversation (participant with handle 'fk') to the top
+        // Pin bot conversation (participant with type 'system_bot') to the top
         const aOtherParticipant = a.participant1?.handle !== profile.handle ? a.participant1 : a.participant2;
         const bOtherParticipant = b.participant1?.handle !== profile.handle ? b.participant1 : b.participant2;
 
-        const aIsBot = aOtherParticipant?.handle === 'fk';
-        const bIsBot = bOtherParticipant?.handle === 'fk';
+        const aIsBot = aOtherParticipant?.type === 'system_bot';
+        const bIsBot = bOtherParticipant?.type === 'system_bot';
 
         if (aIsBot && !bIsBot) return -1;
         if (!aIsBot && bIsBot) return 1;

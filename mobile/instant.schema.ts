@@ -78,6 +78,7 @@ const _schema = i.schema({
       level: i.string().optional(),
       location: i.string().optional().indexed(),
       photos: i.json().optional(),
+      type: i.string().optional(), // "system_bot", "user_bot", or "user" (default)
     }),
     reactions: i.entity({
       createdAt: i.number(),

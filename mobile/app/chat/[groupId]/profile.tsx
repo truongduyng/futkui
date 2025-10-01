@@ -28,6 +28,7 @@ interface Member {
   avatarUrl?: string;
   role?: string;
   membershipId?: string;
+  type?: string;
 }
 
 export default function GroupProfileScreen() {
@@ -60,6 +61,7 @@ export default function GroupProfileScreen() {
         avatarUrl: membership.profile?.avatarUrl,
         role: membership.role,
         membershipId: membership.id,
+        type: membership.profile?.type,
       }))
       .filter((member) => member.id && member.handle) || [];
 
@@ -205,10 +207,10 @@ export default function GroupProfileScreen() {
 
   const handleMemberAction = useCallback((member: Member) => {
     const isCurrentUser = member.id === userMembership?.profile?.id;
-    const isBotUser = member.handle === 'fk';
+    const isBotUser = member.type === 'system_bot';
 
     if (isCurrentUser || isBotUser) {
-      return; // No actions available for current user or bot
+      return; // No actions available for current user or system bot
     }
 
     setBlockModalUser(member);
@@ -409,7 +411,7 @@ export default function GroupProfileScreen() {
           <View style={[styles.membersList, { backgroundColor: colors.card }]}>
             {members.map((member, index) => {
               const isCurrentUser = member.id === userMembership?.profile?.id;
-              const isBotUser = member.handle === 'fk';
+              const isBotUser = member.type === 'system_bot';
               const isBlocked = (blockedData?.blocks?.map((block: any) => block.blocked?.id).filter(Boolean) || []).includes(member.id);
               const isTouchable = !isCurrentUser && !isBotUser;
 
