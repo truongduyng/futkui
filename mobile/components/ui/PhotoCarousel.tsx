@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
-  Image,
   StyleSheet,
   Dimensions,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -34,6 +35,9 @@ const PhotoCarousel = React.memo(function PhotoCarousel({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [autoSlideEnabled, setAutoSlideEnabled] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>(
+    {},
+  );
 
   // Combine avatar and photos into a single array
   const allImages = React.useMemo(() => {
@@ -135,10 +139,26 @@ const PhotoCarousel = React.memo(function PhotoCarousel({
         keyExtractor={(_, index) => `photo-${index}`}
         renderItem={({ item: imageUri }) => (
           <View style={styles.imageContainer}>
+            {loadingImages[imageUri] && (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator
+                  size="large"
+                  color={colors?.tint || "#fff"}
+                />
+              </View>
+            )}
             <Image
               source={{ uri: imageUri }}
               style={styles.image}
-              resizeMode="cover"
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              onLoadStart={() => {
+                setLoadingImages((prev) => ({ ...prev, [imageUri]: true }));
+              }}
+              onLoadEnd={() => {
+                setLoadingImages((prev) => ({ ...prev, [imageUri]: false }));
+              }}
+              transition={300}
             />
           </View>
         )}
@@ -195,6 +215,17 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
+  },
+  loadingContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.3)",
+    zIndex: 1,
   },
   placeholderImage: {
     width: "100%",

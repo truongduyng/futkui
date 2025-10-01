@@ -16,6 +16,7 @@ import {
   View,
   Platform,
   StatusBar as RNStatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
@@ -50,6 +51,9 @@ export default function ProfileScreen() {
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [loadingImages, setLoadingImages] = useState<Record<number, boolean>>(
+    {},
+  );
 
   const currentProfile = profileData?.profiles?.[0];
 
@@ -248,12 +252,29 @@ export default function ProfileScreen() {
                 onPress={() => handleImagePress(index)}
                 activeOpacity={0.8}
               >
+                {loadingImages[index] && (
+                  <View
+                    style={[
+                      styles.photoLoadingContainer,
+                      { backgroundColor: colors.card },
+                    ]}
+                  >
+                    <ActivityIndicator size="small" color={colors.tint} />
+                  </View>
+                )}
                 <Image
                   source={{ uri: photo }}
                   style={[styles.gridPhoto, { borderRadius: 8 }]}
                   contentFit="cover"
                   cachePolicy="memory-disk"
                   recyclingKey={`profile-photo-${index}`}
+                  onLoadStart={() => {
+                    setLoadingImages((prev) => ({ ...prev, [index]: true }));
+                  }}
+                  onLoadEnd={() => {
+                    setLoadingImages((prev) => ({ ...prev, [index]: false }));
+                  }}
+                  transition={200}
                 />
               </TouchableOpacity>
             ))}
@@ -462,6 +483,17 @@ const styles = StyleSheet.create({
   gridPhoto: {
     width: "100%",
     height: "100%",
+  },
+  photoLoadingContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 8,
+    zIndex: 1,
   },
   menuContainer: {
     marginLeft: 28,
