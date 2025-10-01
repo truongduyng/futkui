@@ -48,11 +48,20 @@ export function LocationSelector({
   const colors = isDark ? Colors.dark : Colors.light;
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredProvinces = provinces.filter((province) => {
-    const normalizedLabel = normalizeText(province.label);
-    const normalizedQuery = normalizeText(searchQuery);
-    return normalizedLabel.includes(normalizedQuery);
-  });
+  // Add "All locations" option at the beginning
+  const allLocationsOption: Province = {
+    code: "",
+    label: t("profileExplore.allLocations", "All locations"),
+  };
+
+  const filteredProvinces = [
+    allLocationsOption,
+    ...provinces.filter((province) => {
+      const normalizedLabel = normalizeText(province.label);
+      const normalizedQuery = normalizeText(searchQuery);
+      return normalizedLabel.includes(normalizedQuery);
+    }),
+  ];
 
   const handleSelect = (province: Province) => {
     onSelect(province);

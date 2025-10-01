@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -19,8 +19,13 @@ import { useRouter } from "expo-router";
 import PhotoCarousel from "@/components/ui/PhotoCarousel";
 import { SportFilterBottomSheet } from "@/components/ui/FilterBottomSheet";
 import { LocationSelector } from "@/components/LocationSelector";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+
+// Storage keys for persisting filters
+const STORAGE_KEY_LOCATION = '@futkui_explore_location';
+const STORAGE_KEY_SPORTS = '@futkui_explore_sports';
 
 interface ProfileData {
   id: string;
@@ -144,6 +149,33 @@ export default function ExploreScreen() {
       : {},
   );
 
+  // Load saved filters on mount
+  useEffect(() => {
+    const loadSavedFilters = async () => {
+      try {
+        const [savedLocation, savedSports] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEY_LOCATION),
+          AsyncStorage.getItem(STORAGE_KEY_SPORTS),
+        ]);
+
+        if (savedLocation !== null) {
+          setSelectedLocation(savedLocation);
+        }
+
+        if (savedSports !== null) {
+          const parsedSports = JSON.parse(savedSports);
+          if (Array.isArray(parsedSports)) {
+            setSelectedSports(parsedSports);
+          }
+        }
+      } catch (error) {
+        console.log('Error loading saved filters:', error);
+      }
+    };
+
+    loadSavedFilters();
+  }, []);
+
   React.useEffect(() => {
     if (profileData?.profiles?.[0]) {
       setUserProfile(profileData.profiles[0]);
@@ -265,14 +297,30 @@ export default function ExploreScreen() {
     router,
   ]);
 
-  const handleApplySports = useCallback((sports: string[]) => {
+  const handleApplySports = useCallback(async (sports: string[]) => {
     setSelectedSports(sports);
     setCurrentIndex(0); // Reset to first profile when filters change
+    // Scroll FlatList to top
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+    // Save to AsyncStorage
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY_SPORTS, JSON.stringify(sports));
+    } catch (error) {
+      console.log('Error saving sports filter:', error);
+    }
   }, []);
 
-  const handleLocationSelect = useCallback((province: any) => {
+  const handleLocationSelect = useCallback(async (province: any) => {
     setSelectedLocation(province.label);
     setCurrentIndex(0); // Reset to first profile when filters change
+    // Scroll FlatList to top
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+    // Save to AsyncStorage
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY_LOCATION, province.label);
+    } catch (error) {
+      console.log('Error saving location filter:', error);
+    }
   }, []);
 
   const getLocationDisplayText = () => {
