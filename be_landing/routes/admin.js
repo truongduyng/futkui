@@ -158,7 +158,9 @@ export default async function (fastify, opts) {
         avatarUrl,
         level,
         location,
-        userEmail
+        userEmail,
+        photos,
+        sports
       } = request.body
 
       // Validate required fields
@@ -180,6 +182,23 @@ export default async function (fastify, opts) {
       }
 
       const profileId = id()
+
+      // Parse photos JSON
+      let photosArray = []
+      try {
+        photosArray = photos ? JSON.parse(photos) : []
+      } catch (e) {
+        photosArray = []
+      }
+
+      // Parse sports JSON
+      let sportsArray = []
+      try {
+        sportsArray = sports ? JSON.parse(sports) : []
+      } catch (e) {
+        sportsArray = []
+      }
+
       const transactions = [
         db.tx.profiles[profileId].update({
           handle,
@@ -189,6 +208,8 @@ export default async function (fastify, opts) {
           avatarUrl: avatarUrl || null,
           level: level || null,
           location: location || null,
+          photos: photosArray.length > 0 ? photosArray : null,
+          sports: sportsArray.length > 0 ? sportsArray : null,
           createdAt: Date.now()
         })
       ]
@@ -274,7 +295,9 @@ export default async function (fastify, opts) {
         type,
         avatarUrl,
         level,
-        location
+        location,
+        photos,
+        sports
       } = request.body
 
       // Validate required fields
@@ -296,6 +319,22 @@ export default async function (fastify, opts) {
         return reply.status(400).send('Handle already exists')
       }
 
+      // Parse photos JSON
+      let photosArray = []
+      try {
+        photosArray = photos ? JSON.parse(photos) : []
+      } catch (e) {
+        photosArray = []
+      }
+
+      // Parse sports JSON
+      let sportsArray = []
+      try {
+        sportsArray = sports ? JSON.parse(sports) : []
+      } catch (e) {
+        sportsArray = []
+      }
+
       await db.transact([
         db.tx.profiles[id].update({
           handle,
@@ -304,7 +343,9 @@ export default async function (fastify, opts) {
           type: type || 'user',
           avatarUrl: avatarUrl || null,
           level: level || null,
-          location: location || null
+          location: location || null,
+          photos: photosArray.length > 0 ? photosArray : null,
+          sports: sportsArray.length > 0 ? sportsArray : null
         })
       ])
 

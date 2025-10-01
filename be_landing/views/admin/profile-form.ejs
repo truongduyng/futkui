@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title, description: 'Admin profile management for FutKui' }) %>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div>
+          <h1 class="text-xl font-bold text-gray-900">FutKui Admin</h1>
+          <p class="text-sm text-gray-500">Logged in as <%= adminProfile.handle %></p>
+        </div>
+        <a href="/admin/dashboard" class="text-gray-600 hover:text-gray-900 font-medium">
+          ← Back to Dashboard
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">
+        <%= isEdit ? 'Edit Profile' : 'Create New Profile' %>
+      </h2>
+
+      <form id="profile-form" method="POST" action="<%= isEdit ? '/admin/profiles/' + profile.id + '/update' : '/admin/profiles/create' %>" class="space-y-6">
+        <div>
+          <label for="handle" class="block text-sm font-medium text-gray-700 mb-2">
+            Handle <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="handle"
+            name="handle"
+            value="<%= isEdit ? profile.handle : '' %>"
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            placeholder="username123"
+          >
+          <p class="mt-1 text-sm text-gray-500">Unique identifier for the profile</p>
+        </div>
+
+        <div>
+          <label for="displayName" class="block text-sm font-medium text-gray-700 mb-2">
+            Display Name
+          </label>
+          <input
+            type="text"
+            id="displayName"
+            name="displayName"
+            value="<%= isEdit ? (profile.displayName || '') : '' %>"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            placeholder="John Doe"
+          >
+        </div>
+
+        <div>
+          <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+            Description
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            rows="3"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            placeholder="Profile bio or description"
+          ><%= isEdit ? (profile.description || '') : '' %></textarea>
+        </div>
+
+        <div>
+          <label for="type" class="block text-sm font-medium text-gray-700 mb-2">
+            Type
+          </label>
+          <select
+            id="type"
+            name="type"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          >
+            <option value="user" <%= isEdit && profile.type === 'user' ? 'selected' : '' %>>User</option>
+            <option value="admin" <%= isEdit && profile.type === 'admin' ? 'selected' : '' %>>Admin</option>
+            <option value="system_bot" <%= isEdit && profile.type === 'system_bot' ? 'selected' : '' %>>System Bot</option>
+            <option value="user_bot" <%= isEdit && profile.type === 'user_bot' ? 'selected' : '' %>>User Bot</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Avatar
+          </label>
+
+          <!-- File upload -->
+          <div class="mb-3">
+            <label for="avatarFile" class="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-purple-500 transition-colors">
+              <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              <span id="upload-text" class="text-sm text-gray-600">Upload avatar image</span>
+              <input
+                type="file"
+                id="avatarFile"
+                name="avatarFile"
+                accept="image/*"
+                class="hidden"
+              >
+            </label>
+            <p class="mt-1 text-xs text-gray-500">JPG, PNG, GIF or WebP (max 10MB)</p>
+          </div>
+
+          <!-- Or URL -->
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <div class="relative flex justify-center text-xs">
+              <span class="px-2 bg-white text-gray-500">or paste URL</span>
+            </div>
+          </div>
+
+          <input
+            type="url"
+            id="avatarUrl"
+            name="avatarUrl"
+            value="<%= isEdit ? (profile.avatarUrl || '') : '' %>"
+            class="mt-3 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            placeholder="https://example.com/avatar.jpg"
+          >
+
+          <!-- Avatar preview -->
+          <div id="avatar-preview" class="mt-3" <% if (!isEdit || !profile.avatarUrl) { %>style="display: none;"<% } %>>
+            <img id="avatar-preview-img" src="<%= isEdit ? (profile.avatarUrl || '') : '' %>" alt="Avatar" class="w-16 h-16 rounded-full object-cover border-2 border-gray-200">
+          </div>
+
+          <!-- Upload status -->
+          <div id="upload-status" class="mt-2 text-sm" style="display: none;"></div>
+        </div>
+
+        <div>
+          <label for="level" class="block text-sm font-medium text-gray-700 mb-2">
+            Level
+          </label>
+          <input
+            type="text"
+            id="level"
+            name="level"
+            value="<%= isEdit ? (profile.level || '') : '' %>"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            placeholder="beginner, intermediate, advanced"
+          >
+        </div>
+
+        <div>
+          <label for="location" class="block text-sm font-medium text-gray-700 mb-2">
+            Location
+          </label>
+          <input
+            type="text"
+            id="location"
+            name="location"
+            value="<%= isEdit ? (profile.location || '') : '' %>"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            placeholder="City, Country"
+          >
+        </div>
+
+        <!-- Sports -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Sports
+          </label>
+
+          <!-- Hidden input for sports JSON -->
+          <input type="hidden" id="sports" name="sports" value="<%= isEdit && profile.sports ? JSON.stringify(profile.sports) : '[]' %>">
+
+          <!-- Sports selection -->
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors sport-label">
+              <input type="checkbox" value="football" class="sport-checkbox mr-2">
+              <span>⚽ Football</span>
+            </label>
+            <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors sport-label">
+              <input type="checkbox" value="pickleball" class="sport-checkbox mr-2">
+              <span>🏓 Pickleball</span>
+            </label>
+            <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors sport-label">
+              <input type="checkbox" value="badminton" class="sport-checkbox mr-2">
+              <span>🏸 Badminton</span>
+            </label>
+            <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors sport-label">
+              <input type="checkbox" value="tennis" class="sport-checkbox mr-2">
+              <span>🎾 Tennis</span>
+            </label>
+            <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors sport-label">
+              <input type="checkbox" value="table_tennis" class="sport-checkbox mr-2">
+              <span>🏓 Table Tennis</span>
+            </label>
+            <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors sport-label">
+              <input type="checkbox" value="swimming" class="sport-checkbox mr-2">
+              <span>🏊 Swimming</span>
+            </label>
+            <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors sport-label">
+              <input type="checkbox" value="running" class="sport-checkbox mr-2">
+              <span>🏃 Running</span>
+            </label>
+            <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors sport-label">
+              <input type="checkbox" value="cycling" class="sport-checkbox mr-2">
+              <span>🚴 Cycling</span>
+            </label>
+          </div>
+
+          <p class="text-xs text-gray-500">Select all sports this profile is interested in</p>
+        </div>
+
+        <!-- Profile Photos -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Profile Photos
+          </label>
+
+          <!-- Upload button -->
+          <div class="mb-3">
+            <label for="photoFile" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors border border-gray-300">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              <span id="photo-upload-text">Add Photos</span>
+              <input
+                type="file"
+                id="photoFile"
+                name="photoFile"
+                accept="image/*"
+                multiple
+                class="hidden"
+              >
+            </label>
+            <p class="mt-1 text-xs text-gray-500">Select multiple photos to upload at once (max 10MB each)</p>
+          </div>
+
+          <!-- Hidden input for photos JSON -->
+          <input type="hidden" id="photos" name="photos" value="<%= isEdit && profile.photos ? JSON.stringify(profile.photos) : '[]' %>">
+
+          <!-- Photos grid -->
+          <div id="photos-grid" class="grid grid-cols-3 gap-3">
+            <!-- Photos will be dynamically added here -->
+          </div>
+
+          <!-- Upload status for photos -->
+          <div id="photo-upload-status" class="mt-2 text-sm" style="display: none;"></div>
+        </div>
+
+        <% if (!isEdit) { %>
+          <div>
+            <label for="userEmail" class="block text-sm font-medium text-gray-700 mb-2">
+              Link to User Email (Optional)
+            </label>
+            <input
+              type="email"
+              id="userEmail"
+              name="userEmail"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="user@example.com"
+            >
+            <p class="mt-1 text-sm text-gray-500">If provided, will link this profile to an existing user account</p>
+          </div>
+        <% } %>
+
+        <div class="flex gap-4 pt-4">
+          <button
+            type="submit"
+            class="flex-1 bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors cursor-pointer"
+          >
+            <%= isEdit ? 'Update Profile' : 'Create Profile' %>
+          </button>
+          <a
+            href="/admin/dashboard"
+            class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors text-center"
+          >
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    const profileForm = document.getElementById('profile-form');
+    const avatarFile = document.getElementById('avatarFile');
+    const avatarUrl = document.getElementById('avatarUrl');
+    const avatarPreview = document.getElementById('avatar-preview');
+    const avatarPreviewImg = document.getElementById('avatar-preview-img');
+    const uploadText = document.getElementById('upload-text');
+    const uploadStatus = document.getElementById('upload-status');
+
+    // Prevent form from submitting the file input
+    profileForm.addEventListener('submit', (e) => {
+      // Clear the file input before submission
+      avatarFile.value = '';
+    });
+
+    // Handle file selection
+    avatarFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        showStatus('Please select an image file', 'error');
+        return;
+      }
+
+      // Validate file size (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        showStatus('File size must be less than 10MB', 'error');
+        return;
+      }
+
+      // Show preview immediately
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        avatarPreviewImg.src = e.target.result;
+        avatarPreview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+
+      // Upload file
+      uploadText.textContent = 'Uploading...';
+      showStatus('Uploading image...', 'info');
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/admin/upload-avatar', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Upload failed' }));
+          console.error('Upload error:', errorData);
+          showStatus(errorData.error || 'Failed to upload image', 'error');
+          uploadText.textContent = 'Upload avatar image';
+          return;
+        }
+
+        const data = await response.json();
+        avatarUrl.value = data.url;
+        uploadText.textContent = 'Upload avatar image';
+        showStatus('Image uploaded successfully!', 'success');
+      } catch (error) {
+        console.error('Upload error:', error);
+        showStatus('Failed to upload image. Please try again.', 'error');
+        uploadText.textContent = 'Upload avatar image';
+      }
+    });
+
+    // Handle URL input
+    avatarUrl.addEventListener('input', (e) => {
+      const url = e.target.value.trim();
+      if (url) {
+        avatarPreviewImg.src = url;
+        avatarPreview.style.display = 'block';
+      } else {
+        avatarPreview.style.display = 'none';
+      }
+    });
+
+    function showStatus(message, type) {
+      uploadStatus.textContent = message;
+      uploadStatus.style.display = 'block';
+      uploadStatus.className = `mt-2 text-sm ${
+        type === 'error' ? 'text-red-600' :
+        type === 'success' ? 'text-green-600' :
+        'text-blue-600'
+      }`;
+
+      if (type === 'success') {
+        setTimeout(() => {
+          uploadStatus.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    // ===== Profile Photos Management =====
+    const photoFile = document.getElementById('photoFile');
+    const photosInput = document.getElementById('photos');
+    const photosGrid = document.getElementById('photos-grid');
+    const photoUploadText = document.getElementById('photo-upload-text');
+    const photoUploadStatus = document.getElementById('photo-upload-status');
+
+    // Initialize photos array
+    let photos = [];
+    try {
+      photos = JSON.parse(photosInput.value || '[]');
+    } catch (e) {
+      photos = [];
+    }
+
+    // Render photos grid
+    function renderPhotos() {
+      photosGrid.innerHTML = '';
+      photos.forEach((photoUrl, index) => {
+        const photoDiv = document.createElement('div');
+        photoDiv.className = 'relative group';
+        photoDiv.innerHTML = `
+          <img src="${photoUrl}" alt="Photo ${index + 1}" class="w-full h-32 object-cover rounded-lg border-2 border-gray-200">
+          <button type="button" onclick="removePhoto(${index})" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        `;
+        photosGrid.appendChild(photoDiv);
+      });
+
+      // Update hidden input
+      photosInput.value = JSON.stringify(photos);
+    }
+
+    // Remove photo
+    window.removePhoto = function(index) {
+      if (confirm('Remove this photo?')) {
+        photos.splice(index, 1);
+        renderPhotos();
+        showPhotoStatus('Photo removed', 'success');
+      }
+    };
+
+    // Handle photo file selection (multiple files)
+    photoFile.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length === 0) return;
+
+      // Validate all files first
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) {
+          showPhotoStatus('Please select only image files', 'error');
+          photoFile.value = '';
+          return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+          showPhotoStatus(`${file.name} is larger than 10MB`, 'error');
+          photoFile.value = '';
+          return;
+        }
+      }
+
+      // Upload all files
+      photoUploadText.textContent = `Uploading ${files.length} photo${files.length > 1 ? 's' : ''}...`;
+      showPhotoStatus(`Uploading ${files.length} photo${files.length > 1 ? 's' : ''}...`, 'info');
+
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const file of files) {
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+
+          const response = await fetch('/admin/upload-avatar', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Upload failed' }));
+            console.error('Upload error:', errorData);
+            failCount++;
+            continue;
+          }
+
+          const data = await response.json();
+          photos.push(data.url);
+          successCount++;
+
+          // Update UI after each successful upload
+          renderPhotos();
+        } catch (error) {
+          console.error('Upload error:', error);
+          failCount++;
+        }
+      }
+
+      photoUploadText.textContent = 'Add Photos';
+      photoFile.value = '';
+
+      // Show summary
+      if (successCount > 0 && failCount === 0) {
+        showPhotoStatus(`${successCount} photo${successCount > 1 ? 's' : ''} uploaded successfully!`, 'success');
+      } else if (successCount > 0 && failCount > 0) {
+        showPhotoStatus(`${successCount} uploaded, ${failCount} failed`, 'error');
+      } else {
+        showPhotoStatus('Failed to upload photos. Please try again.', 'error');
+      }
+    });
+
+    function showPhotoStatus(message, type) {
+      photoUploadStatus.textContent = message;
+      photoUploadStatus.style.display = 'block';
+      photoUploadStatus.className = `mt-2 text-sm ${
+        type === 'error' ? 'text-red-600' :
+        type === 'success' ? 'text-green-600' :
+        'text-blue-600'
+      }`;
+
+      if (type === 'success') {
+        setTimeout(() => {
+          photoUploadStatus.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    // Initial render
+    renderPhotos();
+
+    // ===== Sports Management =====
+    const sportsInput = document.getElementById('sports');
+    const sportCheckboxes = document.querySelectorAll('.sport-checkbox');
+    const sportLabels = document.querySelectorAll('.sport-label');
+
+    // Initialize sports array
+    let selectedSports = [];
+    try {
+      selectedSports = JSON.parse(sportsInput.value || '[]');
+    } catch (e) {
+      selectedSports = [];
+    }
+
+    // Set initial checkbox states
+    sportCheckboxes.forEach(checkbox => {
+      if (selectedSports.includes(checkbox.value)) {
+        checkbox.checked = true;
+        checkbox.parentElement.classList.add('bg-purple-50', 'border-purple-500');
+      }
+    });
+
+    // Handle checkbox changes
+    sportCheckboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          selectedSports.push(e.target.value);
+          e.target.parentElement.classList.add('bg-purple-50', 'border-purple-500');
+        } else {
+          selectedSports = selectedSports.filter(s => s !== e.target.value);
+          e.target.parentElement.classList.remove('bg-purple-50', 'border-purple-500');
+        }
+        sportsInput.value = JSON.stringify(selectedSports);
+      });
+    });
+  </script>
+</body>
+</html>

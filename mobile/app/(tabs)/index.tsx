@@ -30,7 +30,7 @@ interface ProfileData {
   sports?: any[];
   location?: string;
   photos?: string[];
-}
+  description?: string;}
 
 const ProfileCard = React.memo(function ProfileCard({
   profile,
@@ -82,6 +82,11 @@ const ProfileCard = React.memo(function ProfileCard({
         <View style={styles.profileInfo}>
           <Text style={[styles.profileName]}>{displayName}</Text>
 
+          {profile.description && (
+            <Text style={styles.profileDescription} numberOfLines={2}>
+              {profile.description}
+            </Text>
+          )}
           {sportTags && (
             <View style={styles.sportsContainer}>{sportTags}</View>
           )}
@@ -576,6 +581,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
     marginBottom: 4,
+  },
+  profileDescription: {
+    fontSize: 16,
+    color: "rgba(255,255,255,0.9)",
+    marginBottom: 8,
+    lineHeight: 22,
   },
   profileHandle: {
     fontSize: 18,
