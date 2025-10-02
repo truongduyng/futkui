@@ -24,8 +24,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 // Storage keys for persisting filters
-const STORAGE_KEY_LOCATION = '@futkui_explore_location';
-const STORAGE_KEY_SPORTS = '@futkui_explore_sports';
+const STORAGE_KEY_LOCATION = "@futkui_explore_location";
+const STORAGE_KEY_SPORTS = "@futkui_explore_sports";
 
 interface ProfileData {
   id: string;
@@ -35,7 +35,8 @@ interface ProfileData {
   sports?: any[];
   location?: string;
   photos?: string[];
-  description?: string;}
+  description?: string;
+}
 
 const ProfileCard = React.memo(function ProfileCard({
   profile,
@@ -52,8 +53,7 @@ const ProfileCard = React.memo(function ProfileCard({
 
     return profile.sports.slice(0, 3).map((sportItem, sportIndex) => {
       // Handle both old format (object with sport property) and new format (string)
-      const sport =
-        typeof sportItem === "string" ? sportItem : sportItem.sport;
+      const sport = typeof sportItem === "string" ? sportItem : sportItem.sport;
       if (!sport) return null;
 
       return (
@@ -68,7 +68,7 @@ const ProfileCard = React.memo(function ProfileCard({
 
   const displayName = React.useMemo(
     () => profile.displayName || profile.handle,
-    [profile.displayName, profile.handle]
+    [profile.displayName, profile.handle],
   );
 
   return (
@@ -92,9 +92,7 @@ const ProfileCard = React.memo(function ProfileCard({
               {profile.description}
             </Text>
           )}
-          {sportTags && (
-            <View style={styles.sportsContainer}>{sportTags}</View>
-          )}
+          {sportTags && <View style={styles.sportsContainer}>{sportTags}</View>}
         </View>
       </View>
     </View>
@@ -120,12 +118,22 @@ export default function ExploreScreen() {
   const [selectedLocation, setSelectedLocation] = useState("");
   const flatListRef = useRef<FlatList>(null);
 
-  // Fetch user's profile for location filtering
-  const { data: profileData } = instantClient.useQuery({
-    profiles: {
-      $: { where: { "user.id": user?.id } },
-    },
-  });
+  // Fetch user's profile once
+  useEffect(() => {
+    if (!user?.id) return;
+
+    instantClient
+      .queryOnce({
+        profiles: {
+          $: { where: { "user.id": user.id } },
+        },
+      })
+      .then((result) => {
+        if (result.data.profiles?.[0]) {
+          setUserProfile(result.data.profiles[0]);
+        }
+      });
+  }, [user?.id, instantClient]);
 
   // Fetch other users' profiles for exploration
   const { data: exploreData, isLoading } = instantClient.useQuery(
@@ -135,6 +143,7 @@ export default function ExploreScreen() {
             $: {
               where: {
                 avatarUrl: { $isNull: false },
+                type: "user",
               },
             },
             user: {
@@ -169,7 +178,7 @@ export default function ExploreScreen() {
           }
         }
       } catch (error) {
-        console.log('Error loading saved filters:', error);
+        console.log("Error loading saved filters:", error);
       }
     };
 
@@ -177,23 +186,10 @@ export default function ExploreScreen() {
   }, []);
 
   React.useEffect(() => {
-    if (profileData?.profiles?.[0]) {
-      setUserProfile(profileData.profiles[0]);
-      // Default to empty string (all locations) instead of user's location
-    }
-  }, [profileData]);
-
-  React.useEffect(() => {
     if (exploreData?.profiles) {
-      // Show all profiles without location filtering
       let filteredProfiles = exploreData.profiles;
 
-      // Filter out system bot profiles for better user experience
-      filteredProfiles = filteredProfiles.filter(
-        (profile: any) => profile.type !== 'system_bot',
-      );
-
-      // Apply filters
+      // Apply location filter
       if (selectedLocation.trim()) {
         filteredProfiles = filteredProfiles.filter((profile: any) =>
           profile.location
@@ -202,6 +198,7 @@ export default function ExploreScreen() {
         );
       }
 
+      // Apply sports filter
       if (selectedSports.length > 0) {
         filteredProfiles = filteredProfiles.filter((profile: any) => {
           if (!profile.sports || profile.sports.length === 0) return false;
@@ -263,12 +260,15 @@ export default function ExploreScreen() {
               "conversation.id": conversationId,
             },
             limit: 1,
-          }
-        }
+          },
+        },
       });
 
       // Auto-send a match invitation message only if there are no messages yet
-      if (!messagesQuery.data.messages || messagesQuery.data.messages.length === 0) {
+      if (
+        !messagesQuery.data.messages ||
+        messagesQuery.data.messages.length === 0
+      ) {
         await sendDMMessage({
           conversationId,
           content: t("dm.matchInvitation"),
@@ -321,7 +321,7 @@ export default function ExploreScreen() {
     try {
       await AsyncStorage.setItem(STORAGE_KEY_SPORTS, JSON.stringify(sports));
     } catch (error) {
-      console.log('Error saving sports filter:', error);
+      console.log("Error saving sports filter:", error);
     }
   }, []);
 
@@ -334,14 +334,13 @@ export default function ExploreScreen() {
     try {
       await AsyncStorage.setItem(STORAGE_KEY_LOCATION, province.label);
     } catch (error) {
-      console.log('Error saving location filter:', error);
+      console.log("Error saving location filter:", error);
     }
   }, []);
 
   const getLocationDisplayText = () => {
     return (
-      selectedLocation ||
-      t("profileExplore.allLocations", "All locations")
+      selectedLocation || t("profileExplore.allLocations", "All locations")
     );
   };
 
@@ -354,6 +353,13 @@ export default function ExploreScreen() {
       return t("filters.multipleSports", { count: selectedSports.length });
     }
   };
+
+  const renderProfileCard = useCallback(
+    ({ item }: { item: ProfileData }) => (
+      <ProfileCard profile={item} colors={colors} t={t} />
+    ),
+    [colors, t],
+  );
 
   if (loading || isLoading) {
     return (
@@ -449,9 +455,7 @@ export default function ExploreScreen() {
         ref={flatListRef}
         data={profiles}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ProfileCard profile={item} colors={colors} t={t} />
-        )}
+        renderItem={renderProfileCard}
         style={styles.flatListContainer}
         showsVerticalScrollIndicator={false}
         pagingEnabled={true}
