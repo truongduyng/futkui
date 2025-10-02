@@ -80,7 +80,7 @@
             <option value="user" <%= isEdit && profile.type === 'user' ? 'selected' : '' %>>User</option>
             <option value="admin" <%= isEdit && profile.type === 'admin' ? 'selected' : '' %>>Admin</option>
             <option value="system_bot" <%= isEdit && profile.type === 'system_bot' ? 'selected' : '' %>>System Bot</option>
-            <option value="user_bot" <%= isEdit && profile.type === 'user_bot' ? 'selected' : '' %>>User Bot</option>
+            <option value="user_bot" <%= !isEdit || profile.type === 'user_bot' ? 'selected' : '' %>>User Bot</option>
           </select>
         </div>
 

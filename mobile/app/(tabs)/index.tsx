@@ -142,8 +142,8 @@ export default function ExploreScreen() {
           profiles: {
             $: {
               where: {
-                avatarUrl: { $isNull: false },
-                type: "user",
+                "avatarUrl": { $isNull: false },
+                "type": { $in: ["user", "user_bot"] },
               },
             },
             user: {
