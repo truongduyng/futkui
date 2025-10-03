@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Dimensions,
   StatusBar,
-  TouchableOpacity,
   ActivityIndicator,
   FlatList,
 } from "react-native";
@@ -19,24 +18,15 @@ import { useRouter } from "expo-router";
 import PhotoCarousel from "@/components/ui/PhotoCarousel";
 import { SportFilterBottomSheet } from "@/components/ui/FilterBottomSheet";
 import { LocationSelector } from "@/components/LocationSelector";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ExploreHeader } from "@/components/explore/ExploreHeader";
+import { ExploreActions } from "@/components/explore/ExploreActions";
+import { useProfileFilters } from "@/hooks/useProfileFilters";
+import {
+  useExploreProfiles,
+  type ProfileData,
+} from "@/hooks/useExploreProfiles";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-
-// Storage keys for persisting filters
-const STORAGE_KEY_LOCATION = "@futkui_explore_location";
-const STORAGE_KEY_SPORTS = "@futkui_explore_sports";
-
-interface ProfileData {
-  id: string;
-  handle: string;
-  displayName?: string;
-  avatarUrl?: string;
-  sports?: any[];
-  location?: string;
-  photos?: string[];
-  description?: string;
-}
 
 const ProfileCard = React.memo(function ProfileCard({
   profile,
@@ -47,18 +37,16 @@ const ProfileCard = React.memo(function ProfileCard({
   colors: any;
   t: any;
 }) {
-  // Memoize sports rendering to avoid re-calculations
   const sportTags = React.useMemo(() => {
     if (!profile.sports || profile.sports.length === 0) return null;
 
     return profile.sports.slice(0, 3).map((sportItem, sportIndex) => {
-      // Handle both old format (object with sport property) and new format (string)
       const sport = typeof sportItem === "string" ? sportItem : sportItem.sport;
       if (!sport) return null;
 
       return (
-        <View key={sportIndex} style={[styles.sportTag]}>
-          <Text style={[styles.sportText]}>
+        <View key={sportIndex} style={styles.sportTag}>
+          <Text style={styles.sportText}>
             {t(`sports.${sport.toLowerCase()}`)}
           </Text>
         </View>
@@ -85,7 +73,7 @@ const ProfileCard = React.memo(function ProfileCard({
         />
 
         <View style={styles.profileInfo}>
-          <Text style={[styles.profileName]}>{displayName}</Text>
+          <Text style={styles.profileName}>{displayName}</Text>
 
           {profile.description && (
             <Text style={styles.profileDescription} numberOfLines={2}>
@@ -109,14 +97,23 @@ export default function ExploreScreen() {
   const router = useRouter();
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [profiles, setProfiles] = useState<ProfileData[]>([]);
-  const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showSportFilter, setShowSportFilter] = useState(false);
   const [showLocationSelector, setShowLocationSelector] = useState(false);
-  const [selectedSports, setSelectedSports] = useState<string[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState("");
   const flatListRef = useRef<FlatList>(null);
+
+  const {
+    selectedSports,
+    selectedLocation,
+    updateSports,
+    updateLocation,
+  } = useProfileFilters();
+
+  const { profiles, loading, isLoading } = useExploreProfiles({
+    userId: user?.id,
+    selectedSports,
+    selectedLocation,
+  });
 
   // Fetch user's profile once
   useEffect(() => {
@@ -135,108 +132,25 @@ export default function ExploreScreen() {
       });
   }, [user?.id, instantClient]);
 
-  // Fetch other users' profiles for exploration
-  const { data: exploreData, isLoading } = instantClient.useQuery(
-    user?.id
-      ? {
-          profiles: {
-            $: {
-              where: {
-                "avatarUrl": { $isNull: false },
-                "type": { $in: ["user", "user_bot"] },
-              },
-            },
-            user: {
-              $: {
-                where: {
-                  id: { $ne: user.id },
-                },
-              },
-            },
-          },
-        }
-      : {},
-  );
-
-  // Load saved filters on mount
-  useEffect(() => {
-    const loadSavedFilters = async () => {
-      try {
-        const [savedLocation, savedSports] = await Promise.all([
-          AsyncStorage.getItem(STORAGE_KEY_LOCATION),
-          AsyncStorage.getItem(STORAGE_KEY_SPORTS),
-        ]);
-
-        if (savedLocation !== null) {
-          setSelectedLocation(savedLocation);
-        }
-
-        if (savedSports !== null) {
-          const parsedSports = JSON.parse(savedSports);
-          if (Array.isArray(parsedSports)) {
-            setSelectedSports(parsedSports);
-          }
-        }
-      } catch (error) {
-        console.log("Error loading saved filters:", error);
-      }
-    };
-
-    loadSavedFilters();
+  const resetToFirstProfile = useCallback(() => {
+    setCurrentIndex(0);
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, []);
 
-  React.useEffect(() => {
-    if (exploreData?.profiles) {
-      let filteredProfiles = exploreData.profiles;
-
-      // Apply location filter
-      if (selectedLocation.trim()) {
-        filteredProfiles = filteredProfiles.filter((profile: any) =>
-          profile.location
-            ?.toLowerCase()
-            .includes(selectedLocation.toLowerCase()),
-        );
-      }
-
-      // Apply sports filter
-      if (selectedSports.length > 0) {
-        filteredProfiles = filteredProfiles.filter((profile: any) => {
-          if (!profile.sports || profile.sports.length === 0) return false;
-
-          return profile.sports.some((sportItem: any) => {
-            const sport =
-              typeof sportItem === "string" ? sportItem : sportItem.sport;
-            return sport && selectedSports.includes(sport.toLowerCase());
-          });
-        });
-      }
-
-      // Shuffle profiles for variety
-      const shuffled = [...filteredProfiles].sort(() => Math.random() - 0.5);
-      setProfiles(shuffled);
-      setLoading(false);
-
-      console.log(
-        `Showing ${shuffled.length} profiles from ${exploreData.profiles.length} total`,
-      );
-    }
-  }, [exploreData, selectedSports, selectedLocation]);
-
-  const handleAction = useCallback(() => {
-    const currentProfile = profiles[currentIndex];
-    if (!currentProfile) return;
-
-    // Move to next profile by scrolling the FlatList
+  const moveToNextProfile = useCallback(() => {
     if (currentIndex < profiles.length - 1) {
       const nextIndex = currentIndex + 1;
       flatListRef.current?.scrollToIndex({
         index: nextIndex,
         animated: true,
       });
-      // Update the state immediately to keep UI in sync
       setCurrentIndex(nextIndex);
     }
-  }, [currentIndex, profiles]);
+  }, [currentIndex, profiles.length]);
+
+  const handlePass = useCallback(() => {
+    moveToNextProfile();
+  }, [moveToNextProfile]);
 
   const handleMatchInvite = useCallback(async () => {
     const currentProfile = profiles[currentIndex];
@@ -246,25 +160,22 @@ export default function ExploreScreen() {
     }
 
     try {
-      // Create or get DM between current user and selected profile
       const conversationId = await createOrGetDM(
         userProfile.id,
         currentProfile.id,
       );
 
-      // Check if there are any existing messages in the conversation
+      // Check if conversation already has messages
       const messagesQuery = await instantClient.queryOnce({
         messages: {
           $: {
-            where: {
-              "conversation.id": conversationId,
-            },
+            where: { "conversation.id": conversationId },
             limit: 1,
           },
         },
       });
 
-      // Auto-send a match invitation message only if there are no messages yet
+      // Auto-send match invitation if no messages exist
       if (
         !messagesQuery.data.messages ||
         messagesQuery.data.messages.length === 0
@@ -277,15 +188,7 @@ export default function ExploreScreen() {
         });
       }
 
-      if (currentIndex < profiles.length - 1) {
-        const nextIndex = currentIndex + 1;
-        flatListRef.current?.scrollToIndex({
-          index: nextIndex,
-          animated: true,
-        });
-        // Update the state immediately to keep UI in sync
-        setCurrentIndex(nextIndex);
-      }
+      moveToNextProfile();
 
       showSuccess(
         t("dm.startingChatWith", {
@@ -293,7 +196,6 @@ export default function ExploreScreen() {
         }),
       );
 
-      // Navigate to the DM chat - we'll need a special route for conversations
       router.push(`/dm/${conversationId}`);
     } catch (error) {
       console.error("Error creating DM:", error);
@@ -310,53 +212,68 @@ export default function ExploreScreen() {
     sendDMMessage,
     router,
     instantClient,
+    moveToNextProfile,
   ]);
 
-  const handleApplySports = useCallback(async (sports: string[]) => {
-    setSelectedSports(sports);
-    setCurrentIndex(0); // Reset to first profile when filters change
-    // Scroll FlatList to top
-    flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-    // Save to AsyncStorage
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY_SPORTS, JSON.stringify(sports));
-    } catch (error) {
-      console.log("Error saving sports filter:", error);
-    }
-  }, []);
+  const handleApplySports = useCallback(
+    async (sports: string[]) => {
+      await updateSports(sports);
+      resetToFirstProfile();
+    },
+    [updateSports, resetToFirstProfile],
+  );
 
-  const handleLocationSelect = useCallback(async (province: any) => {
-    setSelectedLocation(province.label);
-    setCurrentIndex(0); // Reset to first profile when filters change
-    // Scroll FlatList to top
-    flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-    // Save to AsyncStorage
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY_LOCATION, province.label);
-    } catch (error) {
-      console.log("Error saving location filter:", error);
-    }
-  }, []);
-
-  const getLocationDisplayText = () => {
-    return (
-      selectedLocation || t("profileExplore.allLocations", "All locations")
-    );
-  };
-
-  const getSportsDisplayText = () => {
-    if (selectedSports.length === 0) {
-      return t("filters.sports", "Sports");
-    } else if (selectedSports.length === 1) {
-      return t(`sports.${selectedSports[0]}`);
-    } else {
-      return t("filters.multipleSports", { count: selectedSports.length });
-    }
-  };
+  const handleLocationSelect = useCallback(
+    async (province: any) => {
+      await updateLocation(province.label);
+      resetToFirstProfile();
+    },
+    [updateLocation, resetToFirstProfile],
+  );
 
   const renderProfileCard = useCallback(
     ({ item }: { item: ProfileData }) => (
       <ProfileCard profile={item} colors={colors} t={t} />
+    ),
+    [colors, t],
+  );
+
+  const renderEmptyList = useCallback(
+    () => (
+      <View style={[styles.emptyContainer, { height: screenHeight - 150 }]}>
+        <Ionicons
+          name="search-outline"
+          size={80}
+          color={colors.tabIconDefault}
+        />
+        <Text style={[styles.emptyTitle, { color: colors.text }]}>
+          {t("profileExplore.noProfiles", "No more profiles")}
+        </Text>
+        <Text style={[styles.emptySubtitle, { color: colors.tabIconDefault }]}>
+          {t(
+            "profileExplore.noProfilesSubtitle",
+            "Check back later for new people in your area",
+          )}
+        </Text>
+      </View>
+    ),
+    [colors, t],
+  );
+
+  const renderFooter = useCallback(
+    () => (
+      <View style={[styles.endContainer, { height: screenHeight }]}>
+        <Ionicons name="checkmark-circle" size={60} color={colors.tint} />
+        <Text style={[styles.endTitle, { color: colors.text }]}>
+          {t("profileExplore.endOfProfiles", "You've seen all profiles!")}
+        </Text>
+        <Text style={[styles.endSubtitle, { color: colors.tabIconDefault }]}>
+          {t(
+            "profileExplore.checkBackLater",
+            "Check back later for new people",
+          )}
+        </Text>
+      </View>
     ),
     [colors, t],
   );
@@ -379,78 +296,13 @@ export default function ExploreScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
-      {/* Absolute Header */}
-      <View style={[styles.header]}>
-        <View style={styles.filterRow}>
-          <TouchableOpacity
-            style={[
-              styles.filterButton,
-              {
-                backgroundColor: selectedLocation
-                  ? `${Colors.light.tint}90`
-                  : "rgba(0,0,0,0.3)",
-                borderColor: "rgba(255,255,255,0.2)",
-              },
-            ]}
-            onPress={() => setShowLocationSelector(true)}
-          >
-            <Ionicons
-              name="location-outline"
-              size={16}
-              color="rgba(255,255,255,0.9)"
-            />
-            <Text
-              style={[
-                styles.filterButtonText,
-                { color: "rgba(255,255,255,0.9)" },
-              ]}
-            >
-              {getLocationDisplayText()}
-            </Text>
-            <Ionicons
-              name="chevron-down"
-              size={16}
-              color="rgba(255,255,255,0.7)"
-            />
-          </TouchableOpacity>
+      <ExploreHeader
+        selectedLocation={selectedLocation}
+        selectedSports={selectedSports}
+        onLocationPress={() => setShowLocationSelector(true)}
+        onSportsPress={() => setShowSportFilter(true)}
+      />
 
-          <TouchableOpacity
-            style={[
-              styles.filterButton,
-              styles.sportFilterButton,
-              {
-                backgroundColor:
-                  selectedSports.length > 0
-                    ? `${Colors.light.tint}90`
-                    : "rgba(0,0,0,0.3)",
-                borderColor: "rgba(255,255,255,0.2)",
-              },
-            ]}
-            onPress={() => setShowSportFilter(true)}
-          >
-            <Ionicons
-              name="fitness-outline"
-              size={16}
-              color="rgba(255,255,255,0.9)"
-            />
-            <Text
-              style={[
-                styles.filterButtonText,
-                { color: "rgba(255,255,255,0.9)" },
-              ]}
-            >
-              {getSportsDisplayText()}
-            </Text>
-            <Ionicons
-              name="chevron-down"
-              size={16}
-              color="rgba(255,255,255,0.7)"
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Profile Cards - TikTok Style FlatList */}
       <FlatList
         ref={flatListRef}
         data={profiles}
@@ -478,66 +330,16 @@ export default function ExploreScreen() {
           offset: screenHeight * index,
           index,
         })}
-        ListEmptyComponent={() => (
-          <View style={[styles.emptyContainer, { height: screenHeight - 150 }]}>
-            <Ionicons
-              name="search-outline"
-              size={80}
-              color={colors.tabIconDefault}
-            />
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              {t("profileExplore.noProfiles", "No more profiles")}
-            </Text>
-            <Text
-              style={[styles.emptySubtitle, { color: colors.tabIconDefault }]}
-            >
-              {t(
-                "profileExplore.noProfilesSubtitle",
-                "Check back later for new people in your area",
-              )}
-            </Text>
-          </View>
-        )}
-        ListFooterComponent={() => (
-          <View style={[styles.endContainer, { height: screenHeight }]}>
-            <Ionicons name="checkmark-circle" size={60} color={colors.tint} />
-            <Text style={[styles.endTitle, { color: colors.text }]}>
-              {t("profileExplore.endOfProfiles", "You've seen all profiles!")}
-            </Text>
-            <Text
-              style={[styles.endSubtitle, { color: colors.tabIconDefault }]}
-            >
-              {t(
-                "profileExplore.checkBackLater",
-                "Check back later for new people",
-              )}
-            </Text>
-          </View>
-        )}
+        ListEmptyComponent={renderEmptyList}
+        ListFooterComponent={renderFooter}
       />
 
-      {/* Action Buttons - Hide when at end of profiles list */}
-      {currentIndex < profiles.length && (
-        <View style={styles.actionContainer}>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.passButton]}
-            onPress={handleAction}
-          >
-            <Ionicons name="close" size={30} color="#fff" />
-          </TouchableOpacity>
+      <ExploreActions
+        visible={currentIndex < profiles.length}
+        onPass={handlePass}
+        onMatch={handleMatchInvite}
+      />
 
-          <TouchableOpacity
-            style={[styles.actionButton, styles.fightButton]}
-            onPress={handleMatchInvite}
-          >
-            <Text style={{ fontSize: 24, color: "white", fontWeight: "500" }}>
-              VS
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Location Selector */}
       <LocationSelector
         visible={showLocationSelector}
         onClose={() => setShowLocationSelector(false)}
@@ -545,7 +347,6 @@ export default function ExploreScreen() {
         selectedLocation={selectedLocation}
       />
 
-      {/* Sport Filter Bottom Sheet */}
       <SportFilterBottomSheet
         isVisible={showSportFilter}
         onClose={() => setShowSportFilter(false)}
@@ -587,50 +388,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 24,
   },
-  header: {
-    position: "absolute",
-    top: 50,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    zIndex: 10,
-    alignItems: "center",
-  },
-  filterRow: {
-    flexDirection: "row",
-    gap: 12,
-    width: "100%",
-    justifyContent: "center",
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    marginTop: 4,
-  },
-  filterButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: 6,
-    flex: 1,
-    maxWidth: 180,
-  },
-  sportFilterButton: {
-    maxWidth: 180,
-  },
-  filterButtonText: {
-    fontSize: 14,
-    fontWeight: "500",
-    flex: 1,
-    textAlign: "center",
-  },
   carouselStyle: {
     width: "100%",
     height: "100%",
@@ -638,7 +395,7 @@ const styles = StyleSheet.create({
   },
   profileInfo: {
     position: "absolute",
-    bottom: 200, // Move up to avoid overlap with action buttons
+    bottom: 200,
     left: 20,
     right: 20,
     zIndex: 2,
@@ -655,21 +412,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     lineHeight: 22,
   },
-  profileHandle: {
-    fontSize: 18,
-    color: "rgba(255,255,255,0.8)",
-    marginBottom: 12,
-  },
-  locationContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  locationText: {
-    color: "#fff",
-    fontSize: 16,
-    marginLeft: 4,
-  },
   sportsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -685,40 +427,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "500",
-  },
-  actionContainer: {
-    position: "absolute",
-    bottom: 80,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 40,
-    paddingVertical: 20,
-    gap: 64,
-    backgroundColor: "transparent",
-  },
-  actionButton: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  passButton: {
-    backgroundColor: Colors.light.accent,
-  },
-  fightButton: {
-    backgroundColor: Colors.light.tint,
   },
   flatListContainer: {
     flex: 1,
