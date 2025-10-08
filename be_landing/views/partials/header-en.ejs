@@ -1,5 +1,5 @@
 <!-- Navigation -->
-<nav class="absolute top-0 left-0 right-0 z-50 <%= (typeof isHomePage !== 'undefined' && isHomePage) ? 'bg-transparent' : 'bg-white shadow-lg' %> py-2">
+<nav class="fixed top-0 left-0 right-0 z-50 <%= (typeof isHomePage !== 'undefined' && isHomePage) ? 'bg-transparent' : 'bg-white shadow-lg' %> py-2 transition-all duration-300">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center h-16">
       <div class="flex items-center">
@@ -24,11 +24,6 @@
           >Download</a
         >
         <a
-          href="#about"
-          class="<%= (typeof isHomePage !== 'undefined' && isHomePage) ? 'text-white hover:text-cyan-400' : 'text-gray-900 hover:text-cyan-600' %> px-3 py-2 rounded-full text-sm font-medium transition-colors duration-200"
-          >About</a
-        >
-        <a
           href="/"
           class="<%= (typeof isHomePage !== 'undefined' && isHomePage) ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900' %> px-2 py-1 text-sm transition-colors duration-200"
           title="Tiếng Việt"
@@ -37,8 +32,9 @@
       </div>
       <!-- Mobile menu button -->
       <div class="md:hidden">
-        <button class="<%= (typeof isHomePage !== 'undefined' && isHomePage) ? 'text-white' : 'text-gray-900' %> p-2">
+        <button id="mobile-menu-button" class="<%= (typeof isHomePage !== 'undefined' && isHomePage) ? 'text-white' : 'text-gray-900' %> p-2">
           <svg
+            id="menu-icon"
             class="w-6 h-6"
             fill="none"
             stroke="currentColor"
@@ -51,8 +47,85 @@
               d="M4 6h16M4 12h16M4 18h16"
             ></path>
           </svg>
+          <svg
+            id="close-icon"
+            class="w-6 h-6 hidden"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
+          </svg>
         </button>
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden md:hidden <%= (typeof isHomePage !== 'undefined' && isHomePage) ? 'bg-[#0f1419]/98 backdrop-blur-sm' : 'bg-white' %> border-t <%= (typeof isHomePage !== 'undefined' && isHomePage) ? 'border-cyan-400/20' : 'border-gray-200' %>">
+      <div class="px-2 pt-2 pb-3 space-y-1">
+        <a
+          href="#features"
+          class="<%= (typeof isHomePage !== 'undefined' && isHomePage) ? 'text-white hover:bg-white/10' : 'text-gray-900 hover:bg-gray-100' %> block px-3 py-2 rounded-md text-base font-medium"
+          >Features</a
+        >
+        <a
+          href="#download"
+          class="<%= (typeof isHomePage !== 'undefined' && isHomePage) ? 'text-white hover:bg-white/10' : 'text-gray-900 hover:bg-gray-100' %> block px-3 py-2 rounded-md text-base font-medium"
+          >Download</a
+        >
+        <a
+          href="/"
+          class="<%= (typeof isHomePage !== 'undefined' && isHomePage) ? 'text-gray-400 hover:bg-white/10' : 'text-gray-600 hover:bg-gray-100' %> block px-3 py-2 rounded-md text-base font-medium"
+          >Tiếng Việt</a
+        >
       </div>
     </div>
   </div>
 </nav>
+
+<script>
+  // Mobile menu toggle
+  const mobileMenuButton = document.getElementById('mobile-menu-button');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const menuIcon = document.getElementById('menu-icon');
+  const closeIcon = document.getElementById('close-icon');
+
+  if (mobileMenuButton) {
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+      menuIcon.classList.toggle('hidden');
+      closeIcon.classList.toggle('hidden');
+    });
+
+    // Close mobile menu when clicking on a link
+    const mobileLinks = mobileMenu.querySelectorAll('a');
+    mobileLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.add('hidden');
+        menuIcon.classList.remove('hidden');
+        closeIcon.classList.add('hidden');
+      });
+    });
+  }
+
+  // Sticky header with scroll effect
+  const nav = document.querySelector('nav');
+  const isHomePage = nav.classList.contains('bg-transparent') || !nav.classList.contains('bg-white');
+
+  if (isHomePage) {
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        nav.classList.remove('bg-transparent');
+        nav.classList.add('bg-[#0f1419]/95', 'backdrop-blur-md', 'shadow-lg');
+      } else {
+        nav.classList.add('bg-transparent');
+        nav.classList.remove('bg-[#0f1419]/95', 'backdrop-blur-md', 'shadow-lg');
+      }
+    });
+  }
+</script>
